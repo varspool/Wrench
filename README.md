@@ -44,6 +44,23 @@ This server Applications simply echoes all messages back to all connected client
 	    }
 	}
 
+## Client
+
+	var server = new WebPush('ws://localhost:8000/echo');
+	
+	server.bind('open', function() {
+		// Connection openend...
+		server.send("Hello, I'm there!");
+	});
+	
+	server.bind('close', function() {
+		// Connection closed... 
+	});
+	
+	server.bind('message', function(data) {
+		// Data received
+	});	
+
 ## Libraries used
 
 - [SplClassLoader](http://gist.github.com/221634) by the PHP Standards Working Group
