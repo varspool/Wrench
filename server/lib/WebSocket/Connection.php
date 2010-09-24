@@ -66,12 +66,14 @@ class Connection
         
         $status = '101 Web Socket Protocol Handshake';
         if (array_key_exists('Sec-WebSocket-Key1', $headers)) {
+            // draft-76
             $def_header = array(
                 'Sec-WebSocket-Origin' => $origin,
                 'Sec-WebSocket-Location' => "ws://{$host}{$path}"
             );
             $digest = $this->securityDigest($headers['Sec-WebSocket-Key1'], $headers['Sec-WebSocket-Key2'], $key3);
         } else {
+            // draft-75
             $def_header = array(
                 'WebSocket-Origin' => $origin,
                 'WebSocket-Location' => "ws://{$host}{$path}"  

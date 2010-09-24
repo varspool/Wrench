@@ -11,7 +11,7 @@ class EchoApplication extends Application
 {
     private $clients = array();
 
-	public function onConnect($client)
+    public function onConnect($client)
     {
         $this->clients[] = $client;
     }
