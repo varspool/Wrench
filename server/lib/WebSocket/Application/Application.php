@@ -31,6 +31,8 @@ abstract class Application
     public function onConnect($connection) { }
 
     public function onDisconnect($connection) { }
+    
+    public function onTick() { }
 
-    abstract public function onData($data, $client);
+    public function onData($data, $client) { }
 }

@@ -24,8 +24,10 @@ class Server extends Socket
     {
         while (true) {
             $changed_sockets = $this->allsockets;
-            @socket_select($changed_sockets, $write = NULL, $exceptions = NULL, NULL);
-
+            @socket_select($changed_sockets, $write = NULL, $except = NULL, 1);
+            foreach ($this->applications as $application) {
+                $application->onTick();
+            }
             foreach ($changed_sockets as $socket) {
                 if ($socket == $this->master) {
                     if (($ressource = socket_accept($this->master)) < 0) {

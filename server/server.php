@@ -9,4 +9,5 @@ $classLoader->register();
 
 $server = new \WebSocket\Server('localhost', 8000);
 $server->registerApplication('echo', \WebSocket\Application\EchoApplication::getInstance());
+$server->registerApplication('time', \WebSocket\Application\TimeApplication::getInstance());
 $server->run();
