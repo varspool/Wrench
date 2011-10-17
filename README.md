@@ -3,8 +3,7 @@ PHP WebSocket
 
 A simple PHP 5.3 WebSocket server implementation that follows draft 75 and draft 76 if the WebSockets specification.
 
-- Supports draft 75 and draft 76 of WebSocket RFC
-- Supports Flash Socket Policy requests
+- Supports draft hybi-10
 - Application module, the server can be extended by custom behaviors
 
 ## Server example
