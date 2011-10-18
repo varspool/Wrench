@@ -24,9 +24,9 @@ class WebsocketClient
 		$this->_disconnect();
 	}
 
-	public function sendData($data)
+	public function sendData($data, $type = 'text', $masked = true)
 	{		
-		fwrite($this->_Socket, $this->_hybi10EncodeData($data)) or die('Error:' . $errno . ':' . $errstr); 
+		fwrite($this->_Socket, $this->_hybi10EncodeData($data, $type, $masked)) or die('Error:' . $errno . ':' . $errstr); 
 		$wsData = fread($this->_Socket, 2000);				
 		$retData = $this->_hybi10DecodeData($wsData);		
 		
@@ -178,7 +178,7 @@ class WebsocketClient
 		$secondByteBinary = sprintf('%08b', ord($data[1]));
 		$opcode = bindec(substr($firstByteBinary, 4, 4));
 		$isMasked = ($secondByteBinary[0] == '1') ? true : false;
-		$payloadLength = ord($data[1]) & 127;		
+		$payloadLength = ord($data[1]) & 127;
 		
 		// @TODO: close connection if unmasked frame is received.		
 		
@@ -224,20 +224,28 @@ class WebsocketClient
 			$mask = substr($data, 2, 4);	
 			$payloadOffset = 6;
 		}
-
+		
 		$dataLength = strlen($data);
-		for($i = $payloadOffset; $i < $dataLength; $i++)
+		
+		if($isMasked === true)
 		{
-			$j = $i - $payloadOffset;
-			$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
-		}					
-
-		$decodedData['payload'] = $unmaskedPayload;
+			for($i = $payloadOffset; $i < $dataLength; $i++)
+			{
+				$j = $i - $payloadOffset;
+				$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
+			}
+			$decodedData['payload'] = $unmaskedPayload;
+		}
+		else
+		{
+			$payloadOffset = $payloadOffset - 4;
+			$decodedData['payload'] = substr($data, $payloadOffset);
+		}
 		
 		return $decodedData;
 	}
 }
 
 $WebSocketClient = new WebsocketClient('127.0.0.1', 8000, '/echo');
-var_dump($WebSocketClient->sendData('just a test'));
+var_dump($WebSocketClient->sendData('test', 'ping'));
 unset($WebSocketClient);

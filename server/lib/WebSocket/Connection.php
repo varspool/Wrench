@@ -249,7 +249,7 @@ class Connection
 		$secondByteBinary = sprintf('%08b', ord($data[1]));
 		$opcode = bindec(substr($firstByteBinary, 4, 4));
 		$isMasked = ($secondByteBinary[0] == '1') ? true : false;
-		$payloadLength = ord($data[1]) & 127;		
+		$payloadLength = ord($data[1]) & 127;
 		
 		// @TODO: close connection if unmasked frame is received.		
 		
@@ -295,15 +295,23 @@ class Connection
 			$mask = substr($data, 2, 4);	
 			$payloadOffset = 6;
 		}
-
+		
 		$dataLength = strlen($data);
-		for($i = $payloadOffset; $i < $dataLength; $i++)
+		
+		if($isMasked === true)
 		{
-			$j = $i - $payloadOffset;
-			$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
-		}					
-
-		$decodedData['payload'] = $unmaskedPayload;
+			for($i = $payloadOffset; $i < $dataLength; $i++)
+			{
+				$j = $i - $payloadOffset;
+				$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
+			}
+			$decodedData['payload'] = $unmaskedPayload;
+		}
+		else
+		{
+			$payloadOffset = $payloadOffset - 4;
+			$decodedData['payload'] = substr($data, $payloadOffset);
+		}
 		
 		return $decodedData;
 	}
