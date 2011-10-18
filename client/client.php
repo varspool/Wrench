@@ -4,19 +4,14 @@ error_reporting(E_ALL);
 
 /**
  * Very basic websocket client.
- * Supporting handshake from drafts:
- *	draft-hixie-thewebsocketprotocol-76
- *	draft-ietf-hybi-thewebsocketprotocol-00
- *  draft-ietf-hybi-thewebsocketprotocol-10
+ * Supporting draft hybi-10. 
  * 
  * @author Simon Samtleben <web@lemmingzshadow.net>
- * @version 2011-09-20
+ * @version 2011-10-18
  */
 
 class WebsocketClient
 {
-	const DRAFT = 'hybi10'; // currently supports hypi00 and hybi10
-
 	private $_Socket = null;
 	
 	public function __construct($host, $port, $path = '/')
@@ -30,77 +25,34 @@ class WebsocketClient
 	}
 
 	public function sendData($data)
-	{
-		switch(self::DRAFT)
-		{
-			case 'hybi00':
-				fwrite($this->_Socket, "\x00" . $data . "\xff" ) or die('Error:' . $errno . ':' . $errstr); 
-				$wsData = fread($this->_Socket, 2000);
-				$retData = trim($wsData,"\x00\xff");		
-			break;
-		
-			case 'hybi10':
-				fwrite($this->_Socket, $this->_hybi10EncodeData($data)) or die('Error:' . $errno . ':' . $errstr); 
-				$wsData = fread($this->_Socket, 2000);				
-				$retData = $this->_hybi10DecodeData($wsData);
-			break;
-		}
+	{		
+		fwrite($this->_Socket, $this->_hybi10EncodeData($data)) or die('Error:' . $errno . ':' . $errstr); 
+		$wsData = fread($this->_Socket, 2000);				
+		$retData = $this->_hybi10DecodeData($wsData);		
 		
 		return $retData;
 	}
 
 	private function _connect($host, $port, $path)
-	{
-		switch(self::DRAFT)
-		{
-			case 'hybi00':
-				$key1 = $this->_generateRandomString(32);
-				$key2 = $this->_generateRandomString(32);
-				$key3 = $this->_generateRandomString(8, false, true);		
-
-				$header = "GET " . $path . " HTTP/1.1\r\n";
-				$header.= "Upgrade: WebSocket\r\n";
-				$header.= "Connection: Upgrade\r\n";
-				$header.= "Host: ".$host.":".$port."\r\n";
-				$header.= "Origin: http://foobar.com\r\n";
-				$header.= "Sec-WebSocket-Key1: " . $key1 . "\r\n";
-				$header.= "Sec-WebSocket-Key2: " . $key2 . "\r\n";
-				$header.= "\r\n";
-				$header.= $key3;
-			break;
-		
-			case 'hybi10':
-				$key = base64_encode($this->_generateRandomString(16, false, true));
-				
-				$header = "GET " . $path . " HTTP/1.1\r\n";
-				$header.= "Host: ".$host.":".$port."\r\n";
-				$header.= "Upgrade: websocket\r\n";
-				$header.= "Connection: Upgrade\r\n";
-				$header.= "Sec-WebSocket-Key: " . $key . "\r\n";
-				$header.= "Sec-WebSocket-Origin: http://foobar.com\r\n";				
-				$header.= "Sec-WebSocket-Version: 8\r\n";
-			break;
-		}		
+	{		
+		$key = base64_encode($this->_generateRandomString(16, false, true));				
+		$header = "GET " . $path . " HTTP/1.1\r\n";
+		$header.= "Host: ".$host.":".$port."\r\n";
+		$header.= "Upgrade: websocket\r\n";
+		$header.= "Connection: Upgrade\r\n";
+		$header.= "Sec-WebSocket-Key: " . $key . "\r\n";
+		$header.= "Sec-WebSocket-Origin: http://foobar.com\r\n";				
+		$header.= "Sec-WebSocket-Version: 8\r\n";			
 		
 		$this->_Socket = fsockopen($host, $port, $errno, $errstr, 2); 
 		fwrite($this->_Socket, $header) or die('Error: ' . $errno . ':' . $errstr); 
 		$response = fread($this->_Socket, 2000);		
 
-		if(self::DRAFT === 'hybi10')
-		{
-			preg_match('#Sec-WebSocket-Accept:\s(.*)$#mU', $response, $matches);
-			$keyAccept = trim($matches[1]);
-			$expectedResonse = base64_encode(pack('H*', sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
+		preg_match('#Sec-WebSocket-Accept:\s(.*)$#mU', $response, $matches);
+		$keyAccept = trim($matches[1]);
+		$expectedResonse = base64_encode(pack('H*', sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
 			
-			return ($keyAccept === $expectedResonse) ? true : false;
-		}
-		else
-		{
-			/**
-			 * No key verification for draft hybi00, cause it's already deprecated.
-			 */
-			return true;
-		}	
+		return ($keyAccept === $expectedResonse) ? true : false;		
 	}
 	
 	private function _disconnect()
@@ -132,90 +84,160 @@ class WebsocketClient
 		return $randomString;
 	}
 	
-	private function _hybi10EncodeData($data)
+	private function _hybi10EncodeData($payload, $type = 'text', $masked = true)
 	{
-		$frame = Array();
-		$mask = array(rand(0, 255), rand(0, 255), rand(0, 255), rand(0, 255));
-		$encodedData = '';
-		$frame[0] = 0x81;
-		$dataLength = strlen($data);
-
-		if($dataLength <= 125)
-		{		
-			$frame[1] = $dataLength + 128;		
+		$frameHead = array();
+		$frame = '';
+		$payloadLength = strlen($payload);
+		
+		switch($type)
+		{
+			case 'ping':
+				// first byte indicates FIN, Ping frame (10001001):
+				$frameHead[0] = 137;
+			break;
+		
+			case 'pong':
+				// first byte indicates FIN, Pong frame (10001010):
+				$frameHead[0] = 138;
+			break;
+		
+			case 'text':
+				// first byte indicates FIN, Text-Frame (10000001):
+				$frameHead[0] = 129;				
+			break;			
+		
+			case 'close':
+			break;
+		}
+		
+		// set mask and payload length (using 1, 3 or 9 bytes) 
+		if($payloadLength > 65535)
+		{
+			$payloadLengthBin = str_split(sprintf('%064b', $payloadLength), 8);
+			$frameHead[1] = ($masked === true) ? 255 : 127;
+			for($i = 0; $i < 8; $i++)
+			{
+				$frameHead[$i+2] = bindec($payloadLengthBin[$i]);
+			}
+			// most significant bit MUST be 0 (return false if to much data)
+			if($frameHead[2] > 127)
+			{
+				return false;
+			}
+		}
+		elseif($payloadLength > 125)
+		{
+			$payloadLengthBin = str_split(sprintf('%016b', $payloadLength), 8);
+			$frameHead[1] = ($masked === true) ? 254 : 126;
+			$frameHead[2] = bindec($payloadLengthBin[0]);
+			$frameHead[3] = bindec($payloadLengthBin[1]);
 		}
 		else
 		{
-			$frame[1] = 254;  
-			$frame[2] = $dataLength >> 8;
-			$frame[3] = $dataLength & 0xFF; 
-		}	
-		$frame = array_merge($frame, $mask);	
-		for($i = 0; $i < strlen($data); $i++)
-		{		
-			$frame[] = ord($data[$i]) ^ $mask[$i % 4];
+			$frameHead[1] = ($masked === true) ? $payloadLength + 128 : $payloadLength;
 		}
 
-		for($i = 0; $i < sizeof($frame); $i++)
+		// convert frame-head to string:
+		foreach(array_keys($frameHead) as $i)
 		{
-			$encodedData .= chr($frame[$i]);
-		}		
-		
-		return $encodedData;
+			$frameHead[$i] = chr($frameHead[$i]);
+		}
+		if($masked === true)
+		{
+			// generate a random mask:
+			$mask = array();
+			for($i = 0; $i < 4; $i++)
+			{
+				$mask[$i] = chr(rand(0, 255));
+			}
+			
+			$frameHead = array_merge($frameHead, $mask);			
+		}						
+		$frame = implode('', $frameHead);
+
+		// append payload to frame:
+		$framePayload = array();	
+		for($i = 0; $i < $payloadLength; $i++)
+		{		
+			$frame .= ($masked === true) ? $payload[$i] ^ $mask[$i % 4] : $payload[$i];
+		}
+
+		return $frame;
 	}
 	
 	private function _hybi10DecodeData($data)
 	{		
-		$bytes = $data;
-		$dataLength = '';
+		$payloadLength = '';
 		$mask = '';
-		$coded_data = '';
-		$decodedData = '';
-		$secondByte = sprintf('%08b', ord($bytes[1]));		
-		$masked = ($secondByte[0] == '1') ? true : false;		
-		$dataLength = ($masked === true) ? ord($bytes[1]) & 127 : ord($bytes[1]);
-		if($masked === true)
+		$unmaskedPayload = '';
+		$decodedData = array();
+		
+		// estimate frame type:
+		$firstByteBinary = sprintf('%08b', ord($data[0]));		
+		$secondByteBinary = sprintf('%08b', ord($data[1]));
+		$opcode = bindec(substr($firstByteBinary, 4, 4));
+		$isMasked = ($secondByteBinary[0] == '1') ? true : false;
+		$payloadLength = ord($data[1]) & 127;		
+		
+		// @TODO: close connection if unmasked frame is received.		
+		
+		switch($opcode)
 		{
-			if($dataLength === 126)
-			{
-			   $mask = substr($bytes, 4, 4);
-			   $coded_data = substr($bytes, 8);
-			}
-			elseif($dataLength === 127)
-			{
-				$mask = substr($bytes, 10, 4);
-				$coded_data = substr($bytes, 14);
-			}
-			else
-			{
-				$mask = substr($bytes, 2, 4);		
-				$coded_data = substr($bytes, 6);		
-			}	
-			for($i = 0; $i < strlen($coded_data); $i++)
-			{		
-				$decodedData .= $coded_data[$i] ^ $mask[$i % 4];
-			}
+			// text frame:
+			case 1:
+				$decodedData['type'] = 'text';				
+			break;
+			
+			// connection close frame:
+			case 8:
+				$decodedData['type'] = 'close';
+			break;
+			
+			// ping frame:
+			case 9:
+				$decodedData['type'] = 'ping';				
+			break;
+			
+			// pong frame:
+			case 10:
+				$decodedData['type'] = 'pong';
+			break;
+			
+			default:
+				// @TODO: Close connection on unknown opcode.
+			break;
+		}
+		
+		if($payloadLength === 126)
+		{
+		   $mask = substr($data, 4, 4);
+		   $payloadOffset = 8;
+		}
+		elseif($payloadLength === 127)
+		{
+			$mask = substr($data, 10, 4);
+			$payloadOffset = 14;
 		}
 		else
 		{
-			if($dataLength === 126)
-			{		   
-			   $decodedData = substr($bytes, 4);
-			}
-			elseif($dataLength === 127)
-			{			
-				$decodedData = substr($bytes, 10);
-			}
-			else
-			{				
-				$decodedData = substr($bytes, 2);		
-			}		
+			$mask = substr($data, 2, 4);	
+			$payloadOffset = 6;
 		}
+
+		$dataLength = strlen($data);
+		for($i = $payloadOffset; $i < $dataLength; $i++)
+		{
+			$j = $i - $payloadOffset;
+			$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
+		}					
+
+		$decodedData['payload'] = $unmaskedPayload;
 		
 		return $decodedData;
 	}
 }
 
 $WebSocketClient = new WebsocketClient('127.0.0.1', 8000, '/echo');
-echo $WebSocketClient->sendData('foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar foo bar ');
+var_dump($WebSocketClient->sendData('just a test'));
 unset($WebSocketClient);

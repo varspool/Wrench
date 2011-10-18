@@ -1,5 +1,4 @@
 <?php
-
 namespace WebSocket;
 
 /**
@@ -114,11 +113,12 @@ class Connection
 			break;
 		
 			case 'ping':
-				$this->log('Ping received.');
+				$this->send($decodedData['payload'], 'pong', false);
+				$this->log('Ping? Pong!');
 			break;
 		
 			case 'pong':
-				$this->log('pong received.');
+				// server currently not sending pings, so no pong should be received.
 			break;
 		
 			case 'text':
@@ -129,9 +129,9 @@ class Connection
 		return true;
     }   
     
-    public function send($payload, $type = 'text')
+    public function send($payload, $type = 'text', $masked = true)
     {		
-		$encodedData = $this->hybi10Encode($payload, $type);
+		$encodedData = $this->hybi10Encode($payload, $type, $masked);
 		if(!@socket_write($this->socket, $encodedData, strlen($encodedData)))
 		{
 			@socket_close($this->socket);
@@ -155,83 +155,84 @@ class Connection
         $this->server->log('[client ' . $this->ip . ':' . $this->port . '] ' . $message, $type);
     }
 	
-	private function hybi10Encode($payload, $type = 'text')
+	private function hybi10Encode($payload, $type = 'text', $masked = true)
 	{
 		$frameHead = array();
 		$frame = '';
+		$payloadLength = strlen($payload);
 		
 		switch($type)
 		{
 			case 'ping':
-				$this->log('Sending ping.');
-				return chr(137) . chr(4) . 'ping';
+				// first byte indicates FIN, Ping frame (10001001):
+				$frameHead[0] = 137;
 			break;
 		
 			case 'pong':
-				$this->log('Sending pong.');				
+				// first byte indicates FIN, Pong frame (10001010):
+				$frameHead[0] = 138;
 			break;
 		
 			case 'text':
-				$mask = array();
-				$payloadLength = strlen($payload);
-
-				// generate a random mask:
-				for($i = 0; $i < 4; $i++)
-				{
-					$mask[$i] = chr(rand(0, 255));
-				}
-
-				// first bit indicates FIN, Text-Frame:
-				$frameHead[0] = 0x81;
-
-				// set payload length (using 1, 3 or 9 bytes)
-				if($payloadLength > 65535)
-				{
-					$payloadLengthBin = str_split(sprintf('%064b', $payloadLength), 8);
-					$frameHead[1] = 255;
-					for($i = 0; $i < 8; $i++)
-					{
-						$frameHead[$i+2] = bindec($payloadLengthBin[$i]);
-					}
-					// most significant bit MUST be 0 (return false if to much data)
-					if($frameHead[2] > 127)
-					{
-						return false;
-					}
-				}
-				elseif($payloadLength > 125)
-				{
-
-					$payloadLengthBin = str_split(sprintf('%016b', $payloadLength), 8);
-					$frameHead[1] = 254;		
-					$frameHead[2] = bindec($payloadLengthBin[0]);
-					$frameHead[3] = bindec($payloadLengthBin[1]);
-				}
-				else
-				{
-					$frameHead[1] = $payloadLength + 128;
-				}
-
-				// convert frame-head to string:
-				foreach(array_keys($frameHead) as $i)
-				{
-					$frameHead[$i] = chr($frameHead[$i]);
-				}	
-				$frameHead = array_merge($frameHead, $mask);
-				$frame = implode('', $frameHead);
-
-				// mask payload data and append to frame:
-				$framePayload = array();	
-				for($i = 0; $i < $payloadLength; $i++)
-				{		
-					$frame .= $payload[$i] ^ $mask[$i % 4];
-				}
+				// first byte indicates FIN, Text-Frame (10000001):
+				$frameHead[0] = 129;				
 			break;			
 		
 			case 'close':
 			break;
 		}
+		
+		// set mask and payload length (using 1, 3 or 9 bytes) 
+		if($payloadLength > 65535)
+		{
+			$payloadLengthBin = str_split(sprintf('%064b', $payloadLength), 8);
+			$frameHead[1] = ($masked === true) ? 255 : 127;
+			for($i = 0; $i < 8; $i++)
+			{
+				$frameHead[$i+2] = bindec($payloadLengthBin[$i]);
+			}
+			// most significant bit MUST be 0 (return false if to much data)
+			if($frameHead[2] > 127)
+			{
+				return false;
+			}
+		}
+		elseif($payloadLength > 125)
+		{
+			$payloadLengthBin = str_split(sprintf('%016b', $payloadLength), 8);
+			$frameHead[1] = ($masked === true) ? 254 : 126;
+			$frameHead[2] = bindec($payloadLengthBin[0]);
+			$frameHead[3] = bindec($payloadLengthBin[1]);
+		}
+		else
+		{
+			$frameHead[1] = ($masked === true) ? $payloadLength + 128 : $payloadLength;
+		}
+
+		// convert frame-head to string:
+		foreach(array_keys($frameHead) as $i)
+		{
+			$frameHead[$i] = chr($frameHead[$i]);
+		}
+		if($masked === true)
+		{
+			// generate a random mask:
+			$mask = array();
+			for($i = 0; $i < 4; $i++)
+			{
+				$mask[$i] = chr(rand(0, 255));
+			}
 			
+			$frameHead = array_merge($frameHead, $mask);			
+		}						
+		$frame = implode('', $frameHead);
+
+		// append payload to frame:
+		$framePayload = array();	
+		for($i = 0; $i < $payloadLength; $i++)
+		{		
+			$frame .= ($masked === true) ? $payload[$i] ^ $mask[$i % 4] : $payload[$i];
+		}
 
 		return $frame;
 	}
@@ -248,40 +249,15 @@ class Connection
 		$secondByteBinary = sprintf('%08b', ord($data[1]));
 		$opcode = bindec(substr($firstByteBinary, 4, 4));
 		$isMasked = ($secondByteBinary[0] == '1') ? true : false;
-		$payloadLength = ($isMasked === true) ? ord($data[1]) & 127 : ord($data[1]);
+		$payloadLength = ord($data[1]) & 127;		
 		
-		// @TODO: close connection if unmasked frame is received.
+		// @TODO: close connection if unmasked frame is received.		
 		
 		switch($opcode)
 		{
 			// text frame:
 			case 1:
 				$decodedData['type'] = 'text';				
-				
-				if($payloadLength === 126)
-				{
-				   $mask = substr($data, 4, 4);
-				   $payloadOffset = 8;
-				}
-				elseif($payloadLength === 127)
-				{
-					$mask = substr($data, 10, 4);
-					$payloadOffset = 14;
-				}
-				else
-				{
-					$mask = substr($data, 2, 4);	
-					$payloadOffset = 6;
-				}
-
-				$dataLength = strlen($data);
-				for($i = $payloadOffset; $i < $dataLength; $i++)
-				{
-					$j = $i - $payloadOffset;
-					$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
-				}					
-				
-				$decodedData['payload'] = $unmaskedPayload;
 			break;
 			
 			// connection close frame:
@@ -291,7 +267,7 @@ class Connection
 			
 			// ping frame:
 			case 9:
-				$decodedData['type'] = 'ping';
+				$decodedData['type'] = 'ping';				
 			break;
 			
 			// pong frame:
@@ -303,6 +279,31 @@ class Connection
 				// @TODO: Close connection on unknown opcode.
 			break;
 		}
+		
+		if($payloadLength === 126)
+		{
+		   $mask = substr($data, 4, 4);
+		   $payloadOffset = 8;
+		}
+		elseif($payloadLength === 127)
+		{
+			$mask = substr($data, 10, 4);
+			$payloadOffset = 14;
+		}
+		else
+		{
+			$mask = substr($data, 2, 4);	
+			$payloadOffset = 6;
+		}
+
+		$dataLength = strlen($data);
+		for($i = $payloadOffset; $i < $dataLength; $i++)
+		{
+			$j = $i - $payloadOffset;
+			$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
+		}					
+
+		$decodedData['payload'] = $unmaskedPayload;
 		
 		return $decodedData;
 	}

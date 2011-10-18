@@ -16,9 +16,7 @@ class ChatApplication extends Application
 	public function onConnect($client)
     {
 		$id = $client->getClientId();
-        $this->_clients[$id] = $client;
-		
-		$this->_clients[$id]->send('', 'ping');
+        $this->_clients[$id] = $client;		
     }
 
     public function onDisconnect($client)
