@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="js/jquery.min.js"></script>	
+    <script type="text/javascript">	
+		$(document).ready(function() {		
+			log = function(msg){$('#log').append(msg + '<br/>')};			
+			var socket;
+			if ( $.browser.mozilla )
+			{
+				socket = new MozWebSocket('ws://localhost:8000/echo');
+			}
+			else
+			{
+				socket = new WebSocket('ws://localhost:8000/echo');
+			}
+			
+			socket.onopen = function(msg){
+				$('#status').removeClass().addClass('online').html('online');				
+			};
+			socket.onmessage = function(msg){				
+				log(msg.data);
+			};
+			socket.close = function(msg){
+				$('#status').removeClass().addClass('offline').html('offline');
+			};			
+			
+			$('#send').click(function(){				
+				socket.send($('#message').val());
+				$('#message').val("");
+			});
+		});
+	</script>
+<meta charset=utf-8 />
+<style type="text/css">
+
+body { background: #f1f1f1; padding-top: 65px; text-align: center; font-family: Arial, Helvetica, sans-serif; text-align: center; font-size: 16px; line-height: 25px; color: #444; }
+a, a:hover { color: #169; }
+p {  margin: 0; padding: 0 0 21px 0; }
+#container { text-align: left; width: 580px; background: #fff; position: relative; margin: 0 auto; padding: 40px; border: 1px solid #ddd; border-radius: 10px; -moz-border-radius: 10px; }
+h1 { font-size: 30px; color: #333; font-weight: normal; margin: 0 0 20px 0; padding: 0; }
+#log { margin: 20px 0 0 0; padding: 5px; border: 1px solid #ccc; height: 200px;
+overflow: auto; }
+#status { float: right; padding: 0 10px; border-radius: 5px; -moz-border-radius: 5px; }
+.offline { background: #ddd; color: #000; }
+.online { background: #093; color: #fff; }
+.error { background: #930; color: #fff; }
+.connecting { background: #fc0; color: #000; }
+
+</style>
+<title>WebPush Client</title>
+</head>
+<body>
+    <div id="container">
+        <h1>WebPush Client</h1>		
+        <input id="message" placeholder="Message" type="text" />
+        <button id="send">Send</button>
+        <span id="status" class="offline">offline</span>
+        <div id="log">
+        </div>
+    </div>
+</body>
+</html>​
