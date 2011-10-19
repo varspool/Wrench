@@ -21,7 +21,7 @@
 			socket.onmessage = function(msg){				
 				log(msg.data);
 			};
-			socket.close = function(msg){
+			socket.onclose = function(msg){
 				$('#status').removeClass().addClass('offline').html('offline');
 			};			
 			

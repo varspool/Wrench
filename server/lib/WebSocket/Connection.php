@@ -91,9 +91,9 @@ class Connection
     }
     
     public function onData($data)
-    {
+    {		
         if ($this->handshaked)
-		{
+		{			
             $this->handle($data);
         }
 		else
@@ -104,13 +104,13 @@ class Connection
     
     private function handle($data)
     {		
-		$decodedData = $this->hybi10Decode($data);
+		$decodedData = $this->hybi10Decode($data);		
 		
 		switch($decodedData['type'])
 		{
-			case 'error':
-				return false;
-			break;
+			case 'text':
+				$this->application->onData($decodedData['payload'], $this);
+			break;			
 		
 			case 'ping':
 				$this->send($decodedData['payload'], 'pong', false);
@@ -121,8 +121,8 @@ class Connection
 				// server currently not sending pings, so no pong should be received.
 			break;
 		
-			case 'text':
-				$this->application->onData($decodedData['payload'], $this);
+			case 'close':
+				$this->close();
 			break;
 		}
 		
@@ -131,15 +131,55 @@ class Connection
     
     public function send($payload, $type = 'text', $masked = true)
     {		
-		$encodedData = $this->hybi10Encode($payload, $type, $masked);
+		$encodedData = $this->hybi10Encode($payload, $type, $masked);		
 		if(!@socket_write($this->socket, $encodedData, strlen($encodedData)))
 		{
 			@socket_close($this->socket);
 			$this->socket = false;
 		}
     }
-    
-    public function onDisconnect()
+	
+	public function close($statusCode = 1000)
+	{
+		$payload = str_split(sprintf('%016b', $statusCode), 8);
+		$payload[0] = chr(bindec($payload[0]));
+		$payload[1] = chr(bindec($payload[1]));
+		$payload = implode('', $payload);
+
+		switch($statusCode)
+		{
+			case 1000:
+				$payload .= 'normal closure';
+			break;
+		
+			case 1001:
+				$payload .= 'going away';
+			break;
+		
+			case 1002:
+				$payload .= 'protocol error';
+			break;
+		
+			case 1003:
+				$payload .= 'unknown data (opcode)';
+			break;
+		
+			case 1004:
+				$payload .= 'frame too large';
+			break;		
+		
+			case 1007:
+				$payload .= 'utf8 expected';
+			break;
+		}
+		$this->send($payload, 'close', false);
+		
+		socket_close($this->socket);
+		$this->server->removeClient($this->socket);
+	}
+
+
+	public function onDisconnect()
     {
         $this->log('Disconnected', 'info');
         
@@ -162,7 +202,17 @@ class Connection
 		$payloadLength = strlen($payload);
 		
 		switch($type)
-		{
+		{		
+			case 'text':
+				// first byte indicates FIN, Text-Frame (10000001):
+				$frameHead[0] = 129;				
+			break;			
+		
+			case 'close':
+				// first byte indicates FIN, Close Frame(10001000):
+				$frameHead[0] = 136;
+			break;
+		
 			case 'ping':
 				// first byte indicates FIN, Ping frame (10001001):
 				$frameHead[0] = 137;
@@ -171,14 +221,6 @@ class Connection
 			case 'pong':
 				// first byte indicates FIN, Pong frame (10001010):
 				$frameHead[0] = 138;
-			break;
-		
-			case 'text':
-				// first byte indicates FIN, Text-Frame (10000001):
-				$frameHead[0] = 129;				
-			break;			
-		
-			case 'close':
 			break;
 		}
 		
@@ -251,7 +293,11 @@ class Connection
 		$isMasked = ($secondByteBinary[0] == '1') ? true : false;
 		$payloadLength = ord($data[1]) & 127;
 		
-		// @TODO: close connection if unmasked frame is received.		
+		// close connection if unmasked frame is received:
+		if($isMasked === false)
+		{
+			$this->close(1002);
+		}
 		
 		switch($opcode)
 		{
@@ -276,7 +322,8 @@ class Connection
 			break;
 			
 			default:
-				// @TODO: Close connection on unknown opcode.
+				// Close connection on unknown opcode:
+				$this->close(1003);
 			break;
 		}
 		

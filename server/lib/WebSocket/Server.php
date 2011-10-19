@@ -33,7 +33,7 @@ class Server extends Socket
                         $this->log('Socket error: ' . socket_strerror(socket_last_error($ressource)));
                         continue;
                     } else {
-                        $client = new Connection($this, $ressource);
+                        $client = new Connection($this, $ressource);						
                         $this->clients[$ressource] = $client;
                         $this->allsockets[] = $ressource;
                     }
@@ -72,4 +72,13 @@ class Server extends Socket
     {
         echo date('Y-m-d H:i:s') . ' [' . ($type ? $type : 'error') . '] ' . $message . PHP_EOL;
     }
+	
+	public function removeClient($resource)
+	{
+		$client = $this->clients[$resource];
+		unset($this->clients[$resource]);
+		$index = array_search($resource, $this->allsockets);
+		unset($this->allsockets[$index]);
+		unset($client);
+	}
 }

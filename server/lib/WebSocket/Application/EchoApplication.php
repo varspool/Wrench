@@ -9,24 +9,24 @@ namespace WebSocket\Application;
  */
 class EchoApplication extends Application
 {
-    private $clients = array();
-
-    public function onConnect($client)
+    private $_clients = array();   
+	
+	public function onConnect($client)
     {
-        $this->clients[] = $client;
+		$id = $client->getClientId();
+        $this->_clients[$id] = $client;		
     }
 
     public function onDisconnect($client)
     {
-        $key = array_search($client, $this->clients);
-        if ($key) {
-            unset($this->clients[$key]);
-        }
+        $id = $client->getClientId();		
+		unset($this->_clients[$id]);     
     }
 
     public function onData($data, $client)
-    {
-        foreach ($this->clients as $sendto) {
+    {		
+        foreach($this->_clients as $sendto)
+		{
             $sendto->send($data);
         }
     }
