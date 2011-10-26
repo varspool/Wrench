@@ -9,7 +9,7 @@ namespace WebSocket;
  */
 class Connection
 {
-    private $server;    
+    private $server;
     private $socket;
     private $handshaked = false;
     private $application = null;	
@@ -20,16 +20,16 @@ class Connection
     
     public function __construct($server, $socket)
     {
-        $this->server = $server;
-        $this->socket = $socket;
-		
+		$this->server = $server;
+		$this->socket = $socket;
+
 		// set some client-information:
 		socket_getpeername($this->socket, $ip, $port);
 		$this->ip = $ip;
 		$this->port = $port;
 		$this->connectionId = md5($ip . $port . spl_object_hash($this));
-		
-        $this->log('Connected');
+
+		$this->log('Connected');
     }
     
     private function handshake($data)
@@ -121,8 +121,9 @@ class Connection
 				// server currently not sending pings, so no pong should be received.
 			break;
 		
-			case 'close':
+			case 'close':			
 				$this->close();
+				$this->log('Disconnected');
 			break;
 		}
 		
@@ -131,10 +132,10 @@ class Connection
     
     public function send($payload, $type = 'text', $masked = true)
     {		
-		$encodedData = $this->hybi10Encode($payload, $type, $masked);		
-		if(!@socket_write($this->socket, $encodedData, strlen($encodedData)))
+		$encodedData = $this->hybi10Encode($payload, $type, $masked);
+		if(!socket_write($this->socket, $encodedData, strlen($encodedData)))
 		{
-			@socket_close($this->socket);
+			socket_close($this->socket);
 			$this->socket = false;
 		}
     }
@@ -174,6 +175,10 @@ class Connection
 		}
 		$this->send($payload, 'close', false);
 		
+		if($this->application)
+		{
+            $this->application->onDisconnect($this);
+        }
 		socket_close($this->socket);
 		$this->server->removeClient($this->socket);
 	}
@@ -233,9 +238,10 @@ class Connection
 			{
 				$frameHead[$i+2] = bindec($payloadLengthBin[$i]);
 			}
-			// most significant bit MUST be 0 (return false if to much data)
+			// most significant bit MUST be 0 (close connection if frame too big)
 			if($frameHead[2] > 127)
 			{
+				$this->close(1004);
 				return false;
 			}
 		}
