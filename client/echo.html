@@ -6,15 +6,14 @@
 		$(document).ready(function() {		
 			log = function(msg){$('#log').append(msg + '<br/>')};			
 			var socket;
-			if ( $.browser.mozilla )
+			if($.browser.mozilla)
 			{
 				socket = new MozWebSocket('ws://localhost:8000/echo');
 			}
 			else
 			{
 				socket = new WebSocket('ws://localhost:8000/echo');
-			}
-			
+			}			
 			socket.onopen = function(msg){
 				$('#status').removeClass().addClass('online').html('online');				
 			};
@@ -24,10 +23,13 @@
 			socket.onclose = function(msg){
 				$('#status').removeClass().addClass('offline').html('offline');
 			};			
-			
-			$('#send').click(function(){				
+			$('#send').click(function(){
 				socket.send($('#message').val());
 				$('#message').val("");
+			});
+			
+			$('#disconnect').click(function(){				
+				socket.close();				
 			});
 		});
 	</script>
@@ -56,8 +58,8 @@ overflow: auto; }
         <input id="message" placeholder="Message" type="text" />
         <button id="send">Send</button>
         <span id="status" class="offline">offline</span>
-        <div id="log">
-        </div>
+        <div id="log"></div>
+		<button id="disconnect">Disconnect</button>
     </div>
 </body>
 </html>​

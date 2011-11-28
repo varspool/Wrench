@@ -8,6 +8,5 @@ $classLoader = new SplClassLoader('WebSocket', __DIR__ . '/lib');
 $classLoader->register();
 
 $server = new \WebSocket\Server('localhost', 8000);
-$server->registerApplication('echo', \WebSocket\Application\EchoApplication::getInstance());
-$server->registerApplication('chat', \WebSocket\Application\ChatApplication::getInstance());
+$server->registerApplication('demo', \WebSocket\Application\DemoApplication::getInstance());
 $server->run();

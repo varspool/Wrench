@@ -66,7 +66,7 @@ class Connection
             }
         }
 		
-		// check for supported websocket version:
+		// check for supported websocket version:		
 		if(!isset($headers['Sec-WebSocket-Version']) || $headers['Sec-WebSocket-Version'] < 6)
 		{
 			$this->log('Unsupported websocket version.');
@@ -85,7 +85,7 @@ class Connection
 		socket_write($this->socket, $response, strlen($response));        
 		$this->handshaked = true;
 		$this->log('Handshake sent');
-		$this->application->onConnect($this);
+		$this->application->onConnect($this);		
 		
 		return true;			
     }
@@ -103,7 +103,7 @@ class Connection
     }
     
     private function handle($data)
-    {		
+    {	
 		$decodedData = $this->hybi10Decode($data);		
 		
 		switch($decodedData['type'])

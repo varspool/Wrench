@@ -28,11 +28,42 @@ abstract class Application
         return self::$instances[$calledClassName];
     }
 
-    public function onConnect($connection) { }
+    abstract public function onConnect($connection);
 
-    public function onDisconnect($connection) { }
-    
-    public function onTick() { }
+	abstract public function onDisconnect($connection);
 
-    public function onData($data, $client) { }
+	abstract public function onData($data, $client);	
+
+	// Common methods:
+	
+	protected function _decodeData($data)
+	{
+		$decodedData = json_decode($data, true);
+		if($decodedData === null)
+		{
+			return false;
+		}
+		
+		if(isset($decodedData['action'], $decodedData['data']) === false)
+		{
+			return false;
+		}
+		
+		return $decodedData;
+	}
+	
+	protected function _encodeData($action, $data)
+	{
+		if(empty($action))
+		{
+			return false;
+		}
+		
+		$payload = array(
+			'action' => $action,
+			'data' => $data
+		);
+		
+		return json_encode($payload);
+	}
 }
