@@ -11,6 +11,9 @@ class Server extends Socket
 {   
     private $clients = array();
     private $applications = array();
+	
+	private $_checkOrigin = true;
+	private $_allowedOrigins = array();
 
     public function __construct($host = 'localhost', $port = 8000, $max = 100)
     {
@@ -36,18 +39,18 @@ class Server extends Socket
 					else
 					{
 						$client = new Connection($this, $ressource);						
-						$this->clients[$ressource] = $client;
+						$this->clients[(int)$ressource] = $client;
 						$this->allsockets[] = $ressource;
 					}
 				}
 				else
 				{
-					$client = $this->clients[$socket];
+					$client = $this->clients[(int)$socket];
 					$bytes = socket_recv($socket, $data, 4096, 0);
 					if($bytes === 0)
 					{
 						$client->onDisconnect();
-						unset($this->clients[$socket]);
+						unset($this->clients[(int)$socket]);
 						$index = array_search($socket, $this->allsockets);
 						unset($this->allsockets[$index]);
 						unset($client);
@@ -85,10 +88,48 @@ class Server extends Socket
 	
 	public function removeClient($resource)
 	{
-		$client = $this->clients[$resource];
-		unset($this->clients[$resource]);
+		$client = $this->clients[(int)$resource];
+		unset($this->clients[(int)$resource]);
 		$index = array_search($resource, $this->allsockets);
 		unset($this->allsockets[$index]);
 		unset($client);
+	}
+	
+	public function setCheckOrigin($doOriginCheck)
+	{
+		if(is_bool($doOriginCheck) === false)
+		{
+			return false;
+		}
+		$this->_checkOrigin = $doOriginCheck;
+		return true;
+	}
+	
+	public function getCheckOrigin()
+	{
+		return $this->_checkOrigin;
+	}
+
+
+	public function setAllowedOrigin($domain)
+	{
+		$domain = str_replace('http://', '', $domain);
+		$domain = str_replace('www.', '', $domain);
+		$domain = (strpos($domain, '/') !== false) ? substr($domain, 0, strpos($domain, '/')) : $domain;
+		if(empty($domain))
+		{
+			return false;
+		}
+		$this->_allowedOrigins[$domain] = true;		
+		return true;
+	}
+	
+	public function checkOrigin($domain)
+	{
+		$domain = str_replace('http://', '', $domain);
+		$domain = str_replace('www.', '', $domain);
+		$domain = str_replace('/', '', $domain);
+		
+		return isset($this->_allowedOrigins[$domain]);
 	}
 }

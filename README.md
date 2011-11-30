@@ -9,10 +9,15 @@ ATTENTION: Totally beta and just for testing/development!
 
 ## Server example
 
-This creates a server on localhost:8000 with one Application that listens on `ws://localhost:8000/echo`:
+This creates a server on localhost:8000 with one Application that listens on `ws://localhost:8000/demo`:
 
 	$server = new \WebSocket\Server('localhost', 8000);
-	$server->registerApplication('echo', \WebSocket\Application\EchoApplication::getInstance());
+
+	// server settings:
+	$server->setCheckOrigin(true);
+	$server->setAllowedOrigin('foo.lh');
+
+	$server->registerApplication('demo', \WebSocket\Application\DemoApplication::getInstance());
 	$server->run();
 
 ## Libraries used

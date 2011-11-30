@@ -72,7 +72,33 @@ class Connection
 			$this->log('Unsupported websocket version.');
             socket_close($this->socket);
             return false;
-		}			
+		}
+		
+		// check origin:
+		if($this->server->getCheckOrigin() === true)
+		{
+			if(isset($headers['Sec-WebSocket-Origin']) === false)
+			{
+				$this->log('No origin provided.');
+				$this->close(1002);
+				return false;
+			}
+			
+			if(empty($headers['Sec-WebSocket-Origin']))
+			{
+				$this->log('Empty origin provided.');
+				$this->close(1002);
+				return false;
+			}
+			
+			if($this->server->checkOrigin($headers['Sec-WebSocket-Origin']) === false)
+			{
+				$this->log('Invalid origin provided.');
+				$this->close(1002);
+				return false;
+			}
+		}
+		
 		
 		// do handyshake: (hybi-10)
 		$secKey = $headers['Sec-WebSocket-Key'];
