@@ -55,6 +55,7 @@ h1 {
 #status {
 	float: right;
 	padding: 0 10px;
+	cursor: pointer;
 	border-radius: 5px;
 		-moz-border-radius: 5px;
 }

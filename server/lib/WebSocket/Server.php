@@ -11,9 +11,13 @@ class Server extends Socket
 {   
     private $clients = array();
     private $applications = array();
+	private $_ipStorage = array();
 	
+	// server settings:
 	private $_checkOrigin = true;
 	private $_allowedOrigins = array();
+	private $_maxConnectionsPerIp = 5;
+	private $_maxRequestsPerMinute = 20; // @todo
 
     public function __construct($host = 'localhost', $port = 8000, $max = 100)
     {
@@ -41,6 +45,11 @@ class Server extends Socket
 						$client = new Connection($this, $ressource);						
 						$this->clients[(int)$ressource] = $client;
 						$this->allsockets[] = $ressource;
+						$this->_addIpToStoragee($client->getClientIp());
+						if($this->_checkMaxConnectionsPerIp($client->getClientIp()) === false)
+						{
+							$client->onDisconnect();
+						}						
 					}
 				}
 				else
@@ -49,11 +58,7 @@ class Server extends Socket
 					$bytes = socket_recv($socket, $data, 4096, 0);
 					if($bytes === 0)
 					{
-						$client->onDisconnect();
-						unset($this->clients[(int)$socket]);
-						$index = array_search($socket, $this->allsockets);
-						unset($this->allsockets[$index]);
-						unset($client);
+						$client->onDisconnect();						
 					}
 					else
 					{
@@ -89,11 +94,64 @@ class Server extends Socket
 	public function removeClient($resource)
 	{
 		$client = $this->clients[(int)$resource];
+		$this->_removeIpFromStorage($client->getClientIp());
 		unset($this->clients[(int)$resource]);
 		$index = array_search($resource, $this->allsockets);
 		unset($this->allsockets[$index]);
-		unset($client);
+		unset($client);		
 	}
+	
+	public function checkOrigin($domain)
+	{
+		$domain = str_replace('http://', '', $domain);
+		$domain = str_replace('www.', '', $domain);
+		$domain = str_replace('/', '', $domain);
+		
+		return isset($this->_allowedOrigins[$domain]);
+	}
+	
+	private function _addIpToStoragee($ip)
+	{
+		if(isset($this->_ipStorage[$ip]))
+		{
+			$this->_ipStorage[$ip]++;
+		}
+		else
+		{
+			$this->_ipStorage[$ip] = 1;
+		}		
+	}
+	
+	private function _removeIpFromStorage($ip)
+	{
+		if(!isset($this->_ipStorage[$ip]))
+		{
+			return false;
+		}
+		if($this->_ipStorage[$ip] === 1)
+		{
+			unset($this->_ipStorage[$ip]);
+			return true;
+		}
+		$this->_ipStorage[$ip]--;
+		
+		return true;
+	}
+	
+	private function _checkMaxConnectionsPerIp($ip)
+	{
+		if(empty($ip))
+		{
+			return false;
+		}
+		if(!isset ($this->_ipStorage[$ip]))
+		{
+			return true;
+		}
+		return ($this->_ipStorage[$ip] > $this->_maxConnectionsPerIp) ? false : true;
+	}
+
+	// Getter/Setter Methods...
 	
 	public function setCheckOrigin($doOriginCheck)
 	{
@@ -124,12 +182,28 @@ class Server extends Socket
 		return true;
 	}
 	
-	public function checkOrigin($domain)
+	public function setMaxConnectionsPerIp($limit)
 	{
-		$domain = str_replace('http://', '', $domain);
-		$domain = str_replace('www.', '', $domain);
-		$domain = str_replace('/', '', $domain);
-		
-		return isset($this->_allowedOrigins[$domain]);
+		if(!is_int($limit))
+		{
+			return false;
+		}
+		$this->_maxConnectionsPerIp = $limit;
+		return true;
+	}
+	
+	public function getMaxConnectionsPerIp()
+	{
+		return $this->_maxConnectionsPerIp;
+	}
+	
+	public function setMaxRequestsPerMinute($limit)
+	{
+		if(!is_int($limit))
+		{
+			return false;
+		}
+		$this->_maxRequestsPerMinute = $limit;
+		return true;
 	}
 }

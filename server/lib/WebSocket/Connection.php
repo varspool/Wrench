@@ -213,12 +213,7 @@ class Connection
 	public function onDisconnect()
     {
         $this->log('Disconnected', 'info');
-        
-        if($this->application)
-		{
-            $this->application->onDisconnect($this);
-        }		
-        socket_close($this->socket);
+        $this->close(1000);
     }     
 
     public function log($message, $type = 'info')

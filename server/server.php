@@ -12,6 +12,7 @@ $server = new \WebSocket\Server('localhost', 8000);
 // server settings:
 $server->setCheckOrigin(true);
 $server->setAllowedOrigin('foo.lh');
+$server->setMaxConnectionsPerIp(5);
 
 
 $server->registerApplication('demo', \WebSocket\Application\DemoApplication::getInstance());

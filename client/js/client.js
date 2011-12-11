@@ -11,7 +11,7 @@ $(document).ready(function() {
 	else
 	{
 		socket = new WebSocket('ws://localhost:8000/demo');
-	}
+	}	
 
 	socket.onopen = function(msg){
 		$('#status').removeClass().addClass('online').html('online');				
@@ -30,5 +30,9 @@ $(document).ready(function() {
 		payload['action'] = $('#action').val();
 		payload['data'] = $('#data').val();				
 		socket.send(JSON.stringify(payload));
+	});	
+	
+	$('#status').click(function(){
+		socket.close();		
 	});
 });
