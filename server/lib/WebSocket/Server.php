@@ -12,12 +12,14 @@ class Server extends Socket
     private $clients = array();
     private $applications = array();
 	private $_ipStorage = array();
+	private $_requestStorage = array();
 	
 	// server settings:
 	private $_checkOrigin = true;
 	private $_allowedOrigins = array();
+	private $_maxClients = 30;
 	private $_maxConnectionsPerIp = 5;
-	private $_maxRequestsPerMinute = 20; // @todo
+	private $_maxRequestsPerMinute = 50;
 
     public function __construct($host = 'localhost', $port = 8000, $max = 100)
     {
@@ -45,10 +47,18 @@ class Server extends Socket
 						$client = new Connection($this, $ressource);						
 						$this->clients[(int)$ressource] = $client;
 						$this->allsockets[] = $ressource;
+						
+						if(count($this->clients) > $this->_maxClients)
+						{
+							$client->onDisconnect();
+							continue;
+						}
+						
 						$this->_addIpToStoragee($client->getClientIp());
 						if($this->_checkMaxConnectionsPerIp($client->getClientIp()) === false)
 						{
 							$client->onDisconnect();
+							continue;
 						}						
 					}
 				}
@@ -56,12 +66,12 @@ class Server extends Socket
 				{
 					$client = $this->clients[(int)$socket];
 					$bytes = socket_recv($socket, $data, 4096, 0);
-					if($bytes === 0)
+					if($bytes === 0 || $this->_checkRequestLimit($client->getClientId()) === false)
 					{
 						$client->onDisconnect();						
 					}
 					else
-					{
+					{						
 						$client->onData($data);
 					}
 				}
@@ -94,11 +104,16 @@ class Server extends Socket
 	public function removeClient($resource)
 	{
 		$client = $this->clients[(int)$resource];
+		$clientId = $client->getClientId();
 		$this->_removeIpFromStorage($client->getClientIp());
+		if(isset($this->_requestStorage[$clientId]))
+		{
+			unset($this->_requestStorage[$clientId]);
+		}
 		unset($this->clients[(int)$resource]);
 		$index = array_search($resource, $this->allsockets);
 		unset($this->allsockets[$index]);
-		unset($client);		
+		unset($client, $clientId);		
 	}
 	
 	public function checkOrigin($domain)
@@ -149,6 +164,38 @@ class Server extends Socket
 			return true;
 		}
 		return ($this->_ipStorage[$ip] > $this->_maxConnectionsPerIp) ? false : true;
+	}
+	
+	private function _checkRequestLimit($clientId)
+	{
+		// no data in storage - no danger:
+		if(!isset($this->_requestStorage[$clientId]))
+		{
+			$this->_requestStorage[$clientId] = array(
+				'lastRequest' => time(),
+				'totalRequests' => 1
+			);
+			return true;
+		}
+		
+		// time since last request > 1min - no danger:
+		if(time() - $this->_requestStorage[$clientId]['lastRequest'] > 60)
+		{
+			$this->_requestStorage[$clientId] = array(
+				'lastRequest' => time(),
+				'totalRequests' => 1
+			);
+			return true;
+		}
+		
+		// did requests in last minute - check limits:
+		if($this->_requestStorage[$clientId]['totalRequests'] > $this->_maxRequestsPerMinute)
+		{
+			return false;
+		}
+		
+		$this->_requestStorage[$clientId]['totalRequests']++;
+		return true;
 	}
 
 	// Getter/Setter Methods...
@@ -205,5 +252,20 @@ class Server extends Socket
 		}
 		$this->_maxRequestsPerMinute = $limit;
 		return true;
+	}
+	
+	public function setMaxClients($max)
+	{
+		if((int)$max === 0)
+		{
+			return false;
+		}
+		$this->_maxClients = (int)$max;
+		return true;
+	}
+	
+	public function getMaxClients()
+	{
+		return $this->_maxClients;
 	}
 }

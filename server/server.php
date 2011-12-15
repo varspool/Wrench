@@ -10,9 +10,11 @@ $classLoader->register();
 $server = new \WebSocket\Server('localhost', 8000);
 
 // server settings:
+$server->setMaxClients(20);
 $server->setCheckOrigin(true);
 $server->setAllowedOrigin('foo.lh');
 $server->setMaxConnectionsPerIp(5);
+$server->setMaxRequestsPerMinute(50);
 
 
 $server->registerApplication('demo', \WebSocket\Application\DemoApplication::getInstance());
