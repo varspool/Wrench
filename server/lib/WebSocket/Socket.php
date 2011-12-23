@@ -25,7 +25,7 @@ class Socket
      */
     protected $allsockets = array();
 
-    public function __construct($host = 'localhost', $port = 8000, $max = 100)
+    public function __construct($host = 'localhost', $port = 8000)
     {
         ob_implicit_flush(true);
         $this->createSocket($host, $port);

@@ -112,7 +112,13 @@ class Connection
 		socket_write($this->socket, $response, strlen($response));        
 		$this->handshaked = true;
 		$this->log('Handshake sent');
-		$this->application->onConnect($this);		
+		$this->application->onConnect($this);
+		
+		// trigger status application:
+		if($this->server->getApplication('status') !== false)
+		{
+			$this->server->getApplication('status')->clientConnected($this->ip, $this->port);
+		}
 		
 		return true;			
     }
@@ -212,7 +218,7 @@ class Connection
 
 
 	public function onDisconnect()
-    {
+    {		
         $this->log('Disconnected', 'info');
         $this->close(1000);
     }     
@@ -404,5 +410,10 @@ class Connection
 	public function getClientId()
 	{
 		return $this->connectionId;
+	}
+	
+	public function getClientApplication()
+	{
+		return $this->application;
 	}
 }

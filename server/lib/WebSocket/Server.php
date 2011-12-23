@@ -2,7 +2,7 @@
 namespace WebSocket;
 
 /**
- * Simple WebSockets server
+ * Waschsalon WSS
  *
  * @author Nico Kaiser <nico@kaiser.me>
  * @author Simon Samtleben <web@lemmingzshadow.net>
@@ -21,12 +21,15 @@ class Server extends Socket
 	private $_maxConnectionsPerIp = 5;
 	private $_maxRequestsPerMinute = 50;
 
-    public function __construct($host = 'localhost', $port = 8000, $max = 100)
+    public function __construct($host = 'localhost', $port = 8000)
     {
-        parent::__construct($host, $port, $max);
+        parent::__construct($host, $port);
         $this->log('Server created');
     }
 
+	/**
+	 * Main server method. Listens for connections, handles connectes/disconnectes, e.g.
+	 */
 	public function run()
 	{
 		while(true)
@@ -79,6 +82,12 @@ class Server extends Socket
 		}
 	}
 
+	/**
+	 * Returns a server application.
+	 * 
+	 * @param string $key Name of application.
+	 * @return object The application object. 
+	 */
 	public function getApplication($key)
 	{
 		if(array_key_exists($key, $this->applications))
@@ -91,19 +100,43 @@ class Server extends Socket
 		}
 	}
 
+	/**
+	 * Adds a new application object to the application storage.
+	 * 
+	 * @param string $key Name of application.
+	 * @param object $application The application object.
+	 */
     public function registerApplication($key, $application)
     {
         $this->applications[$key] = $application;
     }
     
+	/**
+	 * Echos a message to standard output.
+	 * 
+	 * @param string $message Message to display.
+	 * @param string $type Type of message.
+	 */
     public function log($message, $type = 'info')
     {
         echo date('Y-m-d H:i:s') . ' [' . ($type ? $type : 'error') . '] ' . $message . PHP_EOL;
     }
 	
+	/**
+	 * Removes a client from client storage.
+	 * 
+	 * @param resorce_id $resource Resource_id of client to remove.
+	 */
 	public function removeClient($resource)
 	{
 		$client = $this->clients[(int)$resource];
+		
+		// trigger status application:
+		if($this->getApplication('status') !== false)
+		{
+			$this->getApplication('status')->clientDisconnected($client->getClientIp(), $client->getClientPort());
+		}
+		
 		$clientId = $client->getClientId();
 		$this->_removeIpFromStorage($client->getClientIp());
 		if(isset($this->_requestStorage[$clientId]))
@@ -116,6 +149,13 @@ class Server extends Socket
 		unset($client, $clientId);		
 	}
 	
+	/**
+	 * Checks if the submitted origin (part of websocket handshake) is allowed
+	 * to connect. Allowed origins can be set at server startup.
+	 * 
+	 * @param string $domain The origin-domain from websocket handshake.
+	 * @return bool If domain is allowed to connect method returns true. 
+	 */
 	public function checkOrigin($domain)
 	{
 		$domain = str_replace('http://', '', $domain);
@@ -125,6 +165,11 @@ class Server extends Socket
 		return isset($this->_allowedOrigins[$domain]);
 	}
 	
+	/**
+	 * Adds a new ip to ip storage.
+	 * 
+	 * @param string $ip An ip address.
+	 */
 	private function _addIpToStoragee($ip)
 	{
 		if(isset($this->_ipStorage[$ip]))
@@ -137,6 +182,12 @@ class Server extends Socket
 		}		
 	}
 	
+	/**
+	 * Removes an ip from ip storage.
+	 * 
+	 * @param string $ip An ip address.
+	 * @return bool True if ip could be removed. 
+	 */
 	private function _removeIpFromStorage($ip)
 	{
 		if(!isset($this->_ipStorage[$ip]))
@@ -153,6 +204,12 @@ class Server extends Socket
 		return true;
 	}
 	
+	/**
+	 * Checks if an ip has reached the maximum connection limit.
+	 * 
+	 * @param string $ip An ip address.
+	 * @return bool False if ip has reached max. connection limit. True if connection is allowed. 
+	 */
 	private function _checkMaxConnectionsPerIp($ip)
 	{
 		if(empty($ip))
@@ -166,6 +223,12 @@ class Server extends Socket
 		return ($this->_ipStorage[$ip] > $this->_maxConnectionsPerIp) ? false : true;
 	}
 	
+	/**
+	 * Checkes if a client has reached its max. requests per minute limit.
+	 * 
+	 * @param string $clientId A client id. (unique client identifier)
+	 * @return bool True if limit is not yet reached. False if request limit is reached. 
+	 */
 	private function _checkRequestLimit($clientId)
 	{
 		// no data in storage - no danger:
@@ -197,9 +260,13 @@ class Server extends Socket
 		$this->_requestStorage[$clientId]['totalRequests']++;
 		return true;
 	}
-
-	// Getter/Setter Methods...
 	
+	/**
+	 * Set whether the client origin should be checked on new connections.
+	 * 
+	 * @param bool $doOriginCheck
+	 * @return bool True if value could validated and set successfully. 
+	 */
 	public function setCheckOrigin($doOriginCheck)
 	{
 		if(is_bool($doOriginCheck) === false)
@@ -210,12 +277,21 @@ class Server extends Socket
 		return true;
 	}
 	
+	/**
+	 * Return value indicating if client origins are checked.
+	 * @return bool True if origins are checked. 
+	 */
 	public function getCheckOrigin()
 	{
 		return $this->_checkOrigin;
 	}
 
-
+	/**
+	 * Adds a domain to the allowed origin storage.
+	 * 
+	 * @param sting $domain A domain name from which connections to server are allowed.
+	 * @return bool True if domain was added to storage.
+	 */
 	public function setAllowedOrigin($domain)
 	{
 		$domain = str_replace('http://', '', $domain);
@@ -229,6 +305,12 @@ class Server extends Socket
 		return true;
 	}
 	
+	/**
+	 * Sets value for the max. connection per ip to this server.
+	 * 
+	 * @param int $limit Connection limit for an ip.
+	 * @return bool True if value could be set. 
+	 */
 	public function setMaxConnectionsPerIp($limit)
 	{
 		if(!is_int($limit))
@@ -239,11 +321,22 @@ class Server extends Socket
 		return true;
 	}
 	
+	/**
+	 * Returns the max. connections per ip value.
+	 * 
+	 * @return int Max. simoultanous  allowed connections for an ip to this server.
+	 */
 	public function getMaxConnectionsPerIp()
 	{
 		return $this->_maxConnectionsPerIp;
 	}
 	
+	/**
+	 * Sets how many requests a client is allowed to do per minute.
+	 * 
+	 * @param int $limit Requets/Min limit (per client).
+	 * @return bool True if value could be set. 
+	 */
 	public function setMaxRequestsPerMinute($limit)
 	{
 		if(!is_int($limit))
@@ -254,6 +347,13 @@ class Server extends Socket
 		return true;
 	}
 	
+	/**
+	 * Sets how many clients are allowed to connect to server until no more
+	 * connections are accepted.
+	 * 
+	 * @param in $max Max. total connections to server.
+	 * @return bool True if value could be set. 
+	 */
 	public function setMaxClients($max)
 	{
 		if((int)$max === 0)
@@ -264,6 +364,11 @@ class Server extends Socket
 		return true;
 	}
 	
+	/**
+	 * Returns total max. connection limit of server.
+	 * 
+	 * @return int Max. connections to this server. 
+	 */
 	public function getMaxClients()
 	{
 		return $this->_maxClients;
