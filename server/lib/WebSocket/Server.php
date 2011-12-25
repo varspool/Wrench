@@ -68,8 +68,13 @@ class Server extends Socket
 				else
 				{
 					$client = $this->clients[(int)$socket];
-					$bytes = socket_recv($socket, $data, 4096, 0);
-					if($bytes === 0 || $this->_checkRequestLimit($client->getClientId()) === false)
+					$bytes = @socket_recv($socket, $data, 4096, 0);					
+					if($bytes === false)
+					{
+						$this->_clientTimeout($client);
+						continue;
+					}
+					elseif($bytes === 0 || $this->_checkRequestLimit($client->getClientId()) === false)
 					{
 						$client->onDisconnect();						
 					}
@@ -147,6 +152,35 @@ class Server extends Socket
 		$index = array_search($resource, $this->allsockets);
 		unset($this->allsockets[$index]);
 		unset($client, $clientId);		
+	}
+	
+	/**
+	 * Removes a client and all references in case of timeout/error.
+	 * @param object $client The client object to remove.
+	 */
+	private function _clientTimeout($client)
+	{
+		// trigger status application:
+		if($this->getApplication('status') !== false)
+		{
+			$this->getApplication('status')->clientDisconnected($client->getClientIp(), $client->getClientPort());
+		}
+		
+		// remove reference in clients app:
+		$client->getClientApplication()->onDisconnect($client);
+        
+		$resource = $client->getClientSocket();
+		$clientId = $client->getClientId();
+		$this->_removeIpFromStorage($client->getClientIp());
+		if(isset($this->_requestStorage[$clientId]))
+		{
+			unset($this->_requestStorage[$clientId]);
+		}
+		unset($this->clients[(int)$resource]);
+		$index = array_search($resource, $this->allsockets);
+		unset($this->allsockets[$index]);
+		unset($client, $clientId, $resource);
+		
 	}
 	
 	/**

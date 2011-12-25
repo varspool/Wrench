@@ -109,7 +109,7 @@ class Connection
 		$response.= "Connection: Upgrade\r\n";
 		$response.= "Sec-WebSocket-Accept: " . $secAccept . "\r\n";
 		$response.= "Sec-WebSocket-Protocol: " . substr($path, 1) . "\r\n\r\n";
-		socket_write($this->socket, $response, strlen($response));        
+		socket_write($this->socket, $response, strlen($response));      
 		$this->handshaked = true;
 		$this->log('Handshake sent');
 		$this->application->onConnect($this);
@@ -410,6 +410,11 @@ class Connection
 	public function getClientId()
 	{
 		return $this->connectionId;
+	}
+	
+	public function getClientSocket()
+	{
+		return $this->socket;
 	}
 	
 	public function getClientApplication()
