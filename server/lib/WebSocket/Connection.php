@@ -314,7 +314,7 @@ class Connection
 	}
 	
 	function hybi10Decode($data)
-	{		
+	{
 		$payloadLength = '';
 		$mask = '';
 		$unmaskedPayload = '';
@@ -365,19 +365,26 @@ class Connection
 		{
 		   $mask = substr($data, 4, 4);
 		   $payloadOffset = 8;
+		   $dataLength = bindec(sprintf('%08b', ord($data[2])) . sprintf('%08b', ord($data[3]))) + $payloadOffset;
 		}
 		elseif($payloadLength === 127)
 		{
 			$mask = substr($data, 10, 4);
 			$payloadOffset = 14;
+			$tmp = '';
+			for($i = 0; $i < 8; $i++)
+			{
+				$tmp .= sprintf('%08b', ord($data[$i+2]));
+			}
+			$dataLength = bindec($tmp);
+			unset($tmp);
 		}
 		else
 		{
 			$mask = substr($data, 2, 4);	
 			$payloadOffset = 6;
+			$dataLength = $payloadLength + $payloadOffset;
 		}
-		
-		$dataLength = strlen($data);
 		
 		if($isMasked === true)
 		{
