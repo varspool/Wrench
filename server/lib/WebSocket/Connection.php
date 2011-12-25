@@ -376,7 +376,7 @@ class Connection
 			{
 				$tmp .= sprintf('%08b', ord($data[$i+2]));
 			}
-			$dataLength = bindec($tmp);
+			$dataLength = bindec($tmp) + $payloadOffset;
 			unset($tmp);
 		}
 		else
