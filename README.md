@@ -2,7 +2,7 @@ PHP WebSocket
 =============
 A websocket server implemented in php.
 
-- Supports websocket draft hybi-10 (Currently tested with Chrome 16 and Firefox 8).
+- Supports websocket draft hybi-10,13 (Currently tested with Chrome 16 and Firefox 9).
 - Supports origin-check.
 - Supports various security/performance settings.
 - Application module, the server can be extended by custom behaviors.

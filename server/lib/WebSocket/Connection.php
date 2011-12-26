@@ -41,6 +41,7 @@ class Connection
         if(!preg_match('/\AGET (\S+) HTTP\/1.1\z/', $lines[0], $matches))
 		{
             $this->log('Invalid request: ' . $lines[0]);
+			$this->sendHttpResponse(400);
             socket_close($this->socket);
             return false;
         }                
@@ -51,7 +52,9 @@ class Connection
         if(!$this->application)
 		{
             $this->log('Invalid application: ' . $path);
+			$this->sendHttpResponse(404);
             socket_close($this->socket);
+			$this->server->removeClientOnError($this);
             return false;
         }
 
@@ -70,7 +73,9 @@ class Connection
 		if(!isset($headers['Sec-WebSocket-Version']) || $headers['Sec-WebSocket-Version'] < 6)
 		{
 			$this->log('Unsupported websocket version.');
+			$this->sendHttpResponse(501);
             socket_close($this->socket);
+			$this->server->removeClientOnError($this);
             return false;
 		}
 		
@@ -82,21 +87,27 @@ class Connection
 			if($origin === false)
 			{
 				$this->log('No origin provided.');
-				$this->close(1002);
+				$this->sendHttpResponse(401);
+				socket_close($this->socket);
+				$this->server->removeClientOnError($this);
 				return false;
 			}
 			
 			if(empty($origin))
 			{
 				$this->log('Empty origin provided.');
-				$this->close(1002);
+				$this->sendHttpResponse(401);
+				socket_close($this->socket);
+				$this->server->removeClientOnError($this);
 				return false;
 			}
 			
 			if($this->server->checkOrigin($origin) === false)
 			{
 				$this->log('Invalid origin provided.');
-				$this->close(1002);
+				$this->sendHttpResponse(401);
+				socket_close($this->socket);
+				$this->server->removeClientOnError($this);
 				return false;
 			}
 		}		
@@ -123,9 +134,38 @@ class Connection
 		return true;			
     }
     
-    public function onData($data)
+	public function sendHttpResponse($httpStatusCode = 400)
+	{
+		$httpHeader = 'HTTP/1.1 ';
+		switch($httpStatusCode)
+		{
+			case 400:
+				$httpHeader .= '400 Bad Request';
+			break;
+		
+			case 401:
+				$httpHeader .= '401 Unauthorized';
+			break;
+		
+			case 403:
+				$httpHeader .= '403 Forbidden';
+			break;
+		
+			case 404:
+				$httpHeader .= '404 Not Found';
+			break;
+		
+			case 501:
+				$httpHeader .= '501 Not Implemented';
+			break;
+		}
+		$httpHeader .= "\r\n";
+		socket_write($this->socket, $httpHeader, strlen($httpHeader));
+	}
+	
+	public function onData($data)
     {		
-        if ($this->handshaked)
+        if($this->handshaked)
 		{			
             $this->handle($data);
         }
@@ -205,6 +245,10 @@ class Connection
 			case 1007:
 				$payload .= 'utf8 expected';
 			break;
+		
+			case 1008:
+				$payload .= 'message violates server policy';
+			break;
 		}
 		$this->send($payload, 'close', false);
 		
@@ -213,7 +257,7 @@ class Connection
             $this->application->onDisconnect($this);
         }
 		socket_close($this->socket);
-		$this->server->removeClient($this->socket);
+		$this->server->removeClientOnClose($this);
 	}
 
 
@@ -313,7 +357,7 @@ class Connection
 		return $frame;
 	}
 	
-	function hybi10Decode($data)
+	private function hybi10Decode($data)
 	{
 		$payloadLength = '';
 		$mask = '';
@@ -426,6 +470,6 @@ class Connection
 	
 	public function getClientApplication()
 	{
-		return $this->application;
+		return (isset($this->application)) ? $this->application : false;
 	}
 }

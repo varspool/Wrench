@@ -47,7 +47,7 @@ class Server extends Socket
 					}
 					else
 					{
-						$client = new Connection($this, $ressource);						
+						$client = new Connection($this, $ressource);
 						$this->clients[(int)$ressource] = $client;
 						$this->allsockets[] = $ressource;
 						
@@ -71,7 +71,7 @@ class Server extends Socket
 					$bytes = @socket_recv($socket, $data, 4096, 0);					
 					if($bytes === false)
 					{
-						$this->_clientTimeout($client);
+						$this->removeClientOnError($client);
 						continue;
 					}
 					elseif($bytes === 0 || $this->_checkRequestLimit($client->getClientId()) === false)
@@ -130,12 +130,10 @@ class Server extends Socket
 	/**
 	 * Removes a client from client storage.
 	 * 
-	 * @param resorce_id $resource Resource_id of client to remove.
+	 * @param Object $client Client object.
 	 */
-	public function removeClient($resource)
-	{
-		$client = $this->clients[(int)$resource];
-		
+	public function removeClientOnClose($client)
+	{		
 		// trigger status application:
 		if($this->getApplication('status') !== false)
 		{
@@ -143,6 +141,8 @@ class Server extends Socket
 		}
 		
 		$clientId = $client->getClientId();
+		$resource = $client->getClientSocket();
+		
 		$this->_removeIpFromStorage($client->getClientIp());
 		if(isset($this->_requestStorage[$clientId]))
 		{
@@ -151,14 +151,14 @@ class Server extends Socket
 		unset($this->clients[(int)$resource]);
 		$index = array_search($resource, $this->allsockets);
 		unset($this->allsockets[$index]);
-		unset($client, $clientId);		
+		unset($client, $clientId);	
 	}
 	
 	/**
 	 * Removes a client and all references in case of timeout/error.
 	 * @param object $client The client object to remove.
 	 */
-	private function _clientTimeout($client)
+	public function removeClientOnError($client)
 	{
 		// trigger status application:
 		if($this->getApplication('status') !== false)
@@ -167,7 +167,10 @@ class Server extends Socket
 		}
 		
 		// remove reference in clients app:
-		$client->getClientApplication()->onDisconnect($client);
+		if($client->getClientApplication() !== false)
+		{
+			$client->getClientApplication()->onDisconnect($client);	
+		}
         
 		$resource = $client->getClientSocket();
 		$clientId = $client->getClientId();
