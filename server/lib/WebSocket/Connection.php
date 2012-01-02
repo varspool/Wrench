@@ -146,7 +146,7 @@ class Connection
                     socket_close($this->socket);
                     return;
                 case 9: // ping
-                    // pong返信
+                    // pong
                     $this->send(chr(10) . $this->payload);
                     return;
             }
