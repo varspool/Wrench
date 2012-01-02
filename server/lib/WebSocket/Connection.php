@@ -37,7 +37,7 @@ class Connection
     
     private function handshake($data)
     {
-        //$this->log('Performing handshake');
+        $this->log('Performing handshake');
         
         $lines = preg_split("/\r\n/", $data);
         if (count($lines)  && preg_match('/<policy-file-request.*>/', $lines[0])) {
