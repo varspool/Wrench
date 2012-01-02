@@ -16,6 +16,16 @@ class Connection
     private $handshaked = false;
 
     private $application = null;
+
+    private $wsversion;
+    
+    private $needBytes = 0;
+    
+    private $cursor;
+    private $opcode;
+    private $isFinal;
+    private $frame;
+    private $payload;
     
     public function __construct($server, $socket)
     {
@@ -65,31 +75,44 @@ class Connection
         }
         
         $status = '101 Web Socket Protocol Handshake';
-        if (array_key_exists('Sec-WebSocket-Key1', $headers)) {
-            // draft-76
+        if(array_key_exists('Sec-WebSocket-Key', $headers))
+        {
+            // hybi-07 ~ RCF
+            $this->wsversion = 7;
+            $digest = base64_encode(sha1($headers['Sec-WebSocket-Key'] . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true));
+        } elseif (array_key_exists('Sec-WebSocket-Key1', $headers)) {
+            // hixi-76
+            $this->wsversion = 76;
             $def_header = array(
                 'Sec-WebSocket-Origin' => $origin,
                 'Sec-WebSocket-Location' => "ws://{$host}{$path}"
             );
             $digest = $this->securityDigest($headers['Sec-WebSocket-Key1'], $headers['Sec-WebSocket-Key2'], $key3);
         } else {
-            // draft-75
+            // hixi-75
+            $this->wsversion = 75;
             $def_header = array(
                 'WebSocket-Origin' => $origin,
                 'WebSocket-Location' => "ws://{$host}{$path}"  
             );
             $digest = '';
         }
-        $header_str = '';
-        foreach ($def_header as $key => $value) {
-            $header_str .= $key . ': ' . $value . "\r\n";
+        $upgrade = '';
+        if($this->wsversion == 7){
+            $upgrade = "HTTP/1.1 101 Switching Protocols\r\n" .
+                                "Upgrade: websocket\r\n" .
+                                "Connection: Upgrade\r\n" .
+                                "Sec-WebSocket-Accept: $digest\r\n\r\n";
+        } else{
+            $header_str = '';
+            foreach ($def_header as $key => $value) {
+                $header_str .= $key . ': ' . $value . "\r\n";
+            }
+            $upgrade = "HTTP/1.1 ${status}\r\n" .
+                "Upgrade: WebSocket\r\n" .
+                "Connection: Upgrade\r\n" .
+                "${header_str}\r\n$digest";
         }
-
-        $upgrade = "HTTP/1.1 ${status}\r\n" .
-            "Upgrade: WebSocket\r\n" .
-            "Connection: Upgrade\r\n" .
-            "${header_str}\r\n$digest";
-
         socket_write($this->socket, $upgrade, strlen($upgrade));
         
         $this->handshaked = true;
@@ -111,18 +134,46 @@ class Connection
     
     private function handle($data)
     {
-        $chunks = explode(chr(255), $data);
-
-        for ($i = 0; $i < count($chunks) - 1; $i++) {
-            $chunk = $chunks[$i];
-            if (substr($chunk, 0, 1) != chr(0)) {
-                $this->log('Data incorrectly framed. Dropping connection');
-                socket_close($this->socket);
-                return false;
+        if($this->wsversion == 7){
+            if($this->needBytes == 0){
+                $this->frame = $data;
+            } else {
+                $this->frame .= $data;
             }
-            $this->application->onData(substr($chunk, 1), $this);
+            if($this->getPayload()) return;
+            switch($this->opcode){
+                case 8: // close
+                    socket_close($this->socket);
+                    return;
+                case 9: // ping
+                    // pong
+                    $this->send(chr(10) . $this->payload);
+                    return;
+            }
+            $this->application->onData(chr($this->opcode) . $this->payload, $this);
+        } else {
+            if($this->needBytes == 0){
+                $this->frame = $data;
+                if($data[strlen($data) - 1] != chr(255)){
+                    $this->needBytes = 1;
+                }
+            } else {
+                $this->frame .= $data;
+                if($data[strlen($data) - 1] == chr(255)){
+                    $this->needBytes = 0;
+                }
+            }
+            $chunks = explode(chr(255), $this->frame);
+            for ($i = 0; $i < count($chunks) - 1; $i++) {
+                $chunk = $chunks[$i];
+                if (substr($chunk, 0, 1) != chr(0)) {
+                    $this->log('Data incorrectly framed. Dropping connection');
+                    socket_close($this->socket);
+                    return false;
+                }
+                $this->application->onData(chr(1) . substr($chunk, 1), $this);
+            }
         }
-
         return true;
     }
     
@@ -139,7 +190,17 @@ class Connection
     
     public function send($data)
     {
-        if (! @socket_write($this->socket, chr(0) . $data . chr(255), strlen($data) + 2)) {
+        $opcode = ord(substr($data, 0, 1));
+        $data = substr($data, 1);
+        $sendData = '';
+        if($this->wsversion == 7){
+            $this->createFrame($data, $opcode);
+        } else {
+            if($opcode == 1){
+                $this->frame = chr(0) . $data . chr(255);
+            }
+        }
+        if (! @socket_write($this->socket, $this->frame, strlen($this->frame))) {
             @socket_close($this->socket);
             $this->socket = false;
         }
@@ -173,7 +234,93 @@ class Connection
             implode('', $number[0]) / count($space[0]) :
             '';
     }
-
+    
+    private function getPayload(){
+        $this->cursor = 0;
+        $co = $this->readByte();
+        $this->isFinal = ($co & 0x80) == 0x80;
+        $this->opcode = ($co & 0x0f);
+        $ml = $this->readByte();
+        $isMask = ($ml & 0x80) == 0x80;
+        $len = $ml & 0x7f;
+        $this->needBytes = 2;
+        if($len == 126){
+            $this->needBytes += 2;
+            if(strlen($this->frame) < $this->needBytes){
+                return true;
+            }
+            $len = $this->readNumeric(2);
+        } elseif($len == 127){
+            $this->needBytes += 8;
+            if(strlen($this->frame) < $this->needBytes){
+                return true;
+            }
+            $len = $this->readNumeric(8);
+        }
+        if($isMask){
+            $this->needBytes += 4;
+            if(strlen($this->frame) < $this->needBytes){
+                return true;
+            }
+            $mask = $this->readBytes(4);
+        }
+        $this->needBytes += $len;
+        if(strlen($this->frame) < $this->needBytes){
+            return true;
+        }
+        $this->payload = $this->readBytes($len);
+        if($isMask){
+            $this->payload = $this->unmask($mask, $this->payload);
+        }
+        $this->needBytes = 0;
+        return false;
+    }
+    private function readByte(){
+        $ret = ord($this->frame[$this->cursor++]); 
+        return $ret;
+    }
+    private function readBytes($size){
+        $ret = substr($this->frame, $this->cursor, $size);
+        $this->cursor += $size;
+        return $ret;
+    }
+    private function readNumeric($size){
+        for (;$size > 0; $size--) {
+            $value <<= 8;
+            $value += ord($this->frame[$this->cursor++]);
+        }
+        return $value;
+    }
+    private function unmask($mask, $data){
+        for($i = 0; $i < strlen($data); $i++){
+            $data[$i] = $mask[$i % 4] ^ $data[$i];
+        }
+        return $data;
+    }
+    
+    private function createFrame($data, $opcode){
+        $this->frame = '';
+        if($data == null) $data = '';
+        $len = strlen($data);
+        $ml = '';
+        if($len > 126){
+            if($len < 65536){
+                $lenb = 2;
+                $ml= chr(126);
+            } else {
+                $lenb = 8;
+                $ml = chr(127);
+            }
+            for($i = 0; $i < $lenb; $i++){
+                $this->frame = chr($len & 0xff) . $this->frame ;
+                $len >>= 8;
+            }
+        } else {
+            $this->frame = chr($len);
+        }
+        $this->frame = chr(0x80 | $opcode) . $ml . $this->frame . $data;
+    }
+      
     public function log($message, $type = 'info')
     {
         socket_getpeername($this->socket, $addr, $port);
