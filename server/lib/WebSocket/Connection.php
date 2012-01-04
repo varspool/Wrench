@@ -177,7 +177,13 @@ class Connection
     
     private function handle($data)
     {	
-		$decodedData = $this->hybi10Decode($data);		
+		$decodedData = $this->hybi10Decode($data);
+		
+		// trigger status application:
+		if($this->server->getApplication('status') !== false)
+		{
+			$this->server->getApplication('status')->clientActivity($this->port);
+		}
 		
 		switch($decodedData['type'])
 		{

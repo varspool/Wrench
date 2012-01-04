@@ -31,6 +31,14 @@ $(document).ready(function() {
 			case 'clientDisconnected':
 				clientDisconnected(response.data);
 			break;
+			
+			case 'clientList':
+				refreshClientlist(response.data);
+			break;
+			
+			case 'clientActivity':
+				clientActivity(response.data);
+			break;
 		}
 	};
 	socket.onclose = function(msg){
@@ -55,11 +63,26 @@ $(document).ready(function() {
 	
 	function clientConnected(data)
 	{		
-		$('#clientListSelect').append(new Option(data.ip + ':' + data.port, data.port));
+		$('#clientListSelect').append(new Option(data.ip + ':' + data.port, data.port));		
 	}
 	
 	function clientDisconnected(port)
 	{
 		$("#clientListSelect option[value='" + port + "']").remove();
+	}
+	
+	function refreshClientlist(clients)
+	{
+		for(port in clients)
+		{
+			$('#clientListSelect').append(new Option(clients[port] + ':' + port, port));
+		}
+	}
+	
+	function clientActivity(port)
+	{
+		$("#clientListSelect option[value='" + port + "']").css("color", "red").animate({opacity: 100}, 600, function(){ 
+			$(this).css("color", "black")
+		});
 	}
 });

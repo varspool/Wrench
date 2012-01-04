@@ -10,12 +10,14 @@ namespace WebSocket\Application;
  */
 class StatusApplication extends Application
 {
-    private $_clients = array();	
+    private $_clients = array();
+	private $_serverClients = array();
 	
 	public function onConnect($client)
     {
 		$id = $client->getClientId();
         $this->_clients[$id] = $client;
+		$this->_sendClientList($client);
     }
 
     public function onDisconnect($client)
@@ -31,6 +33,8 @@ class StatusApplication extends Application
 	
 	public function clientConnected($ip, $port)
 	{
+		$this->_serverClients[$port] = $ip;
+		
 		$this->statusMsg('Client connected. (-> ' .$ip.':'.$port . ')');
 		$data = array(
 			'ip' => $ip,
@@ -42,15 +46,28 @@ class StatusApplication extends Application
 	
 	public function clientDisconnected($ip, $port)
 	{
+		unset($this->_serverClients[$port]);
 		$this->statusMsg('Client disconnected. (<- ' .$ip.':'.$port . ')');
 		$encodedData = $this->_encodeData('clientDisconnected', $port);
 		$this->_sendAll($encodedData);
 	}
 	
+	public function clientActivity($port)
+	{
+		$encodedData = $this->_encodeData('clientActivity', $port);
+		$this->_sendAll($encodedData);
+	}
+
 	public function statusMsg($text)
 	{
 		$encodedData = $this->_encodeData('statusMsg', $text);		
 		$this->_sendAll($encodedData);
+	}
+	
+	private function _sendClientList($client)
+	{
+		$encodedData = $this->_encodeData('clientList', $this->_serverClients);
+		$client->send($encodedData);
 	}
 	
 	private function _sendAll($encodedData)
