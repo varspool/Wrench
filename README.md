@@ -27,3 +27,4 @@ This creates a server on localhost:8000 with one Application that listens on `ws
 
 - [SplClassLoader](http://gist.github.com/221634) by the PHP Standards Working Group
 - [jQuery](http://jquery.com/)
+- [CoffeeScript PHP] (https://github.com/alxlit/coffeescript-php)

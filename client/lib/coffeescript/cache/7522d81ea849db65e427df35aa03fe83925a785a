@@ -1,0 +1,36 @@
+(function() {
+  $(document).ready(function() {
+    var log, serverUrl, socket;
+    log = function(msg) {
+      return $('#log').append("" + msg + "<br />");
+    };
+    serverUrl = 'ws://localhost:8000/demo';
+    if ($.browser.mozilla) {
+      socket = new MozWebSocket(serverUrl);
+    } else {
+      socket = new WebSocket(serverUrl);
+    }
+    socket.onopen = function(msg) {
+      return $('#status').removeClass().addClass('online').html('connected');
+    };
+    socket.onmessage = function(msg) {
+      var response;
+      response = JSON.parse(msg.data);
+      log("Action: " + response.action);
+      return log("Data: " + response.data);
+    };
+    socket.onclose = function(msg) {
+      return $('#status').removeClass().addClass('offline').html('disconnected');
+    };
+    $('#status').click(function() {
+      return socket.close();
+    });
+    return $('#send').click(function() {
+      var payload;
+      payload = new Object();
+      payload.action = $('#action').val();
+      payload.data = $('#data').val();
+      return socket.send(JSON.stringify(payload));
+    });
+  });
+}).call(this);
