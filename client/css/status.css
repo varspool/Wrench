@@ -13,12 +13,10 @@ a,
 a:hover { 
 	color: #169;
 }
-
 p {
 	margin: 0;
-	padding: 0 0 21px 0; 
+	padding: 0;
 }
-
 #container {
 	text-align: left;
 	width: 900px;
@@ -39,7 +37,11 @@ h1 {
 	padding: 0;
 	display: inline-block;
 }
-
+h2 {
+	font-size: 16px;
+	font-weight: bold;
+	margin: 0;
+}
 #log {
 	margin: 6px 0 0 0;
 	padding: 5px;
@@ -86,11 +88,26 @@ h1 {
 .bold {
 	font-weight: bold;
 }
-
-#labelClients {
-	display: block;
+#clientList {
+	float: left;
+	width: 300px;
 }
 #clientListSelect {
 	width: 200px;
 	height: 120px;
+}
+
+#serverInfo {
+	float: left;
+}
+
+#console {
+	margin-top: 20px;
+}
+#console .warning {
+	color: #f00;
+}
+
+.clearer {
+	clear: both;
 }

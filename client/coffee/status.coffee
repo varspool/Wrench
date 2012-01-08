@@ -12,11 +12,11 @@ $(document).ready ->
 	socket.onmessage = (msg) ->
 		response = JSON.parse(msg.data)
 		switch response.action
-			when "statusMsg"			then log response.data
+			when "statusMsg"			then statusMsg response.data
 			when "clientConnected"		then clientConnected response.data
-			when "clientDisconnected"	then clientDisconnected response.data
-			when "clientList"			then refreshClientlist response.data
+			when "clientDisconnected"	then clientDisconnected response.data			
 			when "clientActivity"		then clientActivity response.data
+			when "serverInfo"			then refreshServerinfo response.data
 
 	socket.onclose = (msg) ->
 		$('#status').removeClass().addClass('offline').html('disconnected')
@@ -24,20 +24,28 @@ $(document).ready ->
 	$('#status').click ->
 		socket.close()
 
-	statusMsg = (msg) ->
-		log(msg)
+	statusMsg = (msgData) ->
+		switch msgData.type
+			when "info" then log msgData.text
+			when "warning" then log "<span class=\"warning\">#{msgData.text}</span>"
 
-	clientConnected = (data) ->
+	clientConnected = (data) ->		
 		$('#clientListSelect').append(new Option("#{data.ip}:#{data.port}", data.port))
+		$('#clientCount').text(data.clientCount)
 
-	clientDisconnected = (port) ->
-		$("#clientListSelect option[value='" + port + "']").remove()
+	clientDisconnected = (data) ->
+		$("#clientListSelect option[value='#{data.port}']").remove()
+		$('#clientCount').text(data.clientCount)
 
-	refreshClientlist = (clients) ->
-		for port, ip of clients
-			$('#clientListSelect').append(new Option(ip + ':' + port, port));
+	refreshServerinfo = (serverinfo) ->	
+		$('#clientCount').text(serverinfo.clientCount)
+		$('#maxClients').text(serverinfo.maxClients)
+		$('#maxConnections').text(serverinfo.maxConnectionsPerIp)
+		$('#maxRequetsPerMinute').text(serverinfo.maxRequetsPerMinute)
+		for port, ip of serverinfo.clients			
+			$('#clientListSelect').append(new Option(ip + ':' + port, port));	
 
 	clientActivity = (port) ->
-		$("#clientListSelect option[value='" + port + "']").css("color", "red").animate({opacity: 100}, 600, ->
+		$("#clientListSelect option[value='#{port}']").css("color", "red").animate({opacity: 100}, 600, ->
 			$(this).css("color", "black")
 		)

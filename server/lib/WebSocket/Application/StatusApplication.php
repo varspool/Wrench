@@ -12,12 +12,14 @@ class StatusApplication extends Application
 {
     private $_clients = array();
 	private $_serverClients = array();
-	
+	private $_serverInfo = array();
+
+
 	public function onConnect($client)
     {
 		$id = $client->getClientId();
         $this->_clients[$id] = $client;
-		$this->_sendClientList($client);
+		$this->_sendServerinfo($client);
     }
 
     public function onDisconnect($client)
@@ -31,14 +33,26 @@ class StatusApplication extends Application
         // currently not in use...
     }
 	
+	public function setServerInfo($serverInfo)
+	{
+		if(is_array($serverInfo))
+		{
+			$this->_serverInfo = $serverInfo;
+			return true;
+		}
+		return false;
+	}
+
+
 	public function clientConnected($ip, $port)
 	{
 		$this->_serverClients[$port] = $ip;
 		
-		$this->statusMsg('Client connected. (-> ' .$ip.':'.$port . ')');
+		$this->statusMsg('Client connected: ' .$ip.':'.$port);
 		$data = array(
 			'ip' => $ip,
-			'port' => $port
+			'port' => $port,
+			'clientCount' => count($this->_serverClients),
 		);
 		$encodedData = $this->_encodeData('clientConnected', $data);
 		$this->_sendAll($encodedData);
@@ -47,8 +61,12 @@ class StatusApplication extends Application
 	public function clientDisconnected($ip, $port)
 	{
 		unset($this->_serverClients[$port]);
-		$this->statusMsg('Client disconnected. (<- ' .$ip.':'.$port . ')');
-		$encodedData = $this->_encodeData('clientDisconnected', $port);
+		$this->statusMsg('Client disconnected: ' .$ip.':'.$port);
+		$data = array(			
+			'port' => $port,
+			'clientCount' => count($this->_serverClients),
+		);
+		$encodedData = $this->_encodeData('clientDisconnected', $data);
 		$this->_sendAll($encodedData);
 	}
 	
@@ -58,15 +76,22 @@ class StatusApplication extends Application
 		$this->_sendAll($encodedData);
 	}
 
-	public function statusMsg($text)
+	public function statusMsg($text, $type = 'info')
 	{
-		$encodedData = $this->_encodeData('statusMsg', $text);		
+		$data = array(
+			'type' => $type,
+			'text' => '['. strftime('%m-%d %H:%M', time()) . '] ' . $text,
+		);
+		$encodedData = $this->_encodeData('statusMsg', $data);		
 		$this->_sendAll($encodedData);
 	}
 	
-	private function _sendClientList($client)
+	private function _sendServerinfo($client)
 	{
-		$encodedData = $this->_encodeData('clientList', $this->_serverClients);
+		$currentServerInfo = $this->_serverInfo;
+		$currentServerInfo['clientCount'] = count($this->_serverClients);
+		$currentServerInfo['clients'] = $this->_serverClients;
+		$encodedData = $this->_encodeData('serverInfo', $currentServerInfo);
 		$client->send($encodedData);
 	}
 	

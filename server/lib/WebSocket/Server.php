@@ -54,6 +54,10 @@ class Server extends Socket
 						if(count($this->clients) > $this->_maxClients)
 						{
 							$client->onDisconnect();
+							if($this->getApplication('status') !== false)
+							{
+								$this->getApplication('status')->statusMsg('Attention: Client Limit Reached!', 'warning');
+							}
 							continue;
 						}
 						
@@ -61,6 +65,10 @@ class Server extends Socket
 						if($this->_checkMaxConnectionsPerIp($client->getClientIp()) === false)
 						{
 							$client->onDisconnect();
+							if($this->getApplication('status') !== false)
+							{
+								$this->getApplication('status')->statusMsg('Connection/Ip limit for ip ' . $client->getClientIp() . ' was reached!', 'warning');
+							}
 							continue;
 						}						
 					}
@@ -114,6 +122,17 @@ class Server extends Socket
     public function registerApplication($key, $application)
     {
         $this->applications[$key] = $application;
+		
+		// status is kind of a system-app, needs some special cases:
+		if($key === 'status')
+		{
+			$serverInfo = array(
+				'maxClients' => $this->_maxClients,
+				'maxConnectionsPerIp' => $this->_maxConnectionsPerIp,
+				'maxRequetsPerMinute' => $this->_maxRequestsPerMinute,
+			);
+			$this->applications[$key]->setServerInfo($serverInfo);
+		}
     }
     
 	/**

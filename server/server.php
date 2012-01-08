@@ -22,6 +22,8 @@ $server->setAllowedOrigin('foo.lh');
 $server->setMaxConnectionsPerIp(5);
 $server->setMaxRequestsPerMinute(50);
 
+// Hint: Status application should not be removed as it displays usefull server informations:
 $server->registerApplication('status', \WebSocket\Application\StatusApplication::getInstance());
 $server->registerApplication('demo', \WebSocket\Application\DemoApplication::getInstance());
+
 $server->run();
