@@ -9,17 +9,25 @@
     
 	<meta charset=utf-8 />
 
-	<title>Websocket-Server Testconsole</title>
+	<title>Shiny WSS Demo Application</title>
 </head>
 <body>
     <div id="container">
-        <h1>Websocket-Server Testconsole</h1>
+        <h1>Shiny WSS Demo Application</h1>
 		<span id="status" class="offline">offline</span>
 		
+		<h2>Send Text Frame</h2>
 		<input id="action" placeholder="action" type="text" />
         <input id="data" placeholder="data" type="text" />
-        <button id="send">Send</button>
-		<div class="bold">Server-Response:</div>
+        <button id="send">Send Text</button>
+		
+		<h2>Send Binary Frame</h2>
+		<form name="binaryFrame" action="#">
+			<input type="file" name="file" id="file">
+			<button id="sendfile">Send Binary</button>
+		</form>
+		
+		<h2>Server-Response</h2>
         <div id="log"></div>
     </div>
 </body>

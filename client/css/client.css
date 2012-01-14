@@ -39,6 +39,11 @@ h1 {
 	padding: 0;
 	display: inline-block;
 }
+h2 {
+	font-size: 16px;
+	font-weight: bold;
+	margin: 8px 0 0 0;
+}
 
 #log {
 	margin: 6px 0 0 0;
@@ -78,8 +83,13 @@ h1 {
 
 #action,
 #data {
-	display: block;
-	width: 400px;
+	display: inline-block;
+	width: 200px;
+	margin: 0 0 5px 0;
+}
+#file {
+	display: inline-block;
+	width: 410px;
 	margin: 0 0 5px 0;
 }
 

@@ -2,7 +2,7 @@
 namespace WebSocket;
 
 /**
- * Waschsalon WSS
+ * Shiny WSS
  *
  * @author Nico Kaiser <nico@kaiser.me>
  * @author Simon Samtleben <web@lemmingzshadow.net>
@@ -35,7 +35,7 @@ class Server extends Socket
 		while(true)
 		{
 			$changed_sockets = $this->allsockets;
-			socket_select($changed_sockets, $write = null, $except = null, 1);
+			socket_select($changed_sockets, $write = null, $except = null, null);
 			foreach($changed_sockets as $socket)
 			{
 				if($socket == $this->master)
@@ -76,7 +76,7 @@ class Server extends Socket
 				else
 				{
 					$client = $this->clients[(int)$socket];
-					$bytes = @socket_recv($socket, $data, 4096, 0);					
+					$bytes = socket_recv($socket, $data, 10485760, 0);					
 					if($bytes === false)
 					{
 						$this->removeClientOnError($client);

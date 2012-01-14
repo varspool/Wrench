@@ -9,8 +9,9 @@ namespace WebSocket\Application;
  */
 class DemoApplication extends Application
 {
-    private $_clients = array();	
-	
+    private $_clients = array();
+	private $_filename = '';
+
 	public function onConnect($client)
     {
 		$id = $client->getClientId();
@@ -25,7 +26,7 @@ class DemoApplication extends Application
 
     public function onData($data, $client)
     {		
-        $decodedData = $this->_decodeData($data);
+        $decodedData = $this->_decodeData($data);		
 		if($decodedData === false)
 		{
 			// @todo: invalid request trigger error...
@@ -34,16 +35,48 @@ class DemoApplication extends Application
 		$actionName = '_action' . ucfirst($decodedData['action']);		
 		if(method_exists($this, $actionName))
 		{			
-			call_user_func(array($this, $actionName), array($decodedData['data']));
+			call_user_func(array($this, $actionName), $decodedData['data']);
 		}
     }
 	
+	public function onBinaryData($data, $client)
+	{		
+		$filePath = substr(__FILE__, 0, strpos(__FILE__, 'server')) . 'tmp/';
+		$putfileResult = false;
+		if(!empty($this->_filename))
+		{
+			$putfileResult = file_put_contents($filePath.$this->_filename, $data);			
+		}		
+		if($putfileResult !== false)
+		{
+			
+			$msg = 'File received. Saved: ' . $this->_filename;
+		}
+		else
+		{
+			$msg = 'Error receiving file.';
+		}
+		$client->send($this->_encodeData('echo', $msg));
+		$this->_filename = '';
+	}
+	
 	private function _actionEcho($text)
-	{
+	{		
 		$encodedData = $this->_encodeData('echo', $text);		
 		foreach($this->_clients as $sendto)
 		{
-            $sendto->send($encodedData);
+			$sendto->send($encodedData);
         }
+	}
+	
+	private function _actionSetFilename($filename)
+	{		
+		$filename = basename($filename);
+		if(!empty($filename))
+		{
+			$this->_filename = $filename;
+			return true;
+		}
+		return false;
 	}
 }

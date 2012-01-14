@@ -177,7 +177,7 @@ class Connection
     
     private function handle($data)
     {	
-		$decodedData = $this->hybi10Decode($data);
+		$decodedData = $this->hybi10Decode($data);		
 		
 		// trigger status application:
 		if($this->server->getApplication('status') !== false)
@@ -189,7 +189,18 @@ class Connection
 		{
 			case 'text':
 				$this->application->onData($decodedData['payload'], $this);
-			break;			
+			break;
+		
+			case 'binary':
+				if(method_exists($this->application, 'onBinaryData'))
+				{
+					$this->application->onBinaryData($decodedData['payload'], $this);
+				}
+				else
+				{
+					$this->close(1003);
+				}
+			break;
 		
 			case 'ping':
 				$this->send($decodedData['payload'], 'pong', false);
@@ -388,6 +399,10 @@ class Connection
 			// text frame:
 			case 1:
 				$decodedData['type'] = 'text';				
+			break;
+		
+			case 2:
+				$decodedData['type'] = 'binary';
 			break;
 			
 			// connection close frame:

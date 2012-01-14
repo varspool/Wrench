@@ -3,7 +3,7 @@
 namespace WebSocket\Application;
 
 /**
- * Waschsalon WSS Status Application
+ * Shiny WSS Status Application
  * Provides live server infos/messages to client/browser.
  * 
  * @author Simon Samtleben <web@lemmingzshadow.net>
