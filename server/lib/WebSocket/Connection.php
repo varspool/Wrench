@@ -17,8 +17,12 @@ class Connection
 	private $ip;
 	private $port;
 	private $connectionId = null;
-    
-    public function __construct($server, $socket)
+	
+	public $waitingForData = false;
+	private $_dataBuffer = '';
+
+
+	public function __construct($server, $socket)
     {
 		$this->server = $server;
 		$this->socket = $socket;
@@ -167,7 +171,7 @@ class Connection
     {		
         if($this->handshaked)
 		{			
-            $this->handle($data);
+            return $this->handle($data);
         }
 		else
 		{
@@ -176,8 +180,27 @@ class Connection
     }
     
     private function handle($data)
-    {	
-		$decodedData = $this->hybi10Decode($data);		
+    {
+		if($this->waitingForData === true)
+		{
+			$data = $this->_dataBuffer . $data;
+			$this->_dataBuffer = '';
+			$this->waitingForData = false;
+		}
+		
+		$decodedData = $this->hybi10Decode($data);
+		
+		if($decodedData === false)
+		{
+			$this->waitingForData = true;
+			$this->_dataBuffer .= $data;
+			return false;
+		}
+		else
+		{
+			$this->_dataBuffer = '';
+			$this->waitingForData = false;
+		}
 		
 		// trigger status application:
 		if($this->server->getApplication('status') !== false)
@@ -451,12 +474,25 @@ class Connection
 			$dataLength = $payloadLength + $payloadOffset;
 		}
 		
+		/**
+		 * We have to check for large frames here. socket_recv cuts at 2048 bytes
+		 * so if websocket-frame is > 2048 bytes we have to wait until whole
+		 * data is transferd. 
+		 */
+		if(strlen($data) < $dataLength)
+		{
+			return false;
+		}
+		
 		if($isMasked === true)
 		{
 			for($i = $payloadOffset; $i < $dataLength; $i++)
 			{
 				$j = $i - $payloadOffset;
-				$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
+				if(isset($data[$i]))
+				{
+					$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
+				}
 			}
 			$decodedData['payload'] = $unmaskedPayload;
 		}

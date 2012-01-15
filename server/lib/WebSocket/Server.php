@@ -76,15 +76,20 @@ class Server extends Socket
 				else
 				{
 					$client = $this->clients[(int)$socket];
-					$bytes = socket_recv($socket, $data, 10485760, 0);					
+					$bytes = socket_recv($socket, $data, 2048, 0);					
+					
 					if($bytes === false)
 					{
 						$this->removeClientOnError($client);
 						continue;
 					}
-					elseif($bytes === 0 || $this->_checkRequestLimit($client->getClientId()) === false)
+					elseif($bytes === 0)
 					{
-						$client->onDisconnect();						
+						$client->onDisconnect();
+					}
+					elseif($client->waitingForData === false && $this->_checkRequestLimit($client->getClientId()) === false)
+					{
+						$client->onDisconnect();
 					}
 					else
 					{						
