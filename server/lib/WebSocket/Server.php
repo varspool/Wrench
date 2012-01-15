@@ -76,7 +76,7 @@ class Server extends Socket
 				else
 				{
 					$client = $this->clients[(int)$socket];
-					$bytes = socket_recv($socket, $data, 2048, 0);					
+					$bytes = socket_recv($socket, $data, 1024, 0);					
 					
 					if($bytes === false)
 					{

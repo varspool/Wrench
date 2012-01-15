@@ -475,8 +475,8 @@ class Connection
 		}
 		
 		/**
-		 * We have to check for large frames here. socket_recv cuts at 2048 bytes
-		 * so if websocket-frame is > 2048 bytes we have to wait until whole
+		 * We have to check for large frames here. socket_recv cuts at 1024 bytes
+		 * so if websocket-frame is > 1024 bytes we have to wait until whole
 		 * data is transferd. 
 		 */
 		if(strlen($data) < $dataLength)
