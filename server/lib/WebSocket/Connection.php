@@ -480,7 +480,7 @@ class Connection
 		 * data is transferd. 
 		 */
 		if(strlen($data) < $dataLength)
-		{
+		{			
 			return false;
 		}
 		

@@ -35,7 +35,7 @@ class Server extends Socket
 		while(true)
 		{
 			$changed_sockets = $this->allsockets;
-			socket_select($changed_sockets, $write = null, $except = null, null);
+			socket_select($changed_sockets, $write = null, $except = null, 0, 5000);
 			foreach($changed_sockets as $socket)
 			{
 				if($socket == $this->master)
@@ -76,7 +76,7 @@ class Server extends Socket
 				else
 				{
 					$client = $this->clients[(int)$socket];
-					$bytes = socket_recv($socket, $data, 1024, 0);					
+					$bytes = socket_recv($socket, $data, 8192, 0);					
 					
 					if($bytes === false)
 					{

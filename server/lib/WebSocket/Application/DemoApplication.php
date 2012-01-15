@@ -71,8 +71,15 @@ class DemoApplication extends Application
 	
 	private function _actionSetFilename($filename)
 	{		
-		$filename = basename($filename);
-		if(!empty($filename))
+		if(strpos($filename, '\\') !== false)
+		{
+			$filename = substr($filename, strrpos($filename, '\\')+1);
+		}
+		elseif(strpos($filename, '/') !== false)
+		{
+			$filename = substr($filename, strrpos($filename, '/')+1);
+		}		
+		if(!empty($filename)) 
 		{
 			$this->_filename = $filename;
 			return true;

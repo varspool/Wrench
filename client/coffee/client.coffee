@@ -33,8 +33,7 @@ $(document).ready ->
 			payload = new Object()
 			payload.action = 'setFilename'
 			payload.data = $('#file').val()			
-			socket.send JSON.stringify payload
-			i for i in [1..1000000]
+			socket.send JSON.stringify payload			
 			socket.send(data)
 		return false
 		
