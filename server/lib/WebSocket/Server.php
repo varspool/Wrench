@@ -35,12 +35,12 @@ class Server extends Socket
 		while(true)
 		{
 			$changed_sockets = $this->allsockets;
-			socket_select($changed_sockets, $write = null, $except = null, 0, 5000);
+			@stream_select($changed_sockets, $write = null, $except = null, 0, 5000);
 			foreach($changed_sockets as $socket)
 			{
 				if($socket == $this->master)
 				{
-					if(($ressource = socket_accept($this->master)) < 0)
+					if(($ressource = stream_socket_accept($this->master)) === false)
 					{
 						$this->log('Socket error: ' . socket_strerror(socket_last_error($ressource)));
 						continue;
@@ -75,10 +75,11 @@ class Server extends Socket
 				}
 				else
 				{
-					$client = $this->clients[(int)$socket];
-					$bytes = socket_recv($socket, $data, 8192, 0);					
+					$client = $this->clients[(int)$socket];									
+					$data = $this->readBuffer($socket);
+					$bytes = strlen($data);
 					
-					if($bytes === false)
+					if($data === false)
 					{
 						$this->removeClientOnError($client);
 						continue;
@@ -98,7 +99,7 @@ class Server extends Socket
 				}
 			}
 		}
-	}
+	}	
 
 	/**
 	 * Returns a server application.
@@ -183,7 +184,7 @@ class Server extends Socket
 	 * @param object $client The client object to remove.
 	 */
 	public function removeClientOnError($client)
-	{
+	{		
 		// trigger status application:
 		if($this->getApplication('status') !== false)
 		{

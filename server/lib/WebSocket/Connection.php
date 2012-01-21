@@ -27,11 +27,12 @@ class Connection
 		$this->server = $server;
 		$this->socket = $socket;
 
-		// set some client-information:
-		socket_getpeername($this->socket, $ip, $port);
-		$this->ip = $ip;
-		$this->port = $port;
-		$this->connectionId = md5($ip . $port . spl_object_hash($this));
+		// set some client-information:				
+		$socketName = stream_socket_get_name($socket, true);
+		$tmp = explode(':', $socketName);		
+		$this->ip = $tmp[0];
+		$this->port = $tmp[1];		
+		$this->connectionId = md5($this->ip . $this->port . spl_object_hash($this));		
 
 		$this->log('Connected');
     }
@@ -123,8 +124,8 @@ class Connection
 		$response.= "Upgrade: websocket\r\n";
 		$response.= "Connection: Upgrade\r\n";
 		$response.= "Sec-WebSocket-Accept: " . $secAccept . "\r\n";
-		$response.= "Sec-WebSocket-Protocol: " . substr($path, 1) . "\r\n\r\n";
-		socket_write($this->socket, $response, strlen($response));      
+		$response.= "Sec-WebSocket-Protocol: " . substr($path, 1) . "\r\n\r\n";		
+		$this->server->writeBuffer($this->socket, $response);
 		$this->handshaked = true;
 		$this->log('Handshake sent');
 		$this->application->onConnect($this);
@@ -246,9 +247,9 @@ class Connection
     public function send($payload, $type = 'text', $masked = true)
     {		
 		$encodedData = $this->hybi10Encode($payload, $type, $masked);
-		if(!socket_write($this->socket, $encodedData, strlen($encodedData)))
+		if(!$this->server->writeBuffer($this->socket, $encodedData, strlen($encodedData)))
 		{
-			socket_close($this->socket);
+			fclose($this->socket);
 			$this->socket = false;
 		}
     }
@@ -296,7 +297,7 @@ class Connection
 		{
             $this->application->onDisconnect($this);
         }
-		socket_close($this->socket);
+		fclose($this->socket);
 		$this->server->removeClientOnClose($this);
 	}
 

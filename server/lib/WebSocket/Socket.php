@@ -24,8 +24,9 @@ class Socket
      * @var array Holds all connected sockets
      */
     protected $allsockets = array();
+	protected $context = null;
 
-    public function __construct($host = 'localhost', $port = 8000)
+	public function __construct($host = 'localhost', $port = 8000)
     {
         ob_implicit_flush(true);
         $this->createSocket($host, $port);
@@ -37,35 +38,57 @@ class Socket
      * @param string $host The host/bind address to use
      * @param int $port The actual port to bind on
      */
-    private function createSocket($host, $port)
-    {
-    	if(!($this->master = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)))
+	private function createSocket($host, $port)
+	{		
+		$url = 'tcp://'.$host.':'.$port;
+		$this->context = stream_context_create();
+		if(!$this->master = stream_socket_server($url, $errno, $err, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $this->context))
 		{
-			die("socket_create() failed, reason: " . socket_strerror(socket_last_error()));
-		}		
-		
-		socket_set_option($this->master, SOL_SOCKET, SO_REUSEADDR, 1);		
-		
-		if(!socket_bind($this->master, $host, $port))
-		{
-			die("socket_bind() failed, reason: " . socket_strerror(socket_last_error($this->master)));
-		}		
-		
-		if(!socket_listen($this->master, 5))
-		{
-			die("socket_listen() failed, reason: " . socket_strerror(socket_last_error($this->master)));
-		}		
-		
+			die('Error creating socket: ' . $err);
+		}
 		$this->allsockets[] = $this->master;
-    }    
+	}  
+	
+	// method originally found in phpws project:
+	protected function readBuffer($resource)
+	{
+		$buffer = '';
+		$buffsize = 8192;
 
-    /**
-     * Sends a message over the socket
-     * @param socket $client The destination socket
-     * @param string $msg The message
-     */
-    protected function send($client, $msg)
-    {
-        socket_write($client, $msg, strlen($msg));
-    }
+		$metadata['unread_bytes'] = 0;
+
+		do
+		{
+			if(feof($resource))
+			{
+				return false;
+			}
+
+			$result = fread($resource, $buffsize);
+			if($result === false || feof($resource))
+			{
+			        return false;
+			}
+			$buffer .= $result;
+			$metadata = stream_get_meta_data($resource);
+			$buffsize = min($buffsize, $metadata['unread_bytes']);
+
+		} while($metadata['unread_bytes'] > 0);
+
+		return $buffer;
+	}
+	
+	// method originally found in phpws project:
+	public function writeBuffer($resource, $string)
+	{		
+		for ($written = 0; $written < strlen($string); $written += $fwrite)
+		{
+			$fwrite = fwrite($resource, substr($string, $written));			
+			if($fwrite === false)
+			{
+				return $written;
+			}
+		}
+		return $written;
+	}
 }
