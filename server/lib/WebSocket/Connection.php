@@ -72,6 +72,14 @@ class Connection
                 'Sec-WebSocket-Location' => "ws://{$host}{$path}"
             );
             $digest = $this->securityDigest($headers['Sec-WebSocket-Key1'], $headers['Sec-WebSocket-Key2'], $key3);
+        } else if (array_key_exists('Sec-WebSocket-Key', $headers)) {
+            //hiby protocol, Sec-WebSocket-Accept implementation
+            $def_header = array(
+                'Sec-WebSocket-Origin' => $origin,
+                'Sec-WebSocket-Location' => "ws://{$host}{$path}",
+                'Sec-WebSocket-Accept' => base64_encode(sha1($headers['Sec-WebSocket-Key'] . "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", true))
+            );
+            $digest = '';
         } else {
             // draft-75
             $def_header = array(
