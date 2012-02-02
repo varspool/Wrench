@@ -38,7 +38,7 @@ class Connection
     }
     
     private function handshake($data)
-    {		
+    {	
         $this->log('Performing handshake');	    
         $lines = preg_split("/\r\n/", $data);
 		
@@ -249,8 +249,8 @@ class Connection
 		$encodedData = $this->hybi10Encode($payload, $type, $masked);
 		if(!$this->server->writeBuffer($this->socket, $encodedData, strlen($encodedData)))
 		{
-			fclose($this->socket);
-			$this->socket = false;
+			$this->server->removeClientOnError($this);
+			return false;
 		}
     }
 	

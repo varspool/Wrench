@@ -21,9 +21,9 @@ class Server extends Socket
 	private $_maxConnectionsPerIp = 5;
 	private $_maxRequestsPerMinute = 50;
 
-    public function __construct($host = 'localhost', $port = 8000)
+    public function __construct($host = 'localhost', $port = 8000, $ssl = false)
     {
-        parent::__construct($host, $port);
+        parent::__construct($host, $port, $ssl);
         $this->log('Server created');
     }
 
@@ -61,7 +61,7 @@ class Server extends Socket
 							continue;
 						}
 						
-						$this->_addIpToStoragee($client->getClientIp());
+						$this->_addIpToStorage($client->getClientIp());
 						if($this->_checkMaxConnectionsPerIp($client->getClientIp()) === false)
 						{
 							$client->onDisconnect();
@@ -76,7 +76,7 @@ class Server extends Socket
 				else
 				{
 					$client = $this->clients[(int)$socket];									
-					$data = $this->readBuffer($socket);
+					$data = $this->readBuffer($socket);					
 					$bytes = strlen($data);
 					
 					if($data === false)
@@ -221,6 +221,7 @@ class Server extends Socket
 	public function checkOrigin($domain)
 	{
 		$domain = str_replace('http://', '', $domain);
+		$domain = str_replace('https://', '', $domain);
 		$domain = str_replace('www.', '', $domain);
 		$domain = str_replace('/', '', $domain);
 		
@@ -232,7 +233,7 @@ class Server extends Socket
 	 * 
 	 * @param string $ip An ip address.
 	 */
-	private function _addIpToStoragee($ip)
+	private function _addIpToStorage($ip)
 	{
 		if(isset($this->_ipStorage[$ip]))
 		{
