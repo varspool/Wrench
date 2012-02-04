@@ -6,16 +6,19 @@ A websocket server implemented in php.
 - Supports origin-check.
 - Supports various security/performance settings.
 - Supports binary frames. (Currently receive only)
+- Supports wss (Very Alpha! Chrome only!)
 - Application module, the server can be extended by custom behaviors.
 
 ## Bugs/Todos/Hints
-- Added first attempt on wss support but noticed that readBuffer (in Socket class) sucks. If you have any hints on how to improve please contact me!
+- Optimize whole WSS/TLS stuff
+- Optimize readBuffer() method. (Ideas welcome!)
+- Add support for fragmented frames.
 
 ## Server example
 
 This creates a server on localhost:8000 with one Application that listens on `ws://localhost:8000/demo`:
 
-	$server = new \WebSocket\Server('127.0.0.1', 8000, false);
+	$server = new \WebSocket\Server('127.0.0.1', 8000, false); // host,port,ssl
 
 	// server settings:	
 	$server->setCheckOrigin(true);

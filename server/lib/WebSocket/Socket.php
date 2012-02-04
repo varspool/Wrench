@@ -25,11 +25,13 @@ class Socket
      */
     protected $allsockets = array();
 	protected $context = null;
+	protected $ssl = false;
 
 	public function __construct($host = 'localhost', $port = 8000, $ssl = false)
     {
         ob_implicit_flush(true);
-        $this->createSocket($host, $port, $ssl);
+		$this->ssl = $ssl;
+        $this->createSocket($host, $port);
     }
 
     /**
@@ -38,49 +40,15 @@ class Socket
      * @param string $host The host/bind address to use
      * @param int $port The actual port to bind on
      */
-	private function createSocket($host, $port, $ssl = false)
+	private function createSocket($host, $port)
 	{
-		$protocol = ($ssl === true) ? 'tls://' : 'tcp://';
+		$protocol = ($this->ssl === true) ? 'tls://' : 'tcp://';
 		$url = $protocol.$host.':'.$port;
 		$this->context = stream_context_create();
-		
-		if($ssl === true)
+		if($this->ssl === true)
 		{
-			// Certificate data:
-			$dn = array(
-				"countryName" => "DE",
-				"stateOrProvinceName" => "none",
-				"localityName" => "none",
-				"organizationName" => "none",
-				"organizationalUnitName" => "none",
-				"commonName" => "foo.lh",
-				"emailAddress" => "baz@foo.lh"
-			);
-
-			// Generate certificate
-			$privkey = openssl_pkey_new();
-			$cert    = openssl_csr_new($dn, $privkey);
-			$cert    = openssl_csr_sign($cert, null, $privkey, 365);
-
-			// Generate PEM file
-			# Optionally change the passphrase from 'comet' to whatever you want, or leave it empty for no passphrase
-			$pem_passphrase = 'comet';
-			$pem = array();
-			openssl_x509_export($cert, $pem[0]);
-			openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
-			$pem = implode($pem);
-
-			// Save PEM file
-			$pemfile = './server.pem';
-			file_put_contents($pemfile, $pem);
-
-			// local_cert must be in PEM format
-			stream_context_set_option($this->context, 'ssl', 'local_cert', $pemfile);
-			stream_context_set_option($this->context, 'ssl', 'passphrase', $pem_passphrase);
-			stream_context_set_option($this->context, 'ssl', 'allow_self_signed', true);
-			stream_context_set_option($this->context, 'ssl', 'verify_peer', false);					
+			$this->applySSLContext();
 		}
-		
 		if(!$this->master = stream_socket_server($url, $errno, $err, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $this->context))
 		{
 			die('Error creating socket: ' . $err);
@@ -89,29 +57,77 @@ class Socket
 		$this->allsockets[] = $this->master;
 	}  
 	
+	private function applySSLContext()
+	{		
+		// Certificate data:
+		$dn = array(
+			"countryName" => "DE",
+			"stateOrProvinceName" => "none",
+			"localityName" => "none",
+			"organizationName" => "none",
+			"organizationalUnitName" => "none",
+			"commonName" => "foo.lh",
+			"emailAddress" => "baz@foo.lh"
+		);
+
+		// Generate certificate
+		$privkey = openssl_pkey_new();
+		$cert    = openssl_csr_new($dn, $privkey);
+		$cert    = openssl_csr_sign($cert, null, $privkey, 365);
+
+		// Generate PEM file		
+		$pem_passphrase = 'shinywss';
+		$pem = array();
+		openssl_x509_export($cert, $pem[0]);
+		openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
+		$pem = implode($pem);	
+		$pemfile = './server.pem';
+		file_put_contents($pemfile, $pem);
+		
+		
+		// apply ssl context:
+		stream_context_set_option($this->context, 'ssl', 'local_cert', $pemfile);
+		stream_context_set_option($this->context, 'ssl', 'passphrase', $pem_passphrase);
+		stream_context_set_option($this->context, 'ssl', 'allow_self_signed', true);
+		stream_context_set_option($this->context, 'ssl', 'verify_peer', false);		
+	}
+	
 	// method originally found in phpws project:
 	protected function readBuffer($resource)
-	{		
-		$buffer = '';
-		$buffsize = 1500;
-		$metadata['unread_bytes'] = 0;	
-		do
+	{
+		if($this->ssl === true)
 		{
-			if(feof($resource))
+			$buffer = fread($resource, 8192);
+			// extremely strange chrome behavior: first frame with ssl only contains 1 byte?!
+			if(strlen($buffer) === 1)
 			{
-				return false;
-			}			
-			$result = fread($resource, $buffsize);			
-			if($result === false || feof($resource))
+				$buffer .= fread($resource, 8192);
+			}		
+			return $buffer;
+		}
+		else
+		{
+			$buffer = '';
+			$buffsize = 8192;
+			$metadata['unread_bytes'] = 0;	
+			do
 			{
-			        return false;
-			}
-			$buffer .= $result;			
-			$metadata = stream_get_meta_data($resource);
-		} while($metadata['unread_bytes'] > 0);	
-		
-		return $buffer;
-		
+				if(feof($resource))
+				{
+					return false;
+				}
+				$result = fread($resource, $buffsize);			
+				if($result === false || feof($resource))
+				{
+						return false;
+				}
+				$buffer .= $result;
+				$metadata = stream_get_meta_data($resource);			
+				$buffsize = ($metadata['unread_bytes'] > $buffsize) ? $buffsize : $metadata['unread_bytes'];
+			} while($metadata['unread_bytes'] > 0);	
+
+			return $buffer;
+		}
 	}
 	
 	// method originally found in phpws project:
