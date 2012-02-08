@@ -79,14 +79,15 @@ class Server extends Socket
 					$data = $this->readBuffer($socket);					
 					$bytes = strlen($data);
 					
-					if($data === false)
+					if($bytes === 0)
+					{
+						$client->onDisconnect();
+						continue;
+					}
+					elseif($data === false)
 					{
 						$this->removeClientOnError($client);
 						continue;
-					}
-					elseif($bytes === 0)
-					{
-						$client->onDisconnect();
 					}
 					elseif($client->waitingForData === false && $this->_checkRequestLimit($client->getClientId()) === false)
 					{
@@ -184,7 +185,7 @@ class Server extends Socket
 	 * @param object $client The client object to remove.
 	 */
 	public function removeClientOnError($client)
-	{		
+	{
 		// trigger status application:
 		if($this->getApplication('status') !== false)
 		{
