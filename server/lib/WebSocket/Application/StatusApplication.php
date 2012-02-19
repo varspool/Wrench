@@ -1,5 +1,4 @@
 <?php
-
 namespace WebSocket\Application;
 
 /**
@@ -13,6 +12,7 @@ class StatusApplication extends Application
     private $_clients = array();
 	private $_serverClients = array();
 	private $_serverInfo = array();
+	private $_serverClientCount = 0;
 
 
 	public function onConnect($client)
@@ -47,12 +47,12 @@ class StatusApplication extends Application
 	public function clientConnected($ip, $port)
 	{
 		$this->_serverClients[$port] = $ip;
-		
+		$this->_serverClientCount++;
 		$this->statusMsg('Client connected: ' .$ip.':'.$port);
 		$data = array(
 			'ip' => $ip,
 			'port' => $port,
-			'clientCount' => count($this->_serverClients),
+			'clientCount' => $this->_serverClientCount,
 		);
 		$encodedData = $this->_encodeData('clientConnected', $data);
 		$this->_sendAll($encodedData);
@@ -61,10 +61,11 @@ class StatusApplication extends Application
 	public function clientDisconnected($ip, $port)
 	{
 		unset($this->_serverClients[$port]);
+		$this->_serverClientCount--;
 		$this->statusMsg('Client disconnected: ' .$ip.':'.$port);
 		$data = array(			
 			'port' => $port,
-			'clientCount' => count($this->_serverClients),
+			'clientCount' => $this->_serverClientCount,
 		);
 		$encodedData = $this->_encodeData('clientDisconnected', $data);
 		$this->_sendAll($encodedData);
@@ -77,7 +78,7 @@ class StatusApplication extends Application
 	}
 
 	public function statusMsg($text, $type = 'info')
-	{
+	{		
 		$data = array(
 			'type' => $type,
 			'text' => '['. strftime('%m-%d %H:%M', time()) . '] ' . $text,
@@ -88,6 +89,10 @@ class StatusApplication extends Application
 	
 	private function _sendServerinfo($client)
 	{
+		if(count($this->_clients) < 1)
+		{
+			return false;
+		}
 		$currentServerInfo = $this->_serverInfo;
 		$currentServerInfo['clientCount'] = count($this->_serverClients);
 		$currentServerInfo['clients'] = $this->_serverClients;
@@ -96,7 +101,11 @@ class StatusApplication extends Application
 	}
 	
 	private function _sendAll($encodedData)
-	{
+	{		
+		if(count($this->_clients) < 1)
+		{
+			return false;
+		}
 		foreach($this->_clients as $sendto)
 		{
             $sendto->send($encodedData);
