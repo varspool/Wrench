@@ -113,19 +113,19 @@ class Socket
 			do
 			{
 				if(feof($resource))
-				{					
+				{
 					return false;
 				}
-				$result = fread($resource, $buffsize);			
+				$result = fread($resource, $buffsize);				
 				if($result === false || feof($resource))
-				{					
+				{
 					return false;
 				}
 				$buffer .= $result;
 				$metadata = stream_get_meta_data($resource);			
 				$buffsize = ($metadata['unread_bytes'] > $buffsize) ? $buffsize : $metadata['unread_bytes'];
-			} while($metadata['unread_bytes'] > 0);	
-
+			} while($metadata['unread_bytes'] > 0);		
+			
 			return $buffer;
 		}
 	}
@@ -136,7 +136,7 @@ class Socket
 		$stringLength = strlen($string);
 		for($written = 0; $written < $stringLength; $written += $fwrite)
 		{
-			$fwrite = fwrite($resource, substr($string, $written));			
+			$fwrite = fwrite($resource, substr($string, $written));
 			if($fwrite === false)
 			{
 				return false;

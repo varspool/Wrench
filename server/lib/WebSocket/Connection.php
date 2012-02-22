@@ -47,7 +47,7 @@ class Connection
 		{
             $this->log('Invalid request: ' . $lines[0]);
 			$this->sendHttpResponse(400);
-            socket_close($this->socket);
+            stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
             return false;
         }                
 		
@@ -57,8 +57,8 @@ class Connection
         if(!$this->application)
 		{
             $this->log('Invalid application: ' . $path);
-			$this->sendHttpResponse(404);
-            socket_close($this->socket);
+			$this->sendHttpResponse(404);           
+			stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
 			$this->server->removeClientOnError($this);
             return false;
         }
@@ -79,7 +79,7 @@ class Connection
 		{
 			$this->log('Unsupported websocket version.');
 			$this->sendHttpResponse(501);
-            socket_close($this->socket);
+			stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
 			$this->server->removeClientOnError($this);
             return false;
 		}
@@ -93,7 +93,7 @@ class Connection
 			{
 				$this->log('No origin provided.');
 				$this->sendHttpResponse(401);
-				socket_close($this->socket);
+				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
 				$this->server->removeClientOnError($this);
 				return false;
 			}
@@ -102,7 +102,7 @@ class Connection
 			{
 				$this->log('Empty origin provided.');
 				$this->sendHttpResponse(401);
-				socket_close($this->socket);
+				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
 				$this->server->removeClientOnError($this);
 				return false;
 			}
@@ -111,7 +111,7 @@ class Connection
 			{
 				$this->log('Invalid origin provided.');
 				$this->sendHttpResponse(401);
-				socket_close($this->socket);
+				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
 				$this->server->removeClientOnError($this);
 				return false;
 			}
@@ -125,7 +125,10 @@ class Connection
 		$response.= "Connection: Upgrade\r\n";
 		$response.= "Sec-WebSocket-Accept: " . $secAccept . "\r\n";
 		$response.= "Sec-WebSocket-Protocol: " . substr($path, 1) . "\r\n\r\n";		
-		$this->server->writeBuffer($this->socket, $response);
+		if(false === ($this->server->writeBuffer($this->socket, $response)))
+		{
+			return false;
+		}
 		$this->handshaked = true;
 		$this->log('Handshake sent');
 		$this->application->onConnect($this);
@@ -165,7 +168,7 @@ class Connection
 			break;
 		}
 		$httpHeader .= "\r\n";
-		socket_write($this->socket, $httpHeader, strlen($httpHeader));
+		$this->server->writeBuffer($this->socket, $httpHeader);
 	}
 	
 	public function onData($data)
@@ -189,7 +192,7 @@ class Connection
 			$this->waitingForData = false;
 		}
 		
-		$decodedData = $this->hybi10Decode($data);
+		$decodedData = $this->hybi10Decode($data);		
 		
 		if($decodedData === false)
 		{
@@ -211,7 +214,7 @@ class Connection
 		
 		switch($decodedData['type'])
 		{
-			case 'text':
+			case 'text':				
 				$this->application->onData($decodedData['payload'], $this);
 			break;
 		
@@ -245,9 +248,9 @@ class Connection
     }   
     
     public function send($payload, $type = 'text', $masked = true)
-    {
-		$encodedData = $this->hybi10Encode($payload, $type, $masked);
-		if(!$this->server->writeBuffer($this->socket, $encodedData, strlen($encodedData)))
+    {		
+		$encodedData = $this->hybi10Encode($payload, $type, $masked);			
+		if(!$this->server->writeBuffer($this->socket, $encodedData))
 		{
 			$this->server->removeClientOnError($this);
 			return false;

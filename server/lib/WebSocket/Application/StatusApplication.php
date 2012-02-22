@@ -60,6 +60,10 @@ class StatusApplication extends Application
 	
 	public function clientDisconnected($ip, $port)
 	{
+		if(!isset($this->_serverClients[$port]))
+		{
+			return false;
+		}
 		unset($this->_serverClients[$port]);
 		$this->_serverClientCount--;
 		$this->statusMsg('Client disconnected: ' .$ip.':'.$port);

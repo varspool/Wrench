@@ -111,14 +111,15 @@ class Server extends Socket
 	 */
 	public function getApplication($key)
 	{
+		if(empty($key))
+		{
+			return false;
+		}
 		if(array_key_exists($key, $this->applications))
 		{
 			return $this->applications[$key];
 		}
-		else
-		{
-			return false;
-		}
+		return false;
 	}
 
 	/**
