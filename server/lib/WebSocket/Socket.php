@@ -136,7 +136,7 @@ class Socket
 		$stringLength = strlen($string);
 		for($written = 0; $written < $stringLength; $written += $fwrite)
 		{
-			$fwrite = fwrite($resource, substr($string, $written));
+			$fwrite = fwrite($resource, substr($string, $written));			
 			if($fwrite === false)
 			{
 				return false;
@@ -145,7 +145,7 @@ class Socket
 			{
 				return false;
 			}
-		}
+		}		
 		return $written;
 	}
 }

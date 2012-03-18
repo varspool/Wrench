@@ -255,6 +255,7 @@ class Connection
 			$this->server->removeClientOnError($this);
 			return false;
 		}
+		return true;
     }
 	
 	public function close($statusCode = 1000)
@@ -294,13 +295,17 @@ class Connection
 				$payload .= 'message violates server policy';
 			break;
 		}
-		$this->send($payload, 'close', false);
+		
+		if($this->send($payload, 'close', false) === false)
+		{
+			return false;
+		}
 		
 		if($this->application)
 		{
             $this->application->onDisconnect($this);
         }
-		fclose($this->socket);
+		stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
 		$this->server->removeClientOnClose($this);
 	}
 

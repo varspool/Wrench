@@ -81,8 +81,8 @@ class Server extends Socket
 					
 					if($bytes === 0)
 					{
-						//$client->onDisconnect();
-						$this->removeClientOnError($client);
+						$client->onDisconnect();
+						//$this->removeClientOnError($client);
 						continue;
 					}
 					elseif($data === false)
@@ -181,7 +181,7 @@ class Server extends Socket
 		{
 			$this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
 		}
-		unset($clientId, $clientIp, $clientPort, $resource);
+		unset($clientId, $clientIp, $clientPort, $resource);		
 	}
 	
 	/**
@@ -213,7 +213,7 @@ class Server extends Socket
 		{
 			$this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
 		}
-		unset($resource, $clientId, $clientIp, $clientPort);
+		unset($resource, $clientId, $clientIp, $clientPort);		
 	}
 	
 	/**
