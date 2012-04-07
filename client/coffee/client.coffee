@@ -1,10 +1,10 @@
 $(document).ready ->
 	log = (msg) -> $('#log').append("#{msg}<br />")	
 	serverUrl = 'ws://127.0.0.1:8000/demo'
-	if $.browser.mozilla
-		socket = new MozWebSocket(serverUrl)
-	else
-		socket = new WebSocket(serverUrl)
+	if window.MozWebSocket		
+		socket = new MozWebSocket serverUrl
+	else if window.WebSocket		
+		socket = new WebSocket serverUrl
 	socket.binaryType = 'blob'
 
 	socket.onopen = (msg) ->

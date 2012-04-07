@@ -59,34 +59,33 @@ class Socket
 	
 	private function applySSLContext()
 	{		
-		// Certificate data:
-		$dn = array(
-			"countryName" => "DE",
-			"stateOrProvinceName" => "none",
-			"localityName" => "none",
-			"organizationName" => "none",
-			"organizationalUnitName" => "none",
-			"commonName" => "foo.lh",
-			"emailAddress" => "baz@foo.lh"
-		);
-
-		// Generate certificate
-		$privkey = openssl_pkey_new();
-		$cert    = openssl_csr_new($dn, $privkey);
-		$cert    = openssl_csr_sign($cert, null, $privkey, 365);
-
-		// Generate PEM file		
-		$pem_passphrase = 'shinywss';
-		$pem = array();
-		openssl_x509_export($cert, $pem[0]);
-		openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
-		$pem = implode($pem);	
-		$pemfile = './server.pem';
-		file_put_contents($pemfile, $pem);
+		$pem_file = './server.pem';
+		$pem_passphrase = 'shinywss';		
 		
+		// Generate PEM file
+		if(!file_exists($pem_file))
+		{
+			$dn = array(
+				"countryName" => "DE",
+				"stateOrProvinceName" => "none",
+				"localityName" => "none",
+				"organizationName" => "none",
+				"organizationalUnitName" => "none",
+				"commonName" => "foo.lh",
+				"emailAddress" => "baz@foo.lh"
+			);
+			$privkey = openssl_pkey_new();
+			$cert    = openssl_csr_new($dn, $privkey);
+			$cert    = openssl_csr_sign($cert, null, $privkey, 365);			
+			$pem = array();
+			openssl_x509_export($cert, $pem[0]);
+			openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
+			$pem = implode($pem);		
+			file_put_contents($pem_file, $pem);
+		}
 		
 		// apply ssl context:
-		stream_context_set_option($this->context, 'ssl', 'local_cert', $pemfile);
+		stream_context_set_option($this->context, 'ssl', 'local_cert', $pem_file);
 		stream_context_set_option($this->context, 'ssl', 'passphrase', $pem_passphrase);
 		stream_context_set_option($this->context, 'ssl', 'allow_self_signed', true);
 		stream_context_set_option($this->context, 'ssl', 'verify_peer', false);		
@@ -120,8 +119,8 @@ class Socket
 				if($result === false || feof($resource))
 				{
 					return false;
-				}
-				$buffer .= $result;
+				}				
+				$buffer .= $result;				
 				$metadata = stream_get_meta_data($resource);			
 				$buffsize = ($metadata['unread_bytes'] > $buffsize) ? $buffsize : $metadata['unread_bytes'];
 			} while($metadata['unread_bytes'] > 0);		
@@ -136,7 +135,7 @@ class Socket
 		$stringLength = strlen($string);
 		for($written = 0; $written < $stringLength; $written += $fwrite)
 		{
-			$fwrite = fwrite($resource, substr($string, $written));			
+			$fwrite = @fwrite($resource, substr($string, $written));			
 			if($fwrite === false)
 			{
 				return false;

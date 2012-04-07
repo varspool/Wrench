@@ -2,16 +2,14 @@ PHP WebSocket
 =============
 A websocket server implemented in php.
 
-- Supports websocket draft hybi-10,13 (Currently tested with Chrome 16 and Firefox 9).
+- Supports websocket draft hybi-10,13 (Currently tested with Chrome 18 and Firefox 11).
 - Supports origin-check.
 - Supports various security/performance settings.
 - Supports binary frames. (Currently receive only)
-- Supports wss (Very Alpha! Chrome only!)
+- Supports wss. (Needs valid certificate in Firefox.)
 - Application module, the server can be extended by custom behaviors.
 
 ## Bugs/Todos/Hints
-- Optimize whole WSS/TLS stuff
-- Optimize readBuffer() method. (Ideas welcome!)
 - Add support for fragmented frames.
 
 ## Server example
@@ -23,9 +21,9 @@ This creates a server on localhost:8000 with one Application that listens on `ws
 	// server settings:	
 	$server->setCheckOrigin(true);
 	$server->setAllowedOrigin('foo.lh');
-	$server->setMaxClients(20);
-	$server->setMaxConnectionsPerIp(5);
-	$server->setMaxRequestsPerMinute(50);
+	$server->setMaxClients(100);
+	$server->setMaxConnectionsPerIp(20);
+	$server->setMaxRequestsPerMinute(1000);
 
 	$server->registerApplication('demo', \WebSocket\Application\DemoApplication::getInstance());
 	$server->run();
@@ -35,3 +33,7 @@ This creates a server on localhost:8000 with one Application that listens on `ws
 - [SplClassLoader](http://gist.github.com/221634) by the PHP Standards Working Group
 - [jQuery](http://jquery.com/)
 - [CoffeeScript PHP] (https://github.com/alxlit/coffeescript-php)
+
+## Demo
+
+- Check out http://jitt.li for a sample-project using this websocket server.

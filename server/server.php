@@ -16,11 +16,11 @@ $classLoader->register();
 $server = new \WebSocket\Server('127.0.0.1', 8000, false);
 
 // server settings:
-$server->setMaxClients(20);
+$server->setMaxClients(100);
 $server->setCheckOrigin(true);
 $server->setAllowedOrigin('foo.lh');
-$server->setMaxConnectionsPerIp(5);
-$server->setMaxRequestsPerMinute(50);
+$server->setMaxConnectionsPerIp(100);
+$server->setMaxRequestsPerMinute(2000);
 
 // Hint: Status application should not be removed as it displays usefull server informations:
 $server->registerApplication('status', \WebSocket\Application\StatusApplication::getInstance());

@@ -35,7 +35,7 @@ class Server extends Socket
 		while(true)
 		{
 			$changed_sockets = $this->allsockets;
-			@stream_select($changed_sockets, $write = null, $except = null, 0, 5000);
+			@stream_select($changed_sockets, $write = null, $except = null, 0, 5000);			
 			foreach($changed_sockets as $socket)
 			{
 				if($socket == $this->master)
@@ -74,15 +74,19 @@ class Server extends Socket
 					}
 				}
 				else
-				{
-					$client = $this->clients[(int)$socket];									
+				{					
+					$client = $this->clients[(int)$socket];
+					if(!is_object($client))
+					{
+						unset($this->clients[(int)$socket]);
+						continue;
+					}
 					$data = $this->readBuffer($socket);					
 					$bytes = strlen($data);
 					
 					if($bytes === 0)
 					{
-						$client->onDisconnect();
-						//$this->removeClientOnError($client);
+						$client->onDisconnect();						
 						continue;
 					}
 					elseif($data === false)

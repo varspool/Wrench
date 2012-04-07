@@ -1,10 +1,10 @@
 $(document).ready ->
 	log = (msg) -> $('#log').prepend("#{msg}<br />")	
 	serverUrl = 'ws://localhost:8000/status'
-	if $.browser.mozilla
-		socket = new MozWebSocket(serverUrl)
-	else
-		socket = new WebSocket(serverUrl)
+	if window.MozWebSocket		
+		socket = new MozWebSocket serverUrl
+	else if window.WebSocket		
+		socket = new WebSocket serverUrl
 
 	socket.onopen = (msg) ->
 		$('#status').removeClass().addClass('online').html('connected')
