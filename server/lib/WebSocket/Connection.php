@@ -247,7 +247,7 @@ class Connection
 		return true;
     }   
     
-    public function send($payload, $type = 'text', $masked = true)
+    public function send($payload, $type = 'text', $masked = false)
     {		
 		$encodedData = $this->hybi10Encode($payload, $type, $masked);			
 		if(!$this->server->writeBuffer($this->socket, $encodedData))
