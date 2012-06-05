@@ -51,16 +51,16 @@ class Server extends Socket
             {
                 if($socket == $this->master)
                 {
-                    if(($ressource = stream_socket_accept($this->master)) === false)
+                    if(($resource = stream_socket_accept($this->master)) === false)
                     {
-                        $this->log('Socket error: ' . socket_strerror(socket_last_error($ressource)));
+                        $this->log('Socket error: ' . socket_strerror(socket_last_error($resource)));
                         continue;
                     }
                     else
                     {
-                        $client = $this->createConnection($ressource);
-                        $this->clients[(int)$ressource] = $client;
-                        $this->allsockets[] = $ressource;
+                        $client = $this->createConnection($resource);
+                        $this->clients[(int)$resource] = $client;
+                        $this->allsockets[] = $resource;
 
                         if(count($this->clients) > $this->_maxClients)
                         {
