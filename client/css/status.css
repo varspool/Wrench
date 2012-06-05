@@ -1,0 +1,113 @@
+body {
+	background: #f1f1f1;
+	padding-top: 65px;
+	text-align: center;
+	font-family: Arial, Helvetica, sans-serif;
+	text-align: center;
+	font-size: 16px;
+	line-height: 25px;
+	color: #444;
+}
+
+a,
+a:hover { 
+	color: #169;
+}
+p {
+	margin: 0;
+	padding: 0;
+}
+#container {
+	text-align: left;
+	width: 900px;
+	background: #fff;
+	position: relative;
+	margin: 0 auto;
+	padding: 40px;
+	border: 1px solid #ddd;
+	border-radius: 10px;
+		-moz-border-radius: 10px;
+}
+
+h1 {
+	font-size: 30px;
+	color: #333;
+	font-weight: normal;
+	margin: 0 0 20px 0;
+	padding: 0;
+	display: inline-block;
+}
+h2 {
+	font-size: 16px;
+	font-weight: bold;
+	margin: 0;
+}
+#log {
+	margin: 6px 0 0 0;
+	padding: 5px;
+	border: 1px solid #ccc;
+	height: 200px;
+	overflow: auto;
+}
+
+#send {
+	margin: 0 0 10px 0;
+}
+
+#status {
+	float: right;
+	padding: 0 10px;
+	cursor: pointer;
+	border-radius: 5px;
+		-moz-border-radius: 5px;
+}
+.offline {
+	background: #ddd;
+	color: #000;
+}
+.online {
+	background: #093;
+	color: #fff;
+}
+.error {
+	background: #930;
+	color: #fff;
+}
+.connecting {
+	background: #fc0;
+	color: #000;
+}
+
+#action,
+#data {
+	display: block;
+	width: 400px;
+	margin: 0 0 5px 0;
+}
+
+.bold {
+	font-weight: bold;
+}
+#clientList {
+	float: left;
+	width: 300px;
+}
+#clientListSelect {
+	width: 200px;
+	height: 120px;
+}
+
+#serverInfo {
+	float: left;
+}
+
+#console {
+	margin-top: 20px;
+}
+#console .warning {
+	color: #f00;
+}
+
+.clearer {
+	clear: both;
+}

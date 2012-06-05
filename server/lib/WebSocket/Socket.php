@@ -24,10 +24,13 @@ class Socket
      * @var array Holds all connected sockets
      */
     protected $allsockets = array();
+	protected $context = null;
+	protected $ssl = false;
 
-    public function __construct($host = 'localhost', $port = 8000, $max = 100)
+	public function __construct($host = 'localhost', $port = 8000, $ssl = false)
     {
         ob_implicit_flush(true);
+		$this->ssl = $ssl;
         $this->createSocket($host, $port);
     }
 
@@ -37,53 +40,111 @@ class Socket
      * @param string $host The host/bind address to use
      * @param int $port The actual port to bind on
      */
-    private function createSocket($host, $port)
-    {
-        if (($this->master = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) < 0) {
-            die("socket_create() failed, reason: " . socket_strerror($this->master));
-        }
-
-        self::console("Socket {$this->master} created.");
-
-        socket_set_option($this->master, SOL_SOCKET, SO_REUSEADDR, 1);
-        #socket_set_option($master,SOL_SOCKET,SO_KEEPALIVE,1);
-
-        if (($ret = socket_bind($this->master, $host, $port)) < 0) {
-            die("socket_bind() failed, reason: " . socket_strerror($ret));
-        }
-
-        self::console("Socket bound to {$host}:{$port}.");
-
-        if (($ret = socket_listen($this->master, 5)) < 0) {
-            die("socket_listen() failed, reason: " . socket_strerror($ret));
-        }
-
-        self::console('Start listening on Socket.');
-
-        $this->allsockets[] = $this->master;
-    }
-
-    /**
-     * Log a message
-     *
-     * @param string $msg The message
-     * @param string $type The type of the message
-     */
-    protected function console($msg, $type='System')
-    {
-        /* $msg = explode("\n", $msg);
-        foreach ($msg as $line)
-            echo date('Y-m-d H:i:s') . " {$type}: {$line}\n"; */
-    }
-
-    /**
-     * Sends a message over the socket
-     * @param socket $client The destination socket
-     * @param string $msg The message
-     */
-    protected function send($client, $msg)
-    {
-        socket_write($client, $msg, strlen($msg));
-    }
-
+	private function createSocket($host, $port)
+	{
+		$protocol = ($this->ssl === true) ? 'tls://' : 'tcp://';
+		$url = $protocol.$host.':'.$port;
+		$this->context = stream_context_create();
+		if($this->ssl === true)
+		{
+			$this->applySSLContext();
+		}
+		if(!$this->master = stream_socket_server($url, $errno, $err, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $this->context))
+		{
+			die('Error creating socket: ' . $err);
+		}		
+		
+		$this->allsockets[] = $this->master;
+	}  
+	
+	private function applySSLContext()
+	{		
+		$pem_file = './server.pem';
+		$pem_passphrase = 'shinywss';		
+		
+		// Generate PEM file
+		if(!file_exists($pem_file))
+		{
+			$dn = array(
+				"countryName" => "DE",
+				"stateOrProvinceName" => "none",
+				"localityName" => "none",
+				"organizationName" => "none",
+				"organizationalUnitName" => "none",
+				"commonName" => "foo.lh",
+				"emailAddress" => "baz@foo.lh"
+			);
+			$privkey = openssl_pkey_new();
+			$cert    = openssl_csr_new($dn, $privkey);
+			$cert    = openssl_csr_sign($cert, null, $privkey, 365);			
+			$pem = array();
+			openssl_x509_export($cert, $pem[0]);
+			openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
+			$pem = implode($pem);		
+			file_put_contents($pem_file, $pem);
+		}
+		
+		// apply ssl context:
+		stream_context_set_option($this->context, 'ssl', 'local_cert', $pem_file);
+		stream_context_set_option($this->context, 'ssl', 'passphrase', $pem_passphrase);
+		stream_context_set_option($this->context, 'ssl', 'allow_self_signed', true);
+		stream_context_set_option($this->context, 'ssl', 'verify_peer', false);		
+	}
+	
+	// method originally found in phpws project:
+	protected function readBuffer($resource)
+	{
+		if($this->ssl === true)
+		{
+			$buffer = fread($resource, 8192);
+			// extremely strange chrome behavior: first frame with ssl only contains 1 byte?!
+			if(strlen($buffer) === 1)
+			{
+				$buffer .= fread($resource, 8192);
+			}		
+			return $buffer;
+		}
+		else
+		{
+			$buffer = '';
+			$buffsize = 8192;
+			$metadata['unread_bytes'] = 0;	
+			do
+			{
+				if(feof($resource))
+				{
+					return false;
+				}
+				$result = fread($resource, $buffsize);				
+				if($result === false || feof($resource))
+				{
+					return false;
+				}				
+				$buffer .= $result;				
+				$metadata = stream_get_meta_data($resource);			
+				$buffsize = ($metadata['unread_bytes'] > $buffsize) ? $buffsize : $metadata['unread_bytes'];
+			} while($metadata['unread_bytes'] > 0);		
+			
+			return $buffer;
+		}
+	}
+	
+	// method originally found in phpws project:
+	public function writeBuffer($resource, $string)
+	{		
+		$stringLength = strlen($string);
+		for($written = 0; $written < $stringLength; $written += $fwrite)
+		{
+			$fwrite = @fwrite($resource, substr($string, $written));			
+			if($fwrite === false)
+			{
+				return false;
+			}
+			elseif($fwrite === 0)
+			{
+				return false;
+			}
+		}		
+		return $written;
+	}
 }

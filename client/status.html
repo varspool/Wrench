@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="css/status.css">
+	
+    <script src="js/jquery.min.js"></script>
+	<script src="js/json2.js"></script>
+	<script src="lib/coffeescript/jsmaker.php?f=status.coffee"></script>
+    
+	<meta charset=utf-8 />
+
+	<title>Shiny WSS Status</title>
+</head>
+<body>
+    <div id="container">
+        <h1>Shiny WSS Status</h1>
+		<span id="status" class="offline">disconnected</span>
+		
+		<div id="main">
+			<div id="clientList">
+				<h2>Clients:</h2>
+				<select id="clientListSelect" multiple="multiple"></select>
+			</div>
+
+			<div id="serverInfo">
+				<h2>Server Info:</h2>
+				<p>Connected Clients: <span id="clientCount"></span></p>
+				<p>Limit Clients: <span id="maxClients"></span></p>
+				<p>Limit Connections/IP: <span id="maxConnections"></span></p>
+				<p>Limit Requetes/Min: <span id="maxRequetsPerMinute"></span></p>
+			</div>
+			
+			<div class="clearer"></div>
+			
+			<div id="console">
+				<h2>Server Messages:</h2>
+				<div id="log"></div>
+			</div>
+		</div>			
+    </div>
+</body>
+</html>​
