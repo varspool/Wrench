@@ -9,8 +9,8 @@ namespace WebSocket;
  */
 class Server extends Socket
 {   
-    private $clients = array();
-    private $applications = array();
+    protected $clients = array();
+    protected $applications = array();
 	private $_ipStorage = array();
 	private $_requestStorage = array();
 	
