@@ -27,6 +27,17 @@ class Server extends Socket
         $this->log('Server created');
     }
 
+    /**
+     * Creates a connection from a socket resource
+     *
+     * @param resource $resource A socket resource
+     * @return Connection
+     */
+    protected function createConnection($resource)
+    {
+        return new Connection($this, $resource);
+    }
+
 	/**
 	 * Main server method. Listens for connections, handles connectes/disconnectes, e.g.
 	 */
@@ -47,7 +58,7 @@ class Server extends Socket
 					}
 					else
 					{
-						$client = new Connection($this, $ressource);
+						$client = $this->createConnection($ressource);
 						$this->clients[(int)$ressource] = $client;
 						$this->allsockets[] = $ressource;
 						
