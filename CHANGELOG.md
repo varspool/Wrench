@@ -1,5 +1,13 @@
 <!-- vim: set tw=79 sw=4 ts=4 et ft=markdown : -->
 # Changelog
+
+## 2.0.0
+
+* Moved to a more traditional project layout
+* Added composer.json
+* Refactored the client class to be in the same namespace as the server
+  libraries
+
 ## 1.0.0
 
 * Refactored methods to open up more of the protected API.

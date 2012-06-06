@@ -1,8 +1,8 @@
 <!-- vim: set tw=79 sw=4 ts=4 et ft=markdown : -->
-# PHP WebSocket
+# WebSocket
 ## Simple WebSocket server for PHP
 
-Version: **1.0.0**
+Version: **2.0.0-beta**
 
 A simple websocket server for PHP 5.3, using streams.
 
@@ -15,14 +15,18 @@ A simple websocket server for PHP 5.3, using streams.
 - Supports binary frames. (Currently receive only)
 - Supports wss. (Needs valid certificate in Firefox.)
 
-
 ### Backward compatibility
 
 The public API of the server should remain compatible with early versions of
-php-websocket. The WebSocket namespace begins in the `/server/lib` directory.
-The client-side libraries are deprecated and may be removed in future: the
-exist as an example. You're free to use whatever client-side libraries you'd
-like with the server.
+php-websocket. The WebSocket namespace begins in the `/lib` directory. The
+client class has been integrated into this namespace too.
+
+#### What happened to the `client` dir?
+
+The client-side libraries are no longer supported: some libraries are included
+but are packaged only as examples. You're free to use whatever client-side
+libraries you'd like with the server. If you're still using them, see the 1.0
+branch.
 
 ## Installation
 
@@ -66,3 +70,5 @@ a free software compatible license.
 ## Examples
 
 - [Jitt.li](http://jitt.li), a Twitter API sample project.
+- For Symfony2, [VarspoolWebsocketBundle](https://github.com/varspool/WebsocketBundle)
+  extends this library for use with the Service Container.
