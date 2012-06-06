@@ -39,80 +39,92 @@ class Server extends Socket
     }
 
     /**
-     * Main server method. Listens for connections, handles connectes/disconnectes, e.g.
+     * Main server loop
+     *
+     * This method does not return.
      */
     public function run()
     {
-        while(true)
+        while(true) {
+            $this->processSockets();
+        }
+    }
+
+    /**
+     * Selects all active sockets for read events, and processes those whose
+     * state changes. Listens for connections, handles connects/disconnects, e.g.
+     *
+     * @return void
+     */
+    protected function processSockets()
+    {
+        $changed_sockets = $this->allsockets;
+        @stream_select($changed_sockets, $write = null, $except = null, 0, 5000);
+        foreach($changed_sockets as $socket)
         {
-            $changed_sockets = $this->allsockets;
-            @stream_select($changed_sockets, $write = null, $except = null, 0, 5000);
-            foreach($changed_sockets as $socket)
+            if($socket == $this->master)
             {
-                if($socket == $this->master)
+                if(($resource = stream_socket_accept($this->master)) === false)
                 {
-                    if(($resource = stream_socket_accept($this->master)) === false)
-                    {
-                        $this->log('Socket error: ' . socket_strerror(socket_last_error($resource)));
-                        continue;
-                    }
-                    else
-                    {
-                        $client = $this->createConnection($resource);
-                        $this->clients[(int)$resource] = $client;
-                        $this->allsockets[] = $resource;
-
-                        if(count($this->clients) > $this->_maxClients)
-                        {
-                            $client->onDisconnect();
-                            if($this->getApplication('status') !== false)
-                            {
-                                $this->getApplication('status')->statusMsg('Attention: Client Limit Reached!', 'warning');
-                            }
-                            continue;
-                        }
-
-                        $this->_addIpToStorage($client->getClientIp());
-                        if($this->_checkMaxConnectionsPerIp($client->getClientIp()) === false)
-                        {
-                            $client->onDisconnect();
-                            if($this->getApplication('status') !== false)
-                            {
-                                $this->getApplication('status')->statusMsg('Connection/Ip limit for ip ' . $client->getClientIp() . ' was reached!', 'warning');
-                            }
-                            continue;
-                        }
-                    }
+                    $this->log('Socket error: ' . socket_strerror(socket_last_error($resource)));
+                    continue;
                 }
                 else
                 {
-                    $client = $this->clients[(int)$socket];
-                    if(!is_object($client))
-                    {
-                        unset($this->clients[(int)$socket]);
-                        continue;
-                    }
-                    $data = $this->readBuffer($socket);
-                    $bytes = strlen($data);
+                    $client = $this->createConnection($resource);
+                    $this->clients[(int)$resource] = $client;
+                    $this->allsockets[] = $resource;
 
-                    if($bytes === 0)
+                    if(count($this->clients) > $this->_maxClients)
                     {
                         $client->onDisconnect();
+                        if($this->getApplication('status') !== false)
+                        {
+                            $this->getApplication('status')->statusMsg('Attention: Client Limit Reached!', 'warning');
+                        }
                         continue;
                     }
-                    elseif($data === false)
-                    {
-                        $this->removeClientOnError($client);
-                        continue;
-                    }
-                    elseif($client->waitingForData === false && $this->_checkRequestLimit($client->getClientId()) === false)
+
+                    $this->_addIpToStorage($client->getClientIp());
+                    if($this->_checkMaxConnectionsPerIp($client->getClientIp()) === false)
                     {
                         $client->onDisconnect();
+                        if($this->getApplication('status') !== false)
+                        {
+                            $this->getApplication('status')->statusMsg('Connection/Ip limit for ip ' . $client->getClientIp() . ' was reached!', 'warning');
+                        }
+                        continue;
                     }
-                    else
-                    {
-                        $client->onData($data);
-                    }
+                }
+            }
+            else
+            {
+                $client = $this->clients[(int)$socket];
+                if(!is_object($client))
+                {
+                    unset($this->clients[(int)$socket]);
+                    continue;
+                }
+                $data = $this->readBuffer($socket);
+                $bytes = strlen($data);
+
+                if($bytes === 0)
+                {
+                    $client->onDisconnect();
+                    continue;
+                }
+                elseif($data === false)
+                {
+                    $this->removeClientOnError($client);
+                    continue;
+                }
+                elseif($client->waitingForData === false && $this->_checkRequestLimit($client->getClientId()) === false)
+                {
+                    $client->onDisconnect();
+                }
+                else
+                {
+                    $client->onData($data);
                 }
             }
         }
