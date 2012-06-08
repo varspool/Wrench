@@ -22,7 +22,7 @@ class Client
 
     public function connect($host, $port, $path, $origin = false)
     {
-        $key = base64_encode($this->_generateRandomString(16, false, true));
+        $key = base64_encode($this->generateNonce());
         $header = "GET " . $path . " HTTP/1.1\r\n";
         $header.= "Host: ".$host.":".$port."\r\n";
         $header.= "Upgrade: websocket\r\n";
@@ -50,28 +50,22 @@ class Client
         fclose($this->socket);
     }
 
-    private function _generateRandomString($length = 10, $addSpaces = true, $addNumbers = true)
+    /**
+     * Returns a 16-byte random value.
+     *
+     * Hybi calls for a 16 byte random nonce that gets base64 encoded and
+     * included in various headers.
+     *
+     * @return string Binary string! May include nulls.
+     */
+    protected function generateNonce()
     {
-        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"§$%&/()=[]{}';
-        $useChars = array();
-        // select some random chars:
-        for($i = 0; $i < $length; $i++)
-        {
-            $useChars[] = $characters[mt_rand(0, strlen($characters)-1)];
+        if (extension_loaded('openssl')) {
+            return openssl_random_pseudo_bytes(16);
         }
-        // add spaces and numbers:
-        if($addSpaces === true)
-        {
-            array_push($useChars, ' ', ' ', ' ', ' ', ' ', ' ');
-        }
-        if($addNumbers === true)
-        {
-            array_push($useChars, rand(0,9), rand(0,9), rand(0,9));
-        }
-        shuffle($useChars);
-        $randomString = trim(implode('', $useChars));
-        $randomString = substr($randomString, 0, $length);
-        return $randomString;
+
+        // SHA1 is 128 bit (= 16 bytes)
+        return sha1(mt_rand(0, PHP_INT_MAX) . uniqid(spl_object_hash($this), true), true);
     }
 
     private function _hybi10Encode($payload, $type = 'text', $masked = true)
