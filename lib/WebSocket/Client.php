@@ -7,13 +7,48 @@ namespace WebSocket;
  */
 class Client
 {
+    /**
+     * @var resource
+     */
     private $socket = null;
 
+    /**
+     * @var array
+     */
+    protected $options;
+
+    /**
+     * Constructor
+     *
+     * @param array $options (optional)
+     *             Options:
+     *              - salt => string, salt to use in generating keys, if using
+     *                           fallback mechanism. Install the openssl extension:
+     *                           you'll be more secure and you won't have to specify this.
+     */
+    public function __construct(array $options = array())
+    {
+        $this->options = array_merge(array(
+            'salt' => 'KJ3FVe04ZPzs0VeRXpJq'
+        ), $options);
+    }
+
+    /**
+     * Destructor
+     */
     public function __destruct()
     {
         $this->disconnect();
     }
 
+    /**
+     * Sends data to the socket
+     *
+     * @param string $data
+     * @param string $type Payload type
+     * @param unknown_type $masked
+     * @return number
+     */
     public function sendData($data, $type = 'text', $masked = true)
     {
         $res = fwrite($this->socket, $this->_hybi10Encode($data, $type, $masked));
@@ -45,6 +80,10 @@ class Client
         return ($keyAccept === $expectedResonse) ? true : false;
     }
 
+    /**
+     * @todo Bug: what if connect has been called twice. The first socket never
+     *        gets closed.
+     */
     public function disconnect()
     {
         fclose($this->socket);
@@ -58,14 +97,14 @@ class Client
      *
      * @return string Binary string! May include nulls.
      */
-    protected function generateNonce()
+    public static function generateNonce()
     {
         if (extension_loaded('openssl')) {
             return openssl_random_pseudo_bytes(16);
         }
 
         // SHA1 is 128 bit (= 16 bytes)
-        return sha1(mt_rand(0, PHP_INT_MAX) . uniqid(spl_object_hash($this), true), true);
+        return sha1(mt_rand(0, PHP_INT_MAX) . uniqid($this->options['salt'], true), true);
     }
 
     private function _hybi10Encode($payload, $type = 'text', $masked = true)
