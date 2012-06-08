@@ -1,16 +1,11 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+
+namespace WebSocket;
 
 /**
- * Very basic websocket client.
- * Supporting draft hybi-10. 
- * 
- * @author Simon Samtleben <web@lemmingzshadow.net>
- * @version 2011-10-18
+ * Basic websocket client
  */
-
-class WebsocketClient
+class Client
 {
 	private $_Socket = null;
 	
