@@ -1,5 +1,6 @@
 <!-- vim: set tw=79 sw=4 ts=4 et ft=markdown : -->
 # Changelog
+
 ## 1.0.0
 
 * Refactored methods to open up more of the protected API.
