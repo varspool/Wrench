@@ -7,9 +7,7 @@ namespace WebSocket;
  */
 class Client
 {
-    private $_Socket = null;
-
-    public function __construct() { }
+    private $socket = null;
 
     public function __destruct()
     {
@@ -18,7 +16,7 @@ class Client
 
     public function sendData($data, $type = 'text', $masked = true)
     {
-        $res = fwrite($this->_Socket, $this->_hybi10Encode($data, $type, $masked));
+        $res = fwrite($this->socket, $this->_hybi10Encode($data, $type, $masked));
         return $res;
     }
 
@@ -36,9 +34,9 @@ class Client
         }
         $header.= "Sec-WebSocket-Version: 13\r\n";
 
-        $this->_Socket = fsockopen($host, $port, $errno, $errstr, 2);
-        fwrite($this->_Socket, $header);
-        $response = fread($this->_Socket, 1500);
+        $this->socket = fsockopen($host, $port, $errno, $errstr, 2);
+        fwrite($this->socket, $header);
+        $response = fread($this->socket, 1500);
 
         preg_match('#Sec-WebSocket-Accept:\s(.*)$#mU', $response, $matches);
         $keyAccept = trim($matches[1]);
@@ -49,7 +47,7 @@ class Client
 
     public function disconnect()
     {
-        fclose($this->_Socket);
+        fclose($this->socket);
     }
 
     private function _generateRandomString($length = 10, $addSpaces = true, $addNumbers = true)
