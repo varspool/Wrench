@@ -2,34 +2,100 @@
 
 namespace WebSocket;
 
+use WebSocket\Protocol\Protocol;
+use WebSocket\Protocol\Rfc6455Protocol;
+
+use \InvalidArgumentException;
+use \RuntimeException;
+
 /**
- * Basic websocket client
+ * Client class
+ *
+ * Represents a WebSocket client
  */
 class Client
 {
     /**
-     * @var resource
+     * @var int bytes
      */
-    private $socket = null;
+    const MAX_HANDSHAKE_RESPONSE = '1500';
+
+    protected $uri;
+    protected $origin;
+    protected $socket;
 
     /**
+     * Request headers
+     *
      * @var array
      */
-    protected $options;
+    protected $headers = array();
+
+    /**
+     * Protocol instance
+     *
+     * @var Protocol
+     */
+    protected $protocol;
+
+    /**
+     * Options
+     *
+     * @var array
+     */
+    protected $options = array();
+
+    /**
+     * Whether the client is connected
+     *
+     * @var boolean
+     */
+    protected $connected = false;
 
     /**
      * Constructor
      *
-     * @param array $options (optional)
-     *             Options:
-     *              - salt => string, salt to use in generating keys, if using
-     *                           fallback mechanism. Install the openssl extension:
-     *                           you'll be more secure and you won't have to specify this.
+     * @param string $uri
+     * @param string $origin  The origin to include in the handshake (required
+     *                          in later versions of the protocol)
+     * @param array  $options (optional) Array of options
+     *                         - socket   => Socket instance (otherwise created)
+     *                         - protocol => Protocol
      */
-    public function __construct(array $options = array())
+    public function __construct($uri, $origin, array $options = array())
+    {
+        $uri = (string)$uri;
+        if (!$uri) {
+            throw new InvalidArgumentException('No URI specified');
+        }
+        $this->uri = $uri;
+
+        $origin = (string)$origin;
+        if (!$origin) {
+            throw new InvalidArgumentException('No origin specified');
+        }
+        $this->origin = $origin;
+
+        $this->configure($options);
+
+        $this->socket = $this->options['socket'];
+        $this->protocol = $this->options['protocol'];
+
+        $this->protocol->validateUri($this->uri);
+        $this->protocol->validateOriginUri($this->origin);
+    }
+
+    /**
+     * Configure options
+     *
+     * @param array $options
+     * @return void
+     */
+    protected function configure(array $options)
     {
         $this->options = array_merge(array(
-            'salt' => 'KJ3FVe04ZPzs0VeRXpJq'
+            'protocol'        => new Rfc6455Protocol(),
+            'socket'          => new Socket($this->uri)
         ), $options);
     }
 
@@ -38,7 +104,21 @@ class Client
      */
     public function __destruct()
     {
-        $this->disconnect();
+        $this->socket->disconnect();
+    }
+
+    /**
+     * Adds a request header to be included in the initial handshake
+     *
+     * For example, to include a Cookie header
+     *
+     * @param string $name
+     * @param string $value
+     * @return void
+     */
+    public function addRequestHeader($name, $value)
+    {
+        $this->headers[$name] = $value;
     }
 
     /**
@@ -46,38 +126,51 @@ class Client
      *
      * @param string $data
      * @param string $type Payload type
-     * @param unknown_type $masked
-     * @return number
+     * @param boolean $masked
+     * @return int bytes written
      */
     public function sendData($data, $type = 'text', $masked = true)
     {
-        $res = fwrite($this->socket, $this->_hybi10Encode($data, $type, $masked));
-        return $res;
+        $encoded = $this->protocol->encode($data, $type, $masked);
+        return $this->socket->send($encoded);
     }
 
-    public function connect($host, $port, $path, $origin = false)
+    /**
+     * Connect to the WebSocket server
+     *
+     * @return boolean Whether a new connection was made
+     */
+    public function connect()
     {
-        $key = base64_encode($this->generateNonce());
-        $header = "GET " . $path . " HTTP/1.1\r\n";
-        $header.= "Host: ".$host.":".$port."\r\n";
-        $header.= "Upgrade: websocket\r\n";
-        $header.= "Connection: Upgrade\r\n";
-        $header.= "Sec-WebSocket-Key: " . $key . "\r\n";
-        if($origin !== false)
-        {
-            $header.= "Sec-WebSocket-Origin: " . $origin . "\r\n";
+        if ($this->isConnected()) {
+            return false;
         }
-        $header.= "Sec-WebSocket-Version: 13\r\n";
 
-        $this->socket = fsockopen($host, $port, $errno, $errstr, 2);
-        fwrite($this->socket, $header);
-        $response = fread($this->socket, 1500);
+        $this->socket->connect();
 
-        preg_match('#Sec-WebSocket-Accept:\s(.*)$#mU', $response, $matches);
-        $keyAccept = trim($matches[1]);
-        $expectedResonse = base64_encode(pack('H*', sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
+        $key       = $this->protocol->generateKey();
+        $handshake = $this->protocol->getRequestHandshake(
+            $this->uri,
+            $key,
+            $this->origin,
+            $this->headers
+        );
 
-        return ($keyAccept === $expectedResonse) ? true : false;
+        $this->socket->send($handshake);
+        $response = $this->socket->receive(self::MAX_HANDSHAKE_RESPONSE);
+        var_dump($response);
+        return ($this->connected =
+                    $this->protocol->validateResponseHandshake($response, $key));
+    }
+
+    /**
+     * Whether the client is currently connected
+     *
+     * @return boolean
+     */
+    public function isConnected()
+    {
+        return $this->connected;
     }
 
     /**
@@ -86,217 +179,9 @@ class Client
      */
     public function disconnect()
     {
-        fclose($this->socket);
-    }
-
-    /**
-     * Returns a 16-byte random value.
-     *
-     * Hybi calls for a 16 byte random nonce that gets base64 encoded and
-     * included in various headers.
-     *
-     * @return string Binary string! May include nulls.
-     */
-    public static function generateNonce()
-    {
-        if (extension_loaded('openssl')) {
-            return openssl_random_pseudo_bytes(16);
+        if ($this->socket) {
+            $this->socket->disconnect();
         }
-
-        // SHA1 is 128 bit (= 16 bytes)
-        return sha1(mt_rand(0, PHP_INT_MAX) . uniqid($this->options['salt'], true), true);
-    }
-
-    private function _hybi10Encode($payload, $type = 'text', $masked = true)
-    {
-        $frameHead = array();
-        $frame = '';
-        $payloadLength = strlen($payload);
-
-        switch($type)
-        {
-            case 'text':
-                // first byte indicates FIN, Text-Frame (10000001):
-                $frameHead[0] = 129;
-            break;
-
-            case 'close':
-                // first byte indicates FIN, Close Frame(10001000):
-                $frameHead[0] = 136;
-            break;
-
-            case 'ping':
-                // first byte indicates FIN, Ping frame (10001001):
-                $frameHead[0] = 137;
-            break;
-
-            case 'pong':
-                // first byte indicates FIN, Pong frame (10001010):
-                $frameHead[0] = 138;
-            break;
-        }
-
-        // set mask and payload length (using 1, 3 or 9 bytes)
-        if($payloadLength > 65535)
-        {
-            $payloadLengthBin = str_split(sprintf('%064b', $payloadLength), 8);
-            $frameHead[1] = ($masked === true) ? 255 : 127;
-            for($i = 0; $i < 8; $i++)
-            {
-                $frameHead[$i+2] = bindec($payloadLengthBin[$i]);
-            }
-            // most significant bit MUST be 0 (close connection if frame too big)
-            if($frameHead[2] > 127)
-            {
-                $this->close(1004);
-                return false;
-            }
-        }
-        elseif($payloadLength > 125)
-        {
-            $payloadLengthBin = str_split(sprintf('%016b', $payloadLength), 8);
-            $frameHead[1] = ($masked === true) ? 254 : 126;
-            $frameHead[2] = bindec($payloadLengthBin[0]);
-            $frameHead[3] = bindec($payloadLengthBin[1]);
-        }
-        else
-        {
-            $frameHead[1] = ($masked === true) ? $payloadLength + 128 : $payloadLength;
-        }
-
-        // convert frame-head to string:
-        foreach(array_keys($frameHead) as $i)
-        {
-            $frameHead[$i] = chr($frameHead[$i]);
-        }
-        if($masked === true)
-        {
-            // generate a random mask:
-            $mask = array();
-            for($i = 0; $i < 4; $i++)
-            {
-                $mask[$i] = chr(rand(0, 255));
-            }
-
-            $frameHead = array_merge($frameHead, $mask);
-        }
-        $frame = implode('', $frameHead);
-
-        // append payload to frame:
-        $framePayload = array();
-        for($i = 0; $i < $payloadLength; $i++)
-        {
-            $frame .= ($masked === true) ? $payload[$i] ^ $mask[$i % 4] : $payload[$i];
-        }
-
-        return $frame;
-    }
-
-    private function _hybi10Decode($data)
-    {
-        $payloadLength = '';
-        $mask = '';
-        $unmaskedPayload = '';
-        $decodedData = array();
-
-        // estimate frame type:
-        $firstByteBinary = sprintf('%08b', ord($data[0]));
-        $secondByteBinary = sprintf('%08b', ord($data[1]));
-        $opcode = bindec(substr($firstByteBinary, 4, 4));
-        $isMasked = ($secondByteBinary[0] == '1') ? true : false;
-        $payloadLength = ord($data[1]) & 127;
-
-        // close connection if unmasked frame is received:
-        if($isMasked === false)
-        {
-            $this->close(1002);
-        }
-
-        switch($opcode)
-        {
-            // text frame:
-            case 1:
-                $decodedData['type'] = 'text';
-            break;
-
-            case 2:
-                $decodedData['type'] = 'binary';
-            break;
-
-            // connection close frame:
-            case 8:
-                $decodedData['type'] = 'close';
-            break;
-
-            // ping frame:
-            case 9:
-                $decodedData['type'] = 'ping';
-            break;
-
-            // pong frame:
-            case 10:
-                $decodedData['type'] = 'pong';
-            break;
-
-            default:
-                // Close connection on unknown opcode:
-                $this->close(1003);
-            break;
-        }
-
-        if($payloadLength === 126)
-        {
-           $mask = substr($data, 4, 4);
-           $payloadOffset = 8;
-           $dataLength = bindec(sprintf('%08b', ord($data[2])) . sprintf('%08b', ord($data[3]))) + $payloadOffset;
-        }
-        elseif($payloadLength === 127)
-        {
-            $mask = substr($data, 10, 4);
-            $payloadOffset = 14;
-            $tmp = '';
-            for($i = 0; $i < 8; $i++)
-            {
-                $tmp .= sprintf('%08b', ord($data[$i+2]));
-            }
-            $dataLength = bindec($tmp) + $payloadOffset;
-            unset($tmp);
-        }
-        else
-        {
-            $mask = substr($data, 2, 4);
-            $payloadOffset = 6;
-            $dataLength = $payloadLength + $payloadOffset;
-        }
-
-        /**
-         * We have to check for large frames here. socket_recv cuts at 1024 bytes
-         * so if websocket-frame is > 1024 bytes we have to wait until whole
-         * data is transferd.
-         */
-        if(strlen($data) < $dataLength)
-        {
-            return false;
-        }
-
-        if($isMasked === true)
-        {
-            for($i = $payloadOffset; $i < $dataLength; $i++)
-            {
-                $j = $i - $payloadOffset;
-                if(isset($data[$i]))
-                {
-                    $unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
-                }
-            }
-            $decodedData['payload'] = $unmaskedPayload;
-        }
-        else
-        {
-            $payloadOffset = $payloadOffset - 4;
-            $decodedData['payload'] = substr($data, $payloadOffset);
-        }
-
-        return $decodedData;
+        $this->connected = false;
     }
 }

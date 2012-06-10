@@ -1,14 +1,27 @@
 <?php
 namespace WebSocket;
 
+use \Closure;
+
 /**
- * Shiny WSS
+ * WebSocket server
  *
  * @author Nico Kaiser <nico@kaiser.me>
  * @author Simon Samtleben <web@lemmingzshadow.net>
+ * @author Dominic Scheirlinck <dominic@varspool.com>
  */
-class Server extends Socket
+class Server
 {
+    /**
+     * @var Socket Holds the master socket
+     */
+    protected $master;
+
+    /**
+     * @var array Holds all connected sockets
+     */
+    protected $allsockets = array();
+
     protected $clients = array();
     protected $applications = array();
     private $_ipStorage = array();
@@ -20,11 +33,43 @@ class Server extends Socket
     private $_maxClients = 30;
     private $_maxConnectionsPerIp = 5;
     private $_maxRequestsPerMinute = 50;
-	
-    public function __construct($host = 'localhost', $port = 8000, $ssl=null, $pem_file=null, $pem_passphrase=null)
+
+    protected $logger;
+    protected $options = array();
+
+    /**
+     * Constructor
+     *
+     * @param string $uri Websocket URI, e.g. ws://localhost:8000/, path will
+     *                     be ignored
+     */
+    public function __construct($uri, array $options = array())
     {
-        parent::__construct($host, $port, $ssl, $pem_file, $pem_passphrase);
+        $this->configure($options);
+        $this->setLogger($this->options['logger']);
         $this->log('Server created');
+    }
+
+    /**
+     * Configures options
+     *
+     * @return void
+     */
+    protected function configure($options)
+    {
+        $this->options = array_merge(array(
+        ), $options);
+
+        if (!isset($this->options['logger'])) {
+            $this->options['logger'] = function ($message, $priority = 'info') {
+                printf("%s: %s%s", $priority, $message, PHP_EOL);
+            };
+        }
+    }
+
+    protected function setLogger(Closure $logger)
+    {
+        $this->logger = $logger;
     }
 
     /**
@@ -172,14 +217,38 @@ class Server extends Socket
     }
 
     /**
+     * Create a socket on given host/port
+     *
+     * @param string $host The host/bind address to use
+     * @param int $port The actual port to bind on
+     */
+	private function createSocket($host, $port)
+	{
+		$protocol = ($this->ssl === true) ? 'tls://' : 'tcp://';
+		$url = $protocol.$host.':'.$port;
+		$this->context = stream_context_create();
+		if($this->ssl === true)
+		{
+			$this->applySSLContext();
+		}
+		if(!$this->master = stream_socket_server($url, $errno, $err, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $this->context))
+		{
+			die('Error creating socket: ' . $err);
+		}
+
+		$this->allsockets[] = $this->master;
+	}
+
+    /**
      * Echos a message to standard output.
      *
      * @param string $message Message to display.
      * @param string $type Type of message.
      */
-    public function log($message, $type = 'info')
+    public function log($message, $priority = 'info')
     {
-        echo date('Y-m-d H:i:s') . ' [' . ($type ? $type : 'error') . '] ' . $message . PHP_EOL;
+        $log = $this->logger;
+        $log($message, $priority);
     }
 
     /**
