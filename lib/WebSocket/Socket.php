@@ -25,13 +25,13 @@ class Socket
      */
     protected $allsockets = array();
 	protected $context = null;
-	protected $ssl = false;
-
-	public function __construct($host = 'localhost', $port = 8000, $ssl = false)
+	protected $ssl = null;
+	
+	public function __construct($host = 'localhost', $port = 8000, $ssl=null, $pem_file=null, $pem_passphrase=null)
     {
         ob_implicit_flush(true);
 		$this->ssl = $ssl;
-        $this->createSocket($host, $port);
+        $this->createSocket($host, $port, $ssl, $pem_file, $pem_passphrase);
     }
 
     /**
@@ -40,14 +40,14 @@ class Socket
      * @param string $host The host/bind address to use
      * @param int $port The actual port to bind on
      */
-	private function createSocket($host, $port)
+	private function createSocket($host, $port, $ssl, $pem_file, $pem_passphrase)
 	{
-		$protocol = ($this->ssl === true) ? 'tls://' : 'tcp://';
+		$protocol = ($this->ssl !== null) ? $ssl.'://' : 'tcp://';
 		$url = $protocol.$host.':'.$port;
 		$this->context = stream_context_create();
-		if($this->ssl === true)
+		if($this->ssl !== null)
 		{
-			$this->applySSLContext();
+			$this->applySSLContext($pem_file, $pem_passphrase);
 		}
 		if(!$this->master = stream_socket_server($url, $errno, $err, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $this->context))
 		{
@@ -57,36 +57,13 @@ class Socket
 		$this->allsockets[] = $this->master;
 	}  
 	
-	private function applySSLContext()
+	private function applySSLContext($pem_file, $pem_passphrase)
 	{		
-		$pem_file = './server.pem';
-		$pem_passphrase = 'shinywss';		
-		
-		// Generate PEM file
-		if(!file_exists($pem_file))
-		{
-			$dn = array(
-				"countryName" => "DE",
-				"stateOrProvinceName" => "none",
-				"localityName" => "none",
-				"organizationName" => "none",
-				"organizationalUnitName" => "none",
-				"commonName" => "foo.lh",
-				"emailAddress" => "baz@foo.lh"
-			);
-			$privkey = openssl_pkey_new();
-			$cert    = openssl_csr_new($dn, $privkey);
-			$cert    = openssl_csr_sign($cert, null, $privkey, 365);			
-			$pem = array();
-			openssl_x509_export($cert, $pem[0]);
-			openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
-			$pem = implode($pem);		
-			file_put_contents($pem_file, $pem);
-		}
-		
 		// apply ssl context:
 		stream_context_set_option($this->context, 'ssl', 'local_cert', $pem_file);
-		stream_context_set_option($this->context, 'ssl', 'passphrase', $pem_passphrase);
+		if( $pem_passphrase !== null ) {
+			stream_context_set_option($this->context, 'ssl', 'passphrase', $pem_passphrase);
+		}
 		stream_context_set_option($this->context, 'ssl', 'allow_self_signed', true);
 		stream_context_set_option($this->context, 'ssl', 'verify_peer', false);		
 	}
@@ -146,5 +123,44 @@ class Socket
 			}
 		}		
 		return $written;
+	}
+	
+	/**
+	 * Generates a new PEM File given the informations
+	 *
+	 * @param $pem_file the path of the PEM file to create
+	 * @param $pem_passphrase the passphrase to protect the PEM file or if you don't want to use a passphrase
+	 * @param $country_name the country code of the new PEM file. e.g.: EN
+	 * @param $state_or_province_name the state or province name of the new PEM file
+	 * @param $locality_name the name of the locality
+	 * @param $organisation_name the name of the organisation. e.g.: MyCompany
+	 * @param $organisational_unit_name the organisation unit name
+	 * @param $commonName the common name
+	 * @parm $email_addresse the email address
+	 */
+	public static function generatePEMFile($pem_file, $pem_passphrase, $country_name, $state_or_province_name, 
+		$locality_name, $organization_name, $organizational_unit_name, $common_name, $email_address)
+	{
+		// Generate PEM file
+		$dn = array(
+			"countryName" => $country_name,
+			"stateOrProvinceName" => $state_or_province_name,
+			"localityName" => $locality_name,
+			"organizationName" => $organization_name,
+			"organizationalUnitName" => $organizational_unit_name,
+			"commonName" => $common_name,
+			"emailAddress" => $email_address
+		);
+		$privkey = openssl_pkey_new();
+		$cert    = openssl_csr_new($dn, $privkey);
+		$cert    = openssl_csr_sign($cert, null, $privkey, 365);			
+		$pem = array();
+		openssl_x509_export($cert, $pem[0]);
+		if( $pem_passphrase !== null )
+		{
+			openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
+		}
+		$pem = implode($pem);		
+		file_put_contents($pem_file, $pem);
 	}
 }
