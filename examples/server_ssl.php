@@ -13,7 +13,31 @@ require(__DIR__ . '/../lib/SplClassLoader.php');
 $classLoader = new SplClassLoader('WebSocket', __DIR__ . '/../lib');
 $classLoader->register();
 
-$server = new \WebSocket\Server('127.0.0.1', 8000);
+// Generate PEM file
+$pemFile = dirname(__FILE__).'/generated.pem';
+$pemPassphrase = null;
+$countryName = "DE";
+$stateOrProvinceName = "none";
+$localityName = "none";
+$organizationName = "none";
+$organizationalUnitName = "none";
+$commonName =  "foo.lh";
+$emailAddress = "baz@foo.lh";
+
+\WebSocket\Socket::generatePEMFile(
+	$pemFile, 
+	$pemPassphrase, 
+	$countryName, 
+	$stateOrProvinceName, 
+	$localityName, 
+	$organizationName, 
+	$organizationalUnitName,
+	$commonName,
+	$emailAddress
+);
+
+// User can use tls in place of ssl
+$server = new \WebSocket\Server('127.0.0.1', 8000, 'ssl', $pemFile, $pemPassphrase);
 
 // server settings:
 $server->setMaxClients(100);
