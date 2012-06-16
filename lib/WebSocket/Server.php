@@ -10,17 +10,48 @@ use \Closure;
  * @author Simon Samtleben <web@lemmingzshadow.net>
  * @author Dominic Scheirlinck <dominic@varspool.com>
  */
-class Server
+class Server implements Resource
 {
     /**
-     * @var Socket Holds the master socket
+     * The master socket resource
+     *
+     * @var resource
      */
-    protected $master;
+    protected $master = null;
+
+    /**
+     * Options
+     *
+     * @var array
+     */
+    protected $options = array();
+
+    /**
+     * A logging callback
+     *
+     * The default callback simply prints to stdout. You can pass your own logger
+     * in the options array. It should take a string message and string priority
+     * as parameters.
+     *
+     * @var Closure
+     */
+    protected $logger;
 
     /**
      * @var array Holds all connected sockets
      */
     protected $allsockets = array();
+
+    /**
+     * Holds all connected client resources
+     *
+     * @var resource
+     */
+    protected $resources = array();
+
+    protected $scheme;
+
+
 
     protected $clients = array();
     protected $applications = array();
@@ -34,8 +65,6 @@ class Server
     private $_maxConnectionsPerIp = 5;
     private $_maxRequestsPerMinute = 50;
 
-    protected $logger;
-    protected $options = array();
 
     /**
      * Constructor
@@ -46,8 +75,47 @@ class Server
     public function __construct($uri, array $options = array())
     {
         $this->configure($options);
+        $this->configureUri($uri);
+        $this->configureProtocol();
+        $this->configureContext();
+
+        if ($this->scheme == 'tls') {
+            $this->configureSslContext();
+        }
+
         $this->setLogger($this->options['logger']);
         $this->log('Server created');
+    }
+
+    public function getResource()
+    {
+        return $this->master;
+    }
+
+    /**
+     * Sets a logger
+     *
+     * @param Closure $logger
+     */
+    public function setLogger(Closure $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    /**
+     * Main server loop
+     *
+     * This method does not return.
+     */
+    public function run()
+    {
+        $this->listen();
+
+        $resources = $this->getAllResources();
+
+        while(true) {
+            $this->processSockets($resources);
+        }
     }
 
     /**
@@ -58,7 +126,12 @@ class Server
     protected function configure($options)
     {
         $this->options = array_merge(array(
+            'socket_timeout' => 5
         ), $options);
+
+        if (!is_numeric($this->options['socket_timeout']) || $this->options['socket_timeout'] <= 0) {
+            throw new InvalidArgumentException('Invalid socket timeout');
+        }
 
         if (!isset($this->options['logger'])) {
             $this->options['logger'] = function ($message, $priority = 'info') {
@@ -67,10 +140,44 @@ class Server
         }
     }
 
-    protected function setLogger(Closure $logger)
+    /**
+     * Configures the protocol option
+     *
+     * @throws InvalidArgumentException
+     */
+    protected function configureProtocol()
     {
-        $this->logger = $logger;
+        $protocol = $this->options['protocol'];
+
+        if (!$protocol || !($protocol instanceof Protocol)) {
+            throw new InvalidArgumentException('Invalid protocol option');
+        }
+
+        $this->protocol = $protocol;
     }
+
+    protected function configureUri()
+    {
+        list($scheme, $host, $port) = $this->protocol->validateSocketUri($uri);
+    }
+
+    protected function configureSslContext()
+    {
+
+    }
+
+    /**
+     * Configures the context
+     */
+    protected function configureContext()
+    {
+        $this->context = stream_context_create();
+
+		if ($this->ssl === true) {
+			$this->applySSLContext();
+		}
+    }
+
 
     /**
      * Creates a connection from a socket resource
@@ -83,16 +190,28 @@ class Server
         return new Connection($this, $resource);
     }
 
-    /**
-     * Main server loop
-     *
-     * This method does not return.
-     */
-    public function run()
+    protected function listen()
     {
-        while(true) {
-            $this->processSockets();
-        }
+
+
+
+
+
+
+		if(!$this->master = stream_socket_server($url, $errno, $err, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $this->context))
+		{
+			die('Error creating socket: ' . $err);
+		}
+
+		$this->allsockets[] = $this->master;
+    }
+
+    /**
+     * Gets all resources
+     */
+    protected function getAllResources()
+    {
+        return array_merge($this->resources, array($this->getResource()));
     }
 
     /**
@@ -101,10 +220,17 @@ class Server
      *
      * @return void
      */
-    protected function processSockets()
+    protected function processSockets(array $sockets)
     {
         $changed_sockets = $this->allsockets;
-        @stream_select($changed_sockets, $write = null, $except = null, 0, 5000);
+
+        @stream_select(
+            $changed_sockets,
+            null,
+            null,
+            $this->options['socket_timeout']
+        );
+
         foreach($changed_sockets as $socket)
         {
             if($socket == $this->master)
@@ -224,19 +350,7 @@ class Server
      */
 	private function createSocket($host, $port)
 	{
-		$protocol = ($this->ssl === true) ? 'tls://' : 'tcp://';
-		$url = $protocol.$host.':'.$port;
-		$this->context = stream_context_create();
-		if($this->ssl === true)
-		{
-			$this->applySSLContext();
-		}
-		if(!$this->master = stream_socket_server($url, $errno, $err, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $this->context))
-		{
-			die('Error creating socket: ' . $err);
-		}
 
-		$this->allsockets[] = $this->master;
 	}
 
     /**

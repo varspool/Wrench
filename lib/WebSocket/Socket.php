@@ -50,8 +50,6 @@ class Socket
 
     /**
      * Stream context
-     *
-     * @var unknown_type
      */
     protected $context = null;
 
@@ -198,6 +196,11 @@ class Socket
             $options,
             array()
         );
+    }
+
+    public function getResource()
+    {
+        return $this->socket;
     }
 
     protected function getSslStreamContextOptions()
