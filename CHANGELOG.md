@@ -7,6 +7,10 @@
 * Added composer.json
 * Refactored the client class to be in the same namespace as the server
   libraries
+* Extensive changes to the protected API, not much change to the public API
+* Added PHPUnit tests, and Travis CI integration
+* @vincentdieltiens worked on SSL configuration, and added a method to generate
+  a certificate file
 
 ## 1.0.0
 
