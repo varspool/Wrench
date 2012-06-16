@@ -5,13 +5,12 @@ namespace WebSocket\Tests;
 use WebSocket\Protocol\Rfc6455Protocol;
 
 use WebSocket\Socket;
-use WebSocket\Tests\ListenTest;
 
 use \stdClass;
 use \InvalidArgumentException;
 use \PHPUnit_Framework_Error;
 
-class SocketTest extends ListenTest
+class SocketTest extends Test
 {
     public function testConstructor()
     {
