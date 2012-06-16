@@ -20,10 +20,10 @@ class Server extends Socket
     private $_maxClients = 30;
     private $_maxConnectionsPerIp = 5;
     private $_maxRequestsPerMinute = 50;
-
-    public function __construct($host = 'localhost', $port = 8000, $ssl = false)
+	
+    public function __construct($host = 'localhost', $port = 8000, $ssl=null, $pem_file=null, $pem_passphrase=null)
     {
-        parent::__construct($host, $port, $ssl);
+        parent::__construct($host, $port, $ssl, $pem_file, $pem_passphrase);
         $this->log('Server created');
     }
 
