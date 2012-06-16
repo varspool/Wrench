@@ -4,10 +4,15 @@
 ## 2.0.0
 
 * Moved to a more traditional project layout
-* Added composer.json
 * Refactored the client class to be in the same namespace as the server
   libraries
 * Extensive changes to the protected API, not much change to the public API
+  * Deprecated: `$server->removeClientOnClose($client)`,
+    `$server->removeClientOnError($client)` (both cases should be managed by
+    overriding the server, or hooking into `$client->onDisconnect()`)
+  * Deprecated: `StatusApplication` and `DemoApplication`, both moved to
+    examples directory.
+* Added composer.json
 * Added PHPUnit tests, and Travis CI integration
 * @vincentdieltiens worked on SSL configuration, and added a method to generate
   a certificate file

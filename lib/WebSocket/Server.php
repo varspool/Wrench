@@ -1,23 +1,34 @@
 <?php
 namespace WebSocket;
 
+use WebSocket\Socket;
+use WebSocket\Resource;
+
 use \Closure;
+use \InvalidArgumentException;
 
 /**
  * WebSocket server
+ *
+ * The server extends socket, which provides the master socket resource. This
+ * resource is listened to, and an array of clients managed.
  *
  * @author Nico Kaiser <nico@kaiser.me>
  * @author Simon Samtleben <web@lemmingzshadow.net>
  * @author Dominic Scheirlinck <dominic@varspool.com>
  */
-class Server implements Resource
+class Server extends Socket
 {
-    /**
-     * The master socket resource
+    /**#@+
+     * Events
      *
-     * @var resource
+     * @var string
      */
-    protected $master = null;
+    const EVENT_SOCKET_CONNECT = 'socket_connect';
+    const EVENT_SOCKET_DISCONNECT = 'socket_disconnect';
+    const EVENT_CLIENT_CONNECT = 'client_connect';
+    const EVENT_CLIENT_DISCONNECT = 'client_disconnect';
+    /**#@-*/
 
     /**
      * Options
@@ -38,22 +49,30 @@ class Server implements Resource
     protected $logger;
 
     /**
-     * @var array Holds all connected sockets
+     * Event listeners
+     *
+     * Add listeners using the addListener() method.
+     *
+     * @var array<string => array<Closure>>
      */
-    protected $allsockets = array();
+    protected $listeners = array();
 
     /**
-     * Holds all connected client resources
+     * Holds all connected sockets
      *
-     * @var resource
+     * @var array
      */
     protected $resources = array();
 
-    protected $scheme;
+
+    /**
+     * An array of client connections
+     *
+     * @var array<Connection>
+     */
+    protected $connections = array();
 
 
-
-    protected $clients = array();
     protected $applications = array();
     private $_ipStorage = array();
     private $_requestStorage = array();
@@ -71,25 +90,37 @@ class Server implements Resource
      *
      * @param string $uri Websocket URI, e.g. ws://localhost:8000/, path will
      *                     be ignored
+     * @param array $options (optional)
+     *   Options:
+     *     - logger               => Closure($message, $priority = 'info'), used
+     *                                 for logging
+     *     - timeout_select       => int, seconds, default 5
+     *     - timeout_accept       => int, seconds, default 5
+     *
+     *   This object also accepts all the options of Socket:
+     *     - protocol             => WebSocket\Protocol object, latest protocol
+     *                                 version used if not specified
+     *     - timeout_connect      => int, seconds, default 2
+     *     - timeout_socket       => int, seconds, default 5
+     *     - backlog              => int, used to limit the number of outstanding
+     *                                 connections in the socket's listen queue
+     *     - server_ssl_cert_file => string, server SSL certificate
+     *                                 file location. File should contain
+     *                                 certificate and private key
+     *     - server_ssl_passphrase => string, passphrase for the key
+     *     - server_ssl_allow_self_signed => boolean, whether to allows self-
+     *                                 signed certs
      */
     public function __construct($uri, array $options = array())
     {
-        $this->configure($options);
-        $this->configureUri($uri);
-        $this->configureProtocol();
-        $this->configureContext();
+        parent::__construct($uri, $options);
 
-        if ($this->scheme == 'tls') {
-            $this->configureSslContext();
-        }
+        $this->listeners = array(
+            self::EVENT_CLIENT_CONNECT => array(),
+            self::EVENT_CLIENT_DISCONNECT => array()
+        );
 
-        $this->setLogger($this->options['logger']);
-        $this->log('Server created');
-    }
-
-    public function getResource()
-    {
-        return $this->master;
+        $this->log('Server initialized', 'info');
     }
 
     /**
@@ -110,12 +141,30 @@ class Server implements Resource
     public function run()
     {
         $this->listen();
-
-        $resources = $this->getAllResources();
-
-        while(true) {
-            $this->processSockets($resources);
+        while (true) {
+            /*
+             * If there's nothing changed on any of the sockets, the server
+             * will sleep for up to timeout_socket and
+             */
+            $this->processSockets();
         }
+    }
+
+    /**
+     * Logs a message to the server log
+     *
+     * The default logger simply prints the message to stdout. You can provide
+     * a logging closure. This is useful, for instance, if you've daemonized
+     * and closed STDOUT.
+     *
+     * @param string $message Message to display.
+     * @param string $type Type of message.
+     * @return void
+     */
+    public function log($message, $priority = 'info')
+    {
+        $log = $this->logger;
+        $log($message, $priority);
     }
 
     /**
@@ -123,87 +172,22 @@ class Server implements Resource
      *
      * @return void
      */
-    protected function configure($options)
+    protected function configure(array $options)
     {
-        $this->options = array_merge(array(
-            'socket_timeout' => 5
+        $options = array_merge($options, array(
+            'timeout_accept' => 5,
+            'timeout_select' => 5,
         ), $options);
 
-        if (!is_numeric($this->options['socket_timeout']) || $this->options['socket_timeout'] <= 0) {
-            throw new InvalidArgumentException('Invalid socket timeout');
-        }
+        parent::configure($options);
 
+        // Default logger
         if (!isset($this->options['logger'])) {
             $this->options['logger'] = function ($message, $priority = 'info') {
                 printf("%s: %s%s", $priority, $message, PHP_EOL);
             };
         }
-    }
-
-    /**
-     * Configures the protocol option
-     *
-     * @throws InvalidArgumentException
-     */
-    protected function configureProtocol()
-    {
-        $protocol = $this->options['protocol'];
-
-        if (!$protocol || !($protocol instanceof Protocol)) {
-            throw new InvalidArgumentException('Invalid protocol option');
-        }
-
-        $this->protocol = $protocol;
-    }
-
-    protected function configureUri()
-    {
-        list($scheme, $host, $port) = $this->protocol->validateSocketUri($uri);
-    }
-
-    protected function configureSslContext()
-    {
-
-    }
-
-    /**
-     * Configures the context
-     */
-    protected function configureContext()
-    {
-        $this->context = stream_context_create();
-
-		if ($this->ssl === true) {
-			$this->applySSLContext();
-		}
-    }
-
-
-    /**
-     * Creates a connection from a socket resource
-     *
-     * @param resource $resource A socket resource
-     * @return Connection
-     */
-    protected function createConnection($resource)
-    {
-        return new Connection($this, $resource);
-    }
-
-    protected function listen()
-    {
-
-
-
-
-
-
-		if(!$this->master = stream_socket_server($url, $errno, $err, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $this->context))
-		{
-			die('Error creating socket: ' . $err);
-		}
-
-		$this->allsockets[] = $this->master;
+        $this->setLogger($this->options['logger']);
     }
 
     /**
@@ -220,85 +204,161 @@ class Server implements Resource
      *
      * @return void
      */
-    protected function processSockets(array $sockets)
+    protected function processSockets()
     {
-        $changed_sockets = $this->allsockets;
+        $changed_sockets = $this->resources;
+        $write     = null;
+        $exception = null;
 
-        @stream_select(
+        stream_select(
             $changed_sockets,
-            null,
-            null,
-            $this->options['socket_timeout']
+            $write,
+            $exception,
+            $this->options['timeout_select']
         );
 
-        foreach($changed_sockets as $socket)
-        {
-            if($socket == $this->master)
-            {
-                if(($resource = stream_socket_accept($this->master)) === false)
-                {
-                    $this->log('Socket error: ' . socket_strerror(socket_last_error($resource)));
-                    continue;
-                }
-                else
-                {
-                    $client = $this->createConnection($resource);
-                    $this->clients[(int)$resource] = $client;
-                    $this->allsockets[] = $resource;
-
-                    if(count($this->clients) > $this->_maxClients)
-                    {
-                        $client->onDisconnect();
-                        if($this->getApplication('status') !== false)
-                        {
-                            $this->getApplication('status')->statusMsg('Attention: Client Limit Reached!', 'warning');
-                        }
-                        continue;
-                    }
-
-                    $this->_addIpToStorage($client->getClientIp());
-                    if($this->_checkMaxConnectionsPerIp($client->getClientIp()) === false)
-                    {
-                        $client->onDisconnect();
-                        if($this->getApplication('status') !== false)
-                        {
-                            $this->getApplication('status')->statusMsg('Connection/Ip limit for ip ' . $client->getClientIp() . ' was reached!', 'warning');
-                        }
-                        continue;
-                    }
-                }
-            }
-            else
-            {
-                $client = $this->clients[(int)$socket];
-                if(!is_object($client))
-                {
-                    unset($this->clients[(int)$socket]);
-                    continue;
-                }
-                $data = $this->readBuffer($socket);
-                $bytes = strlen($data);
-
-                if($bytes === 0)
-                {
-                    $client->onDisconnect();
-                    continue;
-                }
-                elseif($data === false)
-                {
-                    $this->removeClientOnError($client);
-                    continue;
-                }
-                elseif($client->waitingForData === false && $this->_checkRequestLimit($client->getClientId()) === false)
-                {
-                    $client->onDisconnect();
-                }
-                else
-                {
-                    $client->onData($data);
-                }
+        foreach ($changed_sockets as $socket) {
+            if ($socket == $this->socket) {
+                $this->processMasterSocket();
+            } else {
+                $this->processClientSocket($socket);
             }
         }
+    }
+
+    /**
+     * Process events on the master socket ($this->socket)
+     *
+     * @return void
+     */
+    protected function processMasterSocket()
+    {
+        $new = stream_socket_accept(
+            $this->socket,
+            $this->options['timeout_accept']
+        );
+
+        if ($new === false) {
+            $this->log('Socket error: ' . socket_strerror(socket_last_error($new)));
+            return;
+        }
+
+        $connection = $this->createConnection($new);
+        $this->notify(self::EVENT_CLIENT_CONNECT, array($connection));
+    }
+
+    /**
+     * Process events on a client socket
+     *
+     * @param resource $socket
+     */
+    protected function processClientSocket($socket)
+    {
+        $connection = $this->getConnectionForClientSocket($socket);
+
+        if (!$connection) {
+            $this->log('No connection for client socket', 'warning');
+            return;
+        }
+
+        $connection->receive();
+
+        $data = $this->read($socket);
+        $bytes = strlen($data);
+
+        if ($bytes === 0) {
+            $connection->onDisconnect();
+            continue;
+        } elseif ($data === false) {
+            $this->removeClientOnError($connection);
+            continue;
+        } elseif($connection->waitingForData === false && $this->_checkRequestLimit($connection->getClientId()) === false) {
+            $connection->onDisconnect();
+        } else {
+            $connection->onData($data);
+        }
+    }
+
+    protected function getConnectionForClientSocket($socket)
+    {
+        if (!isset($this->connections[$this->resourceId($socket)])) {
+            return false;
+        }
+        return $this->connections[$this->resourceId($socket)];
+    }
+
+    protected function removeSocket($socket)
+    {
+        unset($this->connections[$client->getResourceId()]);
+        $index = array_search($resource, $this->resources);
+        unset($this->resources[$index], $client);
+    }
+
+
+    /**
+     * Notifies listeners of an event
+     *
+     * @param string $event
+     * @param array $arguments Event arguments
+     */
+    protected function notify($event, array $arguments = array())
+    {
+        foreach ($this->listeners[$event] as $listener) {
+            call_user_func_array($listener, $arguments);
+        }
+    }
+
+    /**
+     * Adds a listener
+     *
+     * Provide an event (see the Server::EVENT_* constants) and a callback
+     * closure. Some arguments may be provided to your callback, such as the
+     * connection the caused the event.
+     *
+     * @param string $event
+     * @param Closure $callback
+     * @throws InvalidArgumentException
+     */
+    public function addListener($event, Closure $callback)
+    {
+        if (!isset($this->listeners[$event])) {
+            $this->listeners[$event] = array();
+        }
+
+        if (!($callback instanceof Closure)) {
+            throw new InvalidArgumentException('Invalid listener');
+        }
+
+        $this->listeners[$event][] = $callback;
+    }
+
+    /**
+     * Creates a connection from a socket resource
+     *
+     * @param resource $resource A socket resource
+     * @return Connection
+     */
+    protected function createConnection($resource)
+    {
+        $this->resources[] = $resource;
+        return (($this->connections[(int)$resource] = new Connection($this, $resource)));
+    }
+
+
+
+    /**
+     * This server makes an explicit assumption: PHP resource types may be cast
+     * to a integer. Furthermore, we assume this is bijective. Both seem to be
+     * true in most circumstances, but may not be guaranteed.
+     *
+     * This method (and $this->getResourceId()) exist to make this assumption
+     * explicit.
+     *
+     * @param resource $resource
+     */
+    protected function resourceId($resource)
+    {
+        return (int)$resource;
     }
 
     /**
@@ -329,69 +389,39 @@ class Server implements Resource
     public function registerApplication($key, $application)
     {
         $this->applications[$key] = $application;
-
-        // status is kind of a system-app, needs some special cases:
-        if($key === 'status')
-        {
-            $serverInfo = array(
-                'maxClients' => $this->_maxClients,
-                'maxConnectionsPerIp' => $this->_maxConnectionsPerIp,
-                'maxRequetsPerMinute' => $this->_maxRequestsPerMinute,
-            );
-            $this->applications[$key]->setServerInfo($serverInfo);
-        }
     }
 
-    /**
-     * Create a socket on given host/port
-     *
-     * @param string $host The host/bind address to use
-     * @param int $port The actual port to bind on
-     */
-	private function createSocket($host, $port)
-	{
 
-	}
-
-    /**
-     * Echos a message to standard output.
-     *
-     * @param string $message Message to display.
-     * @param string $type Type of message.
-     */
-    public function log($message, $priority = 'info')
-    {
-        $log = $this->logger;
-        $log($message, $priority);
-    }
 
     /**
      * Removes a client from client storage.
      *
      * @param Object $client Client object.
+     * @deprecated
      */
     public function removeClientOnClose($client)
     {
-        $clientId = $client->getClientId();
-        $clientIp = $client->getClientIp();
-        $clientPort = $client->getClientPort();
-        $resource = $client->getClientSocket();
+        throw new \Exception('Not implemented');
+//         $clientId = $client->getClientId();
+//         $clientIp = $client->getClientIp();
+//         $clientPort = $client->getClientPort();
+//         $resource = $client->getClientSocket();
 
-        $this->_removeIpFromStorage($client->getClientIp());
-        if(isset($this->_requestStorage[$clientId]))
-        {
-            unset($this->_requestStorage[$clientId]);
-        }
-        unset($this->clients[(int)$resource]);
-        $index = array_search($resource, $this->allsockets);
-        unset($this->allsockets[$index], $client);
+//         $this->_removeIpFromStorage($client->getClientIp());
+//         if(isset($this->_requestStorage[$clientId]))
+//         {
+//             unset($this->_requestStorage[$clientId]);
+//         }
+//         unset($this->connections[(int)$resource]);
+//         $index = array_search($resource, $this->resources);
+//         unset($this->resources[$index], $client);
 
-        // trigger status application:
-        if($this->getApplication('status') !== false)
-        {
-            $this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
-        }
-        unset($clientId, $clientIp, $clientPort, $resource);
+//         // trigger status application:
+//         if($this->getApplication('status') !== false)
+//         {
+//             $this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
+//         }
+//         unset($clientId, $clientIp, $clientPort, $resource);
     }
 
     /**
@@ -414,9 +444,8 @@ class Server implements Resource
         {
             unset($this->_requestStorage[$clientId]);
         }
-        unset($this->clients[(int)$resource]);
-        $index = array_search($resource, $this->allsockets);
-        unset($this->allsockets[$index], $client);
+        unset($this->connections[(int)$resource]);
+
 
         // trigger status application:
         if($this->getApplication('status') !== false)
@@ -426,229 +455,10 @@ class Server implements Resource
         unset($resource, $clientId, $clientIp, $clientPort);
     }
 
-    /**
-     * Checks if the submitted origin (part of websocket handshake) is allowed
-     * to connect. Allowed origins can be set at server startup.
-     *
-     * @param string $domain The origin-domain from websocket handshake.
-     * @return bool If domain is allowed to connect method returns true.
-     */
-    public function checkOrigin($domain)
+    protected function listen()
     {
-        $domain = str_replace('http://', '', $domain);
-        $domain = str_replace('https://', '', $domain);
-        $domain = str_replace('www.', '', $domain);
-        $domain = str_replace('/', '', $domain);
+        parent::listen();
 
-        return isset($this->_allowedOrigins[$domain]);
-    }
-
-    /**
-     * Adds a new ip to ip storage.
-     *
-     * @param string $ip An ip address.
-     */
-    private function _addIpToStorage($ip)
-    {
-        if(isset($this->_ipStorage[$ip]))
-        {
-            $this->_ipStorage[$ip]++;
-        }
-        else
-        {
-            $this->_ipStorage[$ip] = 1;
-        }
-    }
-
-    /**
-     * Removes an ip from ip storage.
-     *
-     * @param string $ip An ip address.
-     * @return bool True if ip could be removed.
-     */
-    private function _removeIpFromStorage($ip)
-    {
-        if(!isset($this->_ipStorage[$ip]))
-        {
-            return false;
-        }
-        if($this->_ipStorage[$ip] === 1)
-        {
-            unset($this->_ipStorage[$ip]);
-            return true;
-        }
-        $this->_ipStorage[$ip]--;
-
-        return true;
-    }
-
-    /**
-     * Checks if an ip has reached the maximum connection limit.
-     *
-     * @param string $ip An ip address.
-     * @return bool False if ip has reached max. connection limit. True if connection is allowed.
-     */
-    private function _checkMaxConnectionsPerIp($ip)
-    {
-        if(empty($ip))
-        {
-            return false;
-        }
-        if(!isset ($this->_ipStorage[$ip]))
-        {
-            return true;
-        }
-        return ($this->_ipStorage[$ip] > $this->_maxConnectionsPerIp) ? false : true;
-    }
-
-    /**
-     * Checkes if a client has reached its max. requests per minute limit.
-     *
-     * @param string $clientId A client id. (unique client identifier)
-     * @return bool True if limit is not yet reached. False if request limit is reached.
-     */
-    private function _checkRequestLimit($clientId)
-    {
-        // no data in storage - no danger:
-        if(!isset($this->_requestStorage[$clientId]))
-        {
-            $this->_requestStorage[$clientId] = array(
-                'lastRequest' => time(),
-                'totalRequests' => 1
-            );
-            return true;
-        }
-
-        // time since last request > 1min - no danger:
-        if(time() - $this->_requestStorage[$clientId]['lastRequest'] > 60)
-        {
-            $this->_requestStorage[$clientId] = array(
-                'lastRequest' => time(),
-                'totalRequests' => 1
-            );
-            return true;
-        }
-
-        // did requests in last minute - check limits:
-        if($this->_requestStorage[$clientId]['totalRequests'] > $this->_maxRequestsPerMinute)
-        {
-            return false;
-        }
-
-        $this->_requestStorage[$clientId]['totalRequests']++;
-        return true;
-    }
-
-    /**
-     * Set whether the client origin should be checked on new connections.
-     *
-     * @param bool $doOriginCheck
-     * @return bool True if value could validated and set successfully.
-     */
-    public function setCheckOrigin($doOriginCheck)
-    {
-        if(is_bool($doOriginCheck) === false)
-        {
-            return false;
-        }
-        $this->_checkOrigin = $doOriginCheck;
-        return true;
-    }
-
-    /**
-     * Return value indicating if client origins are checked.
-     * @return bool True if origins are checked.
-     */
-    public function getCheckOrigin()
-    {
-        return $this->_checkOrigin;
-    }
-
-    /**
-     * Adds a domain to the allowed origin storage.
-     *
-     * @param sting $domain A domain name from which connections to server are allowed.
-     * @return bool True if domain was added to storage.
-     */
-    public function setAllowedOrigin($domain)
-    {
-        $domain = str_replace('http://', '', $domain);
-        $domain = str_replace('www.', '', $domain);
-        $domain = (strpos($domain, '/') !== false) ? substr($domain, 0, strpos($domain, '/')) : $domain;
-        if(empty($domain))
-        {
-            return false;
-        }
-        $this->_allowedOrigins[$domain] = true;
-        return true;
-    }
-
-    /**
-     * Sets value for the max. connection per ip to this server.
-     *
-     * @param int $limit Connection limit for an ip.
-     * @return bool True if value could be set.
-     */
-    public function setMaxConnectionsPerIp($limit)
-    {
-        if(!is_int($limit))
-        {
-            return false;
-        }
-        $this->_maxConnectionsPerIp = $limit;
-        return true;
-    }
-
-    /**
-     * Returns the max. connections per ip value.
-     *
-     * @return int Max. simoultanous  allowed connections for an ip to this server.
-     */
-    public function getMaxConnectionsPerIp()
-    {
-        return $this->_maxConnectionsPerIp;
-    }
-
-    /**
-     * Sets how many requests a client is allowed to do per minute.
-     *
-     * @param int $limit Requets/Min limit (per client).
-     * @return bool True if value could be set.
-     */
-    public function setMaxRequestsPerMinute($limit)
-    {
-        if(!is_int($limit))
-        {
-            return false;
-        }
-        $this->_maxRequestsPerMinute = $limit;
-        return true;
-    }
-
-    /**
-     * Sets how many clients are allowed to connect to server until no more
-     * connections are accepted.
-     *
-     * @param in $max Max. total connections to server.
-     * @return bool True if value could be set.
-     */
-    public function setMaxClients($max)
-    {
-        if((int)$max === 0)
-        {
-            return false;
-        }
-        $this->_maxClients = (int)$max;
-        return true;
-    }
-
-    /**
-     * Returns total max. connection limit of server.
-     *
-     * @return int Max. connections to this server.
-     */
-    public function getMaxClients()
-    {
-        return $this->_maxClients;
+        $this->resources[] = $this->socket;
     }
 }

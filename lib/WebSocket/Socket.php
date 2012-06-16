@@ -2,6 +2,8 @@
 
 namespace WebSocket;
 
+use WebSocket\Exception\ConnectionException;
+
 use WebSocket\Protocol\Protocol;
 use WebSocket\Protocol\Rfc6455Protocol;
 use \InvalidArgumentException;
@@ -17,7 +19,7 @@ use \RuntimeException;
  * represents a single underlying socket resource. It's designed to be used
  * by aggregation, rather than inheritence.
  */
-class Socket
+class Socket implements Resource
 {
     /**
      * Default connection timeout
@@ -41,7 +43,7 @@ class Socket
     /**
      * @var resource
      */
-    private $socket = null;
+    protected $socket = null;
 
     /**
      * @var array
@@ -53,10 +55,15 @@ class Socket
      */
     protected $context = null;
 
+
+
     protected $scheme;
     protected $host;
     protected $port;
+
+    protected $listening = false;
     protected $connected = false;
+
     protected $firstRead = true;
 
     /**
@@ -95,9 +102,11 @@ class Socket
     protected function configure(array $options)
     {
         $this->options = array_merge(array(
-            'protocol'        => new Rfc6455Protocol(),
-            'timeout_connect' => self::TIMEOUT_CONNECT,
-            'timeout_socket'  => self::TIMEOUT_SOCKET
+            'backlog'              => 50,
+            'protocol'             => new Rfc6455Protocol(),
+            'timeout_connect'      => self::TIMEOUT_CONNECT,
+            'timeout_socket'       => self::TIMEOUT_SOCKET,
+            'server_ssl_cert_file' => null
         ), $options);
     }
 
@@ -161,6 +170,34 @@ class Socket
         return ($this->connected = true);
     }
 
+    protected function listen()
+    {
+        $uri = sprintf(
+            '%s://%s:%d',
+            $this->scheme,
+            $this->host,
+            $this->port
+        );
+
+        $this->socket = stream_socket_server(
+            $uri,
+            $errno,
+            $errstr,
+            STREAM_SERVER_BIND|STREAM_SERVER_LISTEN.
+            $this->getStreamContext()
+        );
+
+        if (!$this->socket) {
+            throw new ConnectionException(sprintf(
+                'Could not listen on socket: %s (%d)',
+                $errstr,
+                $errno
+            ));
+        }
+
+        $this->listening = true;
+    }
+
     public function reconnect()
     {
         $this->disconnect();
@@ -184,9 +221,14 @@ class Socket
     /**
      * Gets a stream context
      */
-    protected function getStreamContext()
+    protected function getStreamContext($listen = false)
     {
         $options = array();
+
+        if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE
+            || $this->scheme == Protocol::SCHEME_UNDERLYING) {
+            $options['socket'] = $this->getSocketStreamContextOptions();
+        }
 
         if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE) {
             $options['ssl'] = $this->getSslStreamContextOptions();
@@ -203,13 +245,29 @@ class Socket
         return $this->socket;
     }
 
+    public function getResourceId()
+    {
+        return (int)$this->socket;
+    }
+
+    protected function getSocketStreamContextOptions()
+    {
+        $options = array();
+
+        if ($this->options['backlog']) {
+            $options['backlog'] = $this->options['backlog'];
+        }
+
+        return $options;
+    }
+
     protected function getSslStreamContextOptions()
     {
         $options = array();
 
-        if (isset($this->options['server_ssl_cert_file'])) {
+        if ($this->options['server_ssl_cert_file']) {
             $options['local_cert'] = $this->options['server_ssl_cert_file'];
-            if (isset($this->options['server_ssl_passphrase'])) {
+            if ($this->options['server_ssl_passphrase']) {
                 $options['passphrase'] = $this->options['server_ssl_passphrase'];
             }
         }
@@ -267,7 +325,6 @@ class Socket
             }
 
             $result = fread($this->socket, $length);
-            $this->firstRead = false;
 
             if ($result === false) {
                 return $buffer;
@@ -283,6 +340,11 @@ class Socket
 
             if ($this->firstRead == true && strlen($result) == 1) {
                 // Workaround Chrome behavior (still needed?)
+                $continue = true;
+            }
+            $this->firstRead = false;
+
+            if (strlen($result) == $length) {
                 $continue = true;
             }
 
