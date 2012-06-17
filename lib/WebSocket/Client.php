@@ -2,6 +2,7 @@
 
 namespace WebSocket;
 
+use WebSocket\Socket\ClientSocket;
 use WebSocket\Protocol\Protocol;
 use WebSocket\Protocol\Rfc6455Protocol;
 
@@ -95,7 +96,7 @@ class Client
     {
         $this->options = array_merge(array(
             'protocol'        => new Rfc6455Protocol(),
-            'socket'          => new Socket($this->uri)
+            'socket'          => new ClientSocket($this->uri)
         ), $options);
     }
 

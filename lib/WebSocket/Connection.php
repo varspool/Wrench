@@ -1,145 +1,195 @@
 <?php
 namespace WebSocket;
 
+use WebSocket\Util\Configurable;
+
+use WebSocket\Socket;
+use WebSocket\Server;
+use \RuntimeException;
+use WebSocket\Exception as WebSocketException;
+
 /**
- * WebSocket Connection class
+ * Represents a client connection on the server side
+ *
+ * i.e. the `Server` manages a bunch of `Connection`s
  *
  * @author Nico Kaiser <nico@kaiser.me>
  * @author Simon Samtleben <web@lemmingzshadow.net>
  */
-class Connection //@todo extends Socket
+class Connection extends Configurable
 {
-    private $server;
-    private $socket;
+    protected $manager;
+
+    /**
+     * Socket object
+     *
+     * Wraps the client connection resource
+     *
+     * @var Socket
+     */
+    protected $socket;
+
+    /**
+     * Whether the connection has successfully handshaken
+     *
+     * @var boolean
+     */
     private $handshaked = false;
+
+    /**
+     * The application this connection belongs to
+     *
+     * @var Application
+     */
     private $application = null;
 
-	private $ip;
-	private $port;
-	private $connectionId = null;
+    /**
+     * The IP address of the client
+     *
+     * @var string
+     */
+	protected $ip;
+
+	/**
+	 * The port of the client
+	 *
+	 * @var int
+	 */
+	protected $port;
+
+	/**
+	 * Connection ID
+	 *
+	 * @var string|null
+	 */
+	protected $id = null;
 
 	public $waitingForData = false;
 	private $_dataBuffer = '';
 
+    /**
+     * Constructor
+     *
+     * @param Server $server
+     * @param resource $socket
+     * @param array $options
+     * @throws InvalidArgumentException
+     */
+	public function __construct(
+	    ConnectionManager $manager,
+	    $socket,
+	    array $options = array()
+    ) {
+        $this->manager = $manager;
 
-	public function __construct($server, $socket)
-    {
-		$this->server = $server;
-		$this->socket = $socket;
+        parent::__construct($options);
 
-		// set some client-information:
-		$socketName = stream_socket_get_name($socket, true);
-		$tmp = explode(':', $socketName);
-		$this->ip = $tmp[0];
-		$this->port = $tmp[1];
-		$this->connectionId = md5($this->ip . $this->port . spl_object_hash($this));
+        $this->configureSocket($socket);
+        $this->configureClientInformation();
 
 		$this->log('Connected');
     }
 
-    private function handshake($data)
+
+
+    /**
+     * @see WebSocket\Util.Configurable::configure()
+     */
+    protected function configure(array $options)
     {
-        $this->log('Performing handshake');
-        $lines = preg_split("/\r\n/", $data);
+        $options = array_merge(array(
+            'socket_class'         => 'WebSocket\Socket\ServerClientSocket',
+            'socket_options'       => array(),
+            'connection_id_secret' => 'asu5gj656h64Da(0crt8pud%^WAYWW$u76dwb',
+            'connection_id_algo'   => 'sha512',
+        ), $options);
 
-		// check for valid http-header:
-        if(!preg_match('/\AGET (\S+) HTTP\/1.1\z/', $lines[0], $matches))
-		{
-            $this->log('Invalid request: ' . $lines[0]);
-			$this->sendHttpResponse(400);
-            stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-            return false;
+        parent::configure($options);
+    }
+
+    /**
+     * @param resource $socket
+     */
+    protected function configureSocket($socket)
+    {
+        $class   = $this->options['socket_class'];
+        $options = $this->options['socket_options'];
+        $this->socket = new $class($socket, $options);
+    }
+
+    /**
+     * @throws RuntimeException
+     */
+    protected function configureClientInformation()
+    {
+		$name = stream_socket_get_name($this->socket->getResource(), true);
+
+		$tmp = explode(':', $name);
+		if (count($tmp) == 2) {
+    		$this->ip = $tmp[0];
+    		$this->port = $tmp[1];
+    		$this->configureClientId();
+		} else {
+		    throw new RuntimeException('Could not get client information');
+		}
+    }
+
+    /**
+     * Configures the client ID
+     *
+     * We hash the client ID to prevent leakage of information if another client
+     * happens to get a hold of an ID. The secret *must* be lengthy, and must
+     * be kept secret for this to work: otherwise it's trivial to search the space
+     * of possible IP addresses/ports (well, if not trivial, at least very fast).
+     */
+    protected function configureClientId()
+    {
+        $message = sprintf(
+		    '%s:uri=%s&ip=%s&port=%s',
+            $this->options['connection_id_secret'],
+		    rawurlencode($this->manager->getUri()),
+		    rawurlencode($this->ip),
+	        rawurlencode($this->port)
+        );
+
+        $algo = $this->options['connection_id_algo'];
+
+        if (extension_loaded('gmp')) {
+            $hash = hash($algo, $message, true);
+            $hash = gmp_strval(gmp_init($hash, 16), 62);
+        } else {
+            $hash = hash($algo, $message);
         }
 
-		// check for valid application:
-		$path = $matches[1];
-		$this->application = $this->server->getApplication(substr($path, 1));
-        if(!$this->application)
-		{
-            $this->log('Invalid application: ' . $path);
-			$this->sendHttpResponse(404);
-			stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-			$this->server->removeClientOnError($this);
-            return false;
+        $this->id = $hash;
+    }
+
+	/**
+	 * Data receiver
+	 *
+	 * Called by the connection manager when the connection has received data
+	 *
+	 * @param string $data
+	 */
+	public function onData($data)
+    {
+        if (!$this->handshaked) {
+            return $this->handshake($data);
+        }
+        return $this->handle($data);
+    }
+
+    public function handshake($data)
+    {
+        try {
+            $this->protocol->validateRequestHandshake($data);
+            $response = $this->protocol->getResponseHandshake();
+        } catch (WebSocketException $e) {
+            $this->log('Handshake failed: ' . $e, 'err');
+            throw $e;
         }
 
-		// generate headers array:
-		$headers = array();
-        foreach($lines as $line)
-		{
-            $line = chop($line);
-            if(preg_match('/\A(\S+): (.*)\z/', $line, $matches))
-			{
-                $headers[$matches[1]] = $matches[2];
-            }
-        }
-
-		// check for supported websocket version:
-		if(!isset($headers['Sec-WebSocket-Version']) || $headers['Sec-WebSocket-Version'] < 6)
-		{
-			$this->log('Unsupported websocket version.');
-			$this->sendHttpResponse(501);
-			stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-			$this->server->removeClientOnError($this);
-            return false;
-		}
-
-		// check origin:
-		if($this->server->getCheckOrigin() === true)
-		{
-			$origin = (isset($headers['Sec-WebSocket-Origin'])) ? $headers['Sec-WebSocket-Origin'] : false;
-			$origin = (isset($headers['Origin'])) ? $headers['Origin'] : $origin;
-			if($origin === false)
-			{
-				$this->log('No origin provided.');
-				$this->sendHttpResponse(401);
-				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-				$this->server->removeClientOnError($this);
-				return false;
-			}
-
-			if(empty($origin))
-			{
-				$this->log('Empty origin provided.');
-				$this->sendHttpResponse(401);
-				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-				$this->server->removeClientOnError($this);
-				return false;
-			}
-
-			if($this->server->checkOrigin($origin) === false)
-			{
-				$this->log('Invalid origin provided.');
-				$this->sendHttpResponse(401);
-				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-				$this->server->removeClientOnError($this);
-				return false;
-			}
-		}
-
-		// do handyshake: (hybi-10)
-		$secKey = $headers['Sec-WebSocket-Key'];
-		$secAccept = base64_encode(pack('H*', sha1($secKey . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
-		$response = "HTTP/1.1 101 Switching Protocols\r\n";
-		$response.= "Upgrade: websocket\r\n";
-		$response.= "Connection: Upgrade\r\n";
-		$response.= "Sec-WebSocket-Accept: " . $secAccept . "\r\n";
-		$response.= "Sec-WebSocket-Protocol: " . substr($path, 1) . "\r\n\r\n";
-		if(false === ($this->server->writeBuffer($this->socket, $response)))
-		{
-			return false;
-		}
-		$this->handshaked = true;
-		$this->log('Handshake sent');
-		$this->application->onConnect($this);
-
-		// trigger status application:
-		if($this->server->getApplication('status') !== false)
-		{
-			$this->server->getApplication('status')->clientConnected($this->ip, $this->port);
-		}
-
-		return true;
+        $this->socket->send($response);
     }
 
 	public function sendHttpResponse($httpStatusCode = 400)
@@ -171,17 +221,6 @@ class Connection //@todo extends Socket
 		$this->server->writeBuffer($this->socket, $httpHeader);
 	}
 
-	public function onData($data)
-    {
-        if($this->handshaked)
-		{
-            return $this->handle($data);
-        }
-		else
-		{
-            $this->handshake($data);
-        }
-    }
 
     private function handle($data)
     {
@@ -309,227 +348,33 @@ class Connection //@todo extends Socket
 		$this->server->removeClientOnClose($this);
 	}
 
-
 	public function onDisconnect()
     {
         $this->log('Disconnected', 'info');
         $this->close(1000);
     }
 
-    public function log($message, $type = 'info')
+    public function log($message, $priority = 'info')
     {
-        $this->server->log('[client ' . $this->ip . ':' . $this->port . '] ' . $message, $type);
+        $this->manager->log(__CLASS__ . ': ' . $message, $priority);
     }
 
-	private function hybi10Encode($payload, $type = 'text', $masked = true)
-	{
-		$frameHead = array();
-		$frame = '';
-		$payloadLength = strlen($payload);
-
-		switch($type)
-		{
-			case 'text':
-				// first byte indicates FIN, Text-Frame (10000001):
-				$frameHead[0] = 129;
-			break;
-
-			case 'close':
-				// first byte indicates FIN, Close Frame(10001000):
-				$frameHead[0] = 136;
-			break;
-
-			case 'ping':
-				// first byte indicates FIN, Ping frame (10001001):
-				$frameHead[0] = 137;
-			break;
-
-			case 'pong':
-				// first byte indicates FIN, Pong frame (10001010):
-				$frameHead[0] = 138;
-			break;
-		}
-
-		// set mask and payload length (using 1, 3 or 9 bytes)
-		if($payloadLength > 65535)
-		{
-			$payloadLengthBin = str_split(sprintf('%064b', $payloadLength), 8);
-			$frameHead[1] = ($masked === true) ? 255 : 127;
-			for($i = 0; $i < 8; $i++)
-			{
-				$frameHead[$i+2] = bindec($payloadLengthBin[$i]);
-			}
-			// most significant bit MUST be 0 (close connection if frame too big)
-			if($frameHead[2] > 127)
-			{
-				$this->close(1004);
-				return false;
-			}
-		}
-		elseif($payloadLength > 125)
-		{
-			$payloadLengthBin = str_split(sprintf('%016b', $payloadLength), 8);
-			$frameHead[1] = ($masked === true) ? 254 : 126;
-			$frameHead[2] = bindec($payloadLengthBin[0]);
-			$frameHead[3] = bindec($payloadLengthBin[1]);
-		}
-		else
-		{
-			$frameHead[1] = ($masked === true) ? $payloadLength + 128 : $payloadLength;
-		}
-
-		// convert frame-head to string:
-		foreach(array_keys($frameHead) as $i)
-		{
-			$frameHead[$i] = chr($frameHead[$i]);
-		}
-		if($masked === true)
-		{
-			// generate a random mask:
-			$mask = array();
-			for($i = 0; $i < 4; $i++)
-			{
-				$mask[$i] = chr(rand(0, 255));
-			}
-
-			$frameHead = array_merge($frameHead, $mask);
-		}
-		$frame = implode('', $frameHead);
-
-		// append payload to frame:
-		$framePayload = array();
-		for($i = 0; $i < $payloadLength; $i++)
-		{
-			$frame .= ($masked === true) ? $payload[$i] ^ $mask[$i % 4] : $payload[$i];
-		}
-
-		return $frame;
-	}
-
-	private function hybi10Decode($data)
-	{
-		$payloadLength = '';
-		$mask = '';
-		$unmaskedPayload = '';
-		$decodedData = array();
-
-		// estimate frame type:
-		$firstByteBinary = sprintf('%08b', ord($data[0]));
-		$secondByteBinary = sprintf('%08b', ord($data[1]));
-		$opcode = bindec(substr($firstByteBinary, 4, 4));
-		$isMasked = ($secondByteBinary[0] == '1') ? true : false;
-		$payloadLength = ord($data[1]) & 127;
-
-		// close connection if unmasked frame is received:
-		if($isMasked === false)
-		{
-			$this->close(1002);
-		}
-
-		switch($opcode)
-		{
-			// text frame:
-			case 1:
-				$decodedData['type'] = 'text';
-			break;
-
-			case 2:
-				$decodedData['type'] = 'binary';
-			break;
-
-			// connection close frame:
-			case 8:
-				$decodedData['type'] = 'close';
-			break;
-
-			// ping frame:
-			case 9:
-				$decodedData['type'] = 'ping';
-			break;
-
-			// pong frame:
-			case 10:
-				$decodedData['type'] = 'pong';
-			break;
-
-			default:
-				// Close connection on unknown opcode:
-				$this->close(1003);
-			break;
-		}
-
-		if($payloadLength === 126)
-		{
-		   $mask = substr($data, 4, 4);
-		   $payloadOffset = 8;
-		   $dataLength = bindec(sprintf('%08b', ord($data[2])) . sprintf('%08b', ord($data[3]))) + $payloadOffset;
-		}
-		elseif($payloadLength === 127)
-		{
-			$mask = substr($data, 10, 4);
-			$payloadOffset = 14;
-			$tmp = '';
-			for($i = 0; $i < 8; $i++)
-			{
-				$tmp .= sprintf('%08b', ord($data[$i+2]));
-			}
-			$dataLength = bindec($tmp) + $payloadOffset;
-			unset($tmp);
-		}
-		else
-		{
-			$mask = substr($data, 2, 4);
-			$payloadOffset = 6;
-			$dataLength = $payloadLength + $payloadOffset;
-		}
-
-		/**
-		 * We have to check for large frames here. socket_recv cuts at 1024 bytes
-		 * so if websocket-frame is > 1024 bytes we have to wait until whole
-		 * data is transferd.
-		 */
-		if(strlen($data) < $dataLength)
-		{
-			return false;
-		}
-
-		if($isMasked === true)
-		{
-			for($i = $payloadOffset; $i < $dataLength; $i++)
-			{
-				$j = $i - $payloadOffset;
-				if(isset($data[$i]))
-				{
-					$unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
-				}
-			}
-			$decodedData['payload'] = $unmaskedPayload;
-		}
-		else
-		{
-			$payloadOffset = $payloadOffset - 4;
-			$decodedData['payload'] = substr($data, $payloadOffset);
-		}
-
-		return $decodedData;
-	}
-
-	public function getClientIp()
+	public function getIp()
 	{
 		return $this->ip;
 	}
 
-	public function getClientPort()
+	public function getPort()
 	{
 		return $this->port;
 	}
 
-	public function getClientId()
+	public function getId()
 	{
 		return $this->connectionId;
 	}
 
-	public function getClientSocket()
+	public function getSocket()
 	{
 		return $this->socket;
 	}
