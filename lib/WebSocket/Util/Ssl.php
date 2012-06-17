@@ -1,8 +1,8 @@
 <?php
 
-namespace WebSocket;
+namespace WebSocket\Util;
 
-class SslSocket extends Socket
+class Ssl
 {
 	/**
 	 * Generates a new PEM File given the informations
@@ -19,28 +19,32 @@ class SslSocket extends Socket
 	 * @param string $commonName               the common name
 	 * @param string $email_address            the email address
 	 */
-	public static function generatePEMFile($pem_file, $pem_passphrase, $country_name, $state_or_province_name,
+	public static function generatePemFile($pem_file, $pem_passphrase, $country_name, $state_or_province_name,
 		$locality_name, $organization_name, $organizational_unit_name, $common_name, $email_address)
 	{
 		// Generate PEM file
 		$dn = array(
-			"countryName" => $country_name,
-			"stateOrProvinceName" => $state_or_province_name,
-			"localityName" => $locality_name,
-			"organizationName" => $organization_name,
-			"organizationalUnitName" => $organizational_unit_name,
-			"commonName" => $common_name,
-			"emailAddress" => $email_address
+			'countryName'            => $country_name,
+			'stateOrProvinceName'    => $state_or_province_name,
+			'localityName'           => $locality_name,
+			'organizationName'       => $organization_name,
+			'organizationalUnitName' => $organizational_unit_name,
+			'commonName'             => $common_name,
+			'emailAddress'           => $email_address
 		);
+
 		$privkey = openssl_pkey_new();
 		$cert    = openssl_csr_new($dn, $privkey);
 		$cert    = openssl_csr_sign($cert, null, $privkey, 365);
+
 		$pem = array();
+
 		openssl_x509_export($cert, $pem[0]);
-		if( $pem_passphrase !== null )
-		{
+
+		if ($pem_passphrase !== null) {
 			openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
 		}
+
 		$pem = implode($pem);
 		file_put_contents($pem_file, $pem);
 	}
