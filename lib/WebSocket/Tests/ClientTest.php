@@ -40,7 +40,7 @@ class ClientTest extends Test
      */
     protected function getMockSocket()
     {
-        return $this->getMock('WebSocket\Socket', array(), array('wss://localhost:8000'));
+        return $this->getMock('WebSocket\Socket\ClientSocket', array(), array('wss://localhost:8000'));
     }
 
     protected function getMockProtocol()

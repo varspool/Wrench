@@ -4,39 +4,39 @@ namespace WebSocket\Tests;
 
 use WebSocket\Protocol\Rfc6455Protocol;
 
-use WebSocket\Socket;
+use WebSocket\Socket\ClientSocket;
 
 use \stdClass;
 use \InvalidArgumentException;
 use \PHPUnit_Framework_Error;
 
-class SocketTest extends Test
+class ClientSocketTest extends Test
 {
     public function testConstructor()
     {
         $socket = null;
 
         $this->assertInstanceOf(
-            'WebSocket\Socket',
-            $socket = new Socket('ws://localhost/'),
+            'WebSocket\Socket\ClientSocket',
+            $socket = new ClientSocket('ws://localhost/'),
             'ws:// scheme, default port'
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket',
-            $socket = new Socket('ws://localhost/some-arbitrary-path'),
+            'WebSocket\Socket\ClientSocket',
+            $socket = new ClientSocket('ws://localhost/some-arbitrary-path'),
             'with path'
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket',
-            $socket = new Socket('wss://localhost/test', array()),
+            'WebSocket\Socket\ClientSocket',
+            $socket = new ClientSocket('wss://localhost/test', array()),
             'empty options'
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket',
-            $socket = new Socket('ws://localhost:8000/foo'),
+            'WebSocket\Socket\ClientSocket',
+            $socket = new ClientSocket('ws://localhost:8000/foo'),
             'specified port'
         );
     }
@@ -46,8 +46,8 @@ class SocketTest extends Test
         $socket = null;
 
         $this->assertInstanceOf(
-            'WebSocket\Socket',
-            $socket = new Socket(
+            'WebSocket\Socket\ClientSocket',
+            $socket = new ClientSocket(
                 'ws://localhost:8000/foo', array(
                     'timeout_connect' => 10
                 )
@@ -56,8 +56,8 @@ class SocketTest extends Test
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket',
-            $socket = new Socket(
+            'WebSocket\Socket\ClientSocket',
+            $socket = new ClientSocket(
                 'ws://localhost:8000/foo', array(
                     'timeout_socket' => 10
                 )
@@ -66,8 +66,8 @@ class SocketTest extends Test
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket',
-            $socket = new Socket(
+            'WebSocket\Socket\ClientSocket',
+            $socket = new ClientSocket(
                 'ws://localhost:8000/foo', array(
                     'protocol' => new Rfc6455Protocol()
                 )
@@ -81,7 +81,7 @@ class SocketTest extends Test
      */
     public function testProtocolTypeError()
     {
-        $socket = new Socket(
+        $socket = new ClientSocket(
             'ws://localhost:8000/foo', array(
                 'protocol' => new stdClass()
             )
@@ -93,7 +93,7 @@ class SocketTest extends Test
      */
     public function testConstructorUriUnspecified()
     {
-        $w = new Socket();
+        $w = new ClientSocket();
     }
 
     /**
@@ -101,7 +101,7 @@ class SocketTest extends Test
      */
     public function testConstructorUriEmpty()
     {
-        $w = new Socket(null);
+        $w = new ClientSocket(null);
     }
 
 
@@ -110,7 +110,7 @@ class SocketTest extends Test
      */
     public function testConstructorUriInvalid()
     {
-        $w = new Socket('Bad argument');
+        $w = new ClientSocket('Bad argument');
     }
 
 }
