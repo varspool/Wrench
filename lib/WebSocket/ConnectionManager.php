@@ -1,8 +1,13 @@
 <?php
 namespace WebSocket;
 
+use WebSocket\Protocol\Protocol;
+
+use WebSocket\Exception\CloseException;
+
 use WebSocket\Resource;
 use WebSocket\Util\Configurable;
+use WebSocket\Exception\Exception as WebSocketException;
 
 class ConnectionManager extends Configurable
 {
@@ -70,6 +75,17 @@ class ConnectionManager extends Configurable
     }
 
     /**
+     * Gets the application associated with the given path
+     *
+     * @param string $path
+     */
+    public function getApplicationForPath($path)
+    {
+        $path = ltrim($path, '/');
+        return $this->server->getApplication($path);
+    }
+
+    /**
      * Configures the main server socket
      *
      * @param string $uri
@@ -104,12 +120,7 @@ class ConnectionManager extends Configurable
         return $this->connections[$this->resourceId($socket)];
     }
 
-    protected function removeSocket($socket)
-    {
-        unset($this->connections[$client->getResourceId()]);
-        $index = array_search($resource, $this->resources);
-        unset($this->resources[$index], $client);
-    }
+
 
 
     /**
@@ -196,17 +207,12 @@ class ConnectionManager extends Configurable
             return;
         }
 
-        $data = $connection->getSocket()->receive();
-        $bytes = strlen($data);
-
-        if ($bytes === 0) {
-            $connection->onDisconnect();
-            continue;
-        } elseif ($data === false) {
-            $this->removeClientOnError($connection);
-            continue;
-        } else {
-            $connection->onData($data);
+        try {
+            $connection->process();
+        } catch (WebSocketException $e) {
+            $this->log('Error on client socket: ' . $e, 'err');
+            $connection->processException($e);
+            $this->removeConnection($connection);
         }
     }
 
@@ -237,7 +243,38 @@ class ConnectionManager extends Configurable
 
     public function log($message, $priority = 'info')
     {
-        $this->server->log('Manager: ' . $message, $priority);
+        $this->server->log(sprintf(
+            '%s: %s',
+            __CLASS__,
+            $message
+        ), $priority);
+    }
+
+    /**
+     * @deprecated
+     * @return \WebSocket\Server
+     */
+    public function getServer()
+    {
+        return $this->server;
+    }
+
+    /**
+     * Removes a connection
+     *
+     * @param Connection $connection
+     */
+    public function removeConnection($connection)
+    {
+        unset($this->connections[$connection->getResourceId()]);
+
+        $index = array_search($connection->getResource(), $this->resources);
+        unset($this->resources[$index], $client);
+
+        $this->server->notify(
+            Server::EVENT_SOCKET_DISCONNECT,
+            array($connection->getResource())
+        );
     }
 
     /**
@@ -274,6 +311,7 @@ class ConnectionManager extends Configurable
     /**
      * Removes a client and all references in case of timeout/error.
      * @param object $client The client object to remove.
+     * @deprecated
      */
     public function removeClientOnError($client)
     {        // remove reference in clients app:

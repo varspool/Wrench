@@ -26,10 +26,11 @@ class Server extends Configurable
      *
      * @var string
      */
-    const EVENT_SOCKET_CONNECT = 'socket_connect';
-    const EVENT_SOCKET_DISCONNECT = 'socket_disconnect';
-    const EVENT_CLIENT_CONNECT = 'client_connect';
-    const EVENT_CLIENT_DISCONNECT = 'client_disconnect';
+    const EVENT_SOCKET_CONNECT       = 'socket_connect';
+    const EVENT_SOCKET_DISCONNECT    = 'socket_disconnect';
+    const EVENT_HANDSHAKE_REQUEST    = 'handshake_request';
+    const EVENT_HANDSHAKE_SUCCESSFUL = 'handshake_successful';
+    const EVENT_CLIENT_DATA          = 'client_data';
     /**#@-*/
 
     /**
@@ -67,25 +68,18 @@ class Server extends Configurable
     protected $listeners = array();
 
     /**
-     * An array of client connections
+     * Connection manager
      *
-     * @var array<Connection>
+     * @var ConnectionManager
      */
-    protected $connections = array();
-
     protected $connectionManager;
 
-
+    /**
+     * Applications
+     *
+     * @var array<string => Application>
+     */
     protected $applications = array();
-    private $_ipStorage = array();
-    private $_requestStorage = array();
-
-    // server settings:
-    private $_checkOrigin = true;
-    private $_allowedOrigins = array();
-    private $_maxClients = 30;
-    private $_maxConnectionsPerIp = 5;
-    private $_maxRequestsPerMinute = 50;
 
     /**
      * Constructor
@@ -130,6 +124,8 @@ class Server extends Configurable
 
     /**
      * Configures the logger
+     *
+     * @return void
      */
     protected function configureLogger()
     {
@@ -144,6 +140,8 @@ class Server extends Configurable
 
     /**
      * Configures the connection manager
+     *
+     * @return void
      */
     protected function configureConnectionManager()
     {
@@ -164,6 +162,7 @@ class Server extends Configurable
      * Sets a logger
      *
      * @param Closure $logger
+     * @return void
      */
     public function setLogger(Closure $logger)
     {
@@ -173,7 +172,7 @@ class Server extends Configurable
     /**
      * Main server loop
      *
-     * This method does not return.
+     * @return void This method does not return!
      */
     public function run()
     {
@@ -211,6 +210,7 @@ class Server extends Configurable
      *
      * @param string $event
      * @param array $arguments Event arguments
+     * @return void
      */
     public function notify($event, array $arguments = array())
     {
@@ -232,6 +232,7 @@ class Server extends Configurable
      *
      * @param string $event
      * @param Closure $callback
+     * @return void
      * @throws InvalidArgumentException
      */
     public function addListener($event, Closure $callback)
@@ -248,31 +249,21 @@ class Server extends Configurable
     }
 
     /**
-     * Whether the socket is currently connected
-     *
-     * @return boolean
-     */
-    public function isConnected()
-    {
-        return $this->connected;
-    }
-
-    /**
      * Returns a server application.
      *
      * @param string $key Name of application.
-     * @return object The application object.
+     * @return Application The application object.
      */
     public function getApplication($key)
     {
-        if(empty($key))
-        {
+        if (empty($key)) {
             return false;
         }
-        if(array_key_exists($key, $this->applications))
-        {
+
+        if (array_key_exists($key, $this->applications)) {
             return $this->applications[$key];
         }
+
         return false;
     }
 
@@ -280,7 +271,8 @@ class Server extends Configurable
      * Adds a new application object to the application storage.
      *
      * @param string $key Name of application.
-     * @param object $application The application object.
+     * @param object $application The application object
+     * @return void
      */
     public function registerApplication($key, $application)
     {

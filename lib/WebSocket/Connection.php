@@ -1,12 +1,21 @@
 <?php
 namespace WebSocket;
 
+use WebSocket\Exception\CloseException;
+
+use WebSocket\Exception\ConnectionException;
+
+use WebSocket\Exception\HandshakeException;
+
+use WebSocket\Exception\BadRequestException;
+
 use WebSocket\Util\Configurable;
 
 use WebSocket\Socket;
 use WebSocket\Server;
 use \RuntimeException;
 use WebSocket\Exception as WebSocketException;
+use \Exception;
 
 /**
  * Represents a client connection on the server side
@@ -34,14 +43,14 @@ class Connection extends Configurable
      *
      * @var boolean
      */
-    private $handshaked = false;
+    protected $handshaked = false;
 
     /**
      * The application this connection belongs to
      *
      * @var Application
      */
-    private $application = null;
+    protected $application = null;
 
     /**
      * The IP address of the client
@@ -89,8 +98,6 @@ class Connection extends Configurable
 
 		$this->log('Connected');
     }
-
-
 
     /**
      * @see WebSocket\Util.Configurable::configure()
@@ -182,14 +189,45 @@ class Connection extends Configurable
     public function handshake($data)
     {
         try {
-            $this->protocol->validateRequestHandshake($data);
-            $response = $this->protocol->getResponseHandshake();
+            list($path, $origin, $key, $extensions)
+                = $this->protocol->validateRequestHandshake($data);
+
+            $this->application = $this->manager->getApplicationForPath($path);
+            if (!$this->application) {
+                throw new BadRequestException('Invalid application');
+            }
+
+            $this->manager->getServer()->notify(
+                Server::EVENT_HANDSHAKE_REQUEST,
+                array($this, $path, $origin, $key, $extensions)
+            );
+
+            $response = $this->protocol->getResponseHandshake($key);
+
+            if ($this->socket->send($response) === false) {
+                throw new HandshakeException('Could not send handshake response');
+            }
+
+            $this->handshaked = true;
+
+            $this->log(sprintf(
+                'Handshake successful: %s:%d (%s) connected to %s',
+                $this->getIp(),
+                $this->getPort(),
+                $this->getId(),
+                $path
+            ), 'info');
+
+            $this->manager->getServer()->notify(
+                Server::EVENT_HANDSHAKE_SUCCESSFUL,
+                array($this)
+            );
+
+            $this->application->onConnect($this);
         } catch (WebSocketException $e) {
             $this->log('Handshake failed: ' . $e, 'err');
             throw $e;
         }
-
-        $this->socket->send($response);
     }
 
 	public function sendHttpResponse($httpStatusCode = 400)
@@ -224,35 +262,24 @@ class Connection extends Configurable
 
     private function handle($data)
     {
-		if($this->waitingForData === true)
-		{
+		if ($this->waitingForData === true) {
 			$data = $this->_dataBuffer . $data;
 			$this->_dataBuffer = '';
 			$this->waitingForData = false;
 		}
 
-		$decodedData = $this->hybi10Decode($data);
+		$decoded = $this->protocol->decode($data);
 
-		if($decodedData === false)
-		{
+		if ($decoded === false) {
 			$this->waitingForData = true;
 			$this->_dataBuffer .= $data;
 			return false;
-		}
-		else
-		{
+		} else {
 			$this->_dataBuffer = '';
 			$this->waitingForData = false;
 		}
 
-		// trigger status application:
-		if($this->server->getApplication('status') !== false)
-		{
-			$this->server->getApplication('status')->clientActivity($this->port);
-		}
-
-		switch($decodedData['type'])
-		{
+		switch ($decoded['type']) {
 			case 'text':
 				$this->application->onData($decodedData['payload'], $this);
 			break;
@@ -286,15 +313,68 @@ class Connection extends Configurable
 		return true;
     }
 
+    /**
+     * Sends the payload to the connection
+     *
+     * @param string $payload
+     * @param string $type
+     * @param boolean $masked
+     * @throws HandshakeException
+     * @throws ConnectionException
+     * @return boolean
+     */
     public function send($payload, $type = 'text', $masked = false)
     {
-		$encodedData = $this->hybi10Encode($payload, $type, $masked);
-		if(!$this->server->writeBuffer($this->socket, $encodedData))
-		{
-			$this->server->removeClientOnError($this);
-			return false;
-		}
+        if (!$payload) {
+            return false;
+        }
+
+        if (!$this->handshaked) {
+            throw new HandshakeException('Connection is not handshaked');
+        }
+
+        $encoded = $this->protocol->encode($payload, $type, $masked);
+
+        if (!$encoded) {
+            $this->log('Could not send message: encoded message is empty', 'warn');
+            return false;
+        }
+
+        if (!$this->socket->send($encoded)) {
+            $this->log('Could not send payload to client', 'warn');
+            throw new ConnectionException('Could not send data to connection');
+        }
+
 		return true;
+    }
+
+    public function processException(Exception $e)
+    {
+        try {
+            if (!$this->handshaked) {
+                $response = $this->protocol->getErrorHandshake($e);
+                $this->socket->send($response);
+            } else {
+                $response = $this->protocol->getCloseFrame($e);
+                $this->socket->send($response);
+            }
+        } catch (Exception $e) {
+            $this->log('Unable to send error response', 'warning');
+        }
+
+        $connection->close();
+    }
+
+    public function process()
+    {
+        $data = $this->socket->receive();
+        $bytes = strlen($data);
+
+        if ($bytes === 0 || $data === false) {
+            throw new CloseException('Error reading data from socket');
+        }
+
+        $this->onData($data);
     }
 
 	public function close($statusCode = 1000)
@@ -356,7 +436,14 @@ class Connection extends Configurable
 
     public function log($message, $priority = 'info')
     {
-        $this->manager->log(__CLASS__ . ': ' . $message, $priority);
+        $this->manager->log(sprintf(
+            '%s: %s:%d (%s): %s',
+            __CLASS__,
+            $this->getIp(),
+            $this->getPort(),
+            $this->getId(),
+            $message
+        ), $priority);
     }
 
 	public function getIp()
@@ -371,7 +458,7 @@ class Connection extends Configurable
 
 	public function getId()
 	{
-		return $this->connectionId;
+		return $this->id;
 	}
 
 	public function getSocket()
