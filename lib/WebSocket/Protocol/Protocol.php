@@ -2,6 +2,9 @@
 
 namespace WebSocket\Protocol;
 
+use WebSocket\Exception\BadRequestException;
+
+use \Exception;
 use \InvalidArgumentException;
 
 /**
@@ -11,16 +14,16 @@ use \InvalidArgumentException;
  */
 abstract class Protocol
 {
-    const MAGIC_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
-
-    /**
-     * New IANA registered schemes
+    /**#@+
+     * Relevant schemes
+     *
      * @var string
      */
     const SCHEME_WEBSOCKET         = 'ws';
     const SCHEME_WEBSOCKET_SECURE  = 'wss';
     const SCHEME_UNDERLYING        = 'tcp';
     const SCHEME_UNDERLYING_SECURE = 'tls';
+    /**#@-*/
 
     /**#@+
      * Headers
@@ -36,6 +39,36 @@ abstract class Protocol
     const HEADER_CONNECTION = 'Connection';
     const HEADER_UPGRADE    = 'Upgrade';
     /**#@-*/
+
+    /**#@+
+     * Close statuses
+     *
+     * @see http://tools.ietf.org/html/rfc6455#section-7.4
+     * @var int
+     */
+    const CLOSE_NORMAL            = 1000;
+    const CLOSE_GOING_AWAY        = 1001;
+    const CLOSE_PROTOCOL_ERROR    = 1002;
+    const CLOSE_DATA_INVALID      = 1003;
+    const CLOSE_RESERVED          = 1004;
+    const CLOSE_RESERVED_NONE     = 1005;
+    const CLOSE_RESERVED_ABNORM   = 1006;
+    const CLOSE_DATA_INCONSISTENT = 1007;
+    const CLOSE_POLICY_VIOLATION  = 1008;
+    const CLOSE_MESSAGE_TOO_BIG   = 1009;
+    const CLOSE_EXTENSION_NEEDED  = 1010;
+    const CLOSE_UNEXPECTED        = 1011;
+    const CLOSE_RESERVED_TLS      = 1015;
+    /**#@-*/
+
+    /**
+     * Magic GUID
+     *
+     * Used in the WebSocket accept header
+     *
+     * @var string
+     */
+    const MAGIC_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
     /**
      * The request MUST contain an |Upgrade| header field whose value
@@ -70,7 +103,7 @@ abstract class Protocol
      *
      * @var string
      */
-    const RESPONSE_LINE_FORMAT = '%d %s';
+    const RESPONSE_LINE_FORMAT = 'HTTP/1.1 %d %s';
 
     /**
      * Header line format
@@ -86,9 +119,30 @@ abstract class Protocol
      */
     protected $schemes = array(
         self::SCHEME_WEBSOCKET,
-        self::SCHEME_WEBSOCKET_SECURE ,
+        self::SCHEME_WEBSOCKET_SECURE,
         self::SCHEME_UNDERLYING,
         self::SCHEME_UNDERLYING_SECURE
+    );
+
+    /**
+     * Close status codes
+     *
+     * @var array
+     */
+    protected $closeReasons = array(
+        self::CLOSE_NORMAL            => 'normal close',
+        self::CLOSE_GOING_AWAY        => 'going away',
+        self::CLOSE_PROTOCOL_ERROR    => 'protocol error',
+        self::CLOSE_DATA_INVALID      => 'data invalid',
+        self::CLOSE_DATA_INCONSISTENT => 'data inconsistent',
+        self::CLOSE_POLICY_VIOLATION  => 'policy violation',
+        self::CLOSE_MESSAGE_TOO_BIG   => 'message too big',
+        self::CLOSE_EXTENSION_NEEDED  => 'extension needed',
+        self::CLOSE_UNEXPECTED        => 'unexpected error',
+        self::CLOSE_RESERVED          => null, // Don't use these!
+        self::CLOSE_RESERVED_NONE     => null,
+        self::CLOSE_RESERVED_ABNORM   => null,
+        self::CLOSE_RESERVED_TLS      => null
     );
 
     /**
@@ -98,15 +152,32 @@ abstract class Protocol
      */
     abstract public function getVersion();
 
-
     /**
      * Encodes the given binary data into a frame
      *
-     * @param string $data
-     * @param string $payload
-     * @param boolean $masked
+     * @param string     $data
+     * @param string|int $payload
+     * @param boolean    $masked
+     * @deprecated
      */
-    abstract public function encode($data, $payload, $masked = true);
+    //abstract public function encode($data, $payload = self::PAYLOAD_TEXT, $masked = true);
+
+    /**
+     * Subclasses should implement this method and return a boolean to the given
+     * version string, as to whether they would like to accept requests from
+     * user agents that specify that version.
+     *
+     * @return boolean
+     */
+    abstract public function acceptsVersion($version);
+
+    /**
+     * Gets a payload instance, suitable for use in decoding/encoding protocol
+     * frames
+     *
+     * @return Payload
+     */
+    abstract public function getPayload();
 
     /**
      * Generates a key suitable for use in the protocol
@@ -119,11 +190,13 @@ abstract class Protocol
     public function generateKey()
     {
         if (extension_loaded('openssl')) {
-            return openssl_random_pseudo_bytes(16);
+            $key = openssl_random_pseudo_bytes(16);
+        } else {
+            // SHA1 is 128 bit (= 16 bytes)
+            $key = sha1(spl_object_hash($this) . mt_rand(0, PHP_INT_MAX) . uniqid('', true), true);
         }
 
-        // SHA1 is 128 bit (= 16 bytes)
-        return sha1(mt_rand(0, PHP_INT_MAX) . uniqid('', true), true);
+        return base64_encode($key);
     }
 
     /**
@@ -162,7 +235,7 @@ abstract class Protocol
 
         $headers = array_merge(
             $this->getDefaultRequestHeaders(
-                $host, $key, $origin
+                $host . ':' . $port, $key, $origin
             ),
             $headers
         );
@@ -175,85 +248,25 @@ abstract class Protocol
     }
 
 
-    public function getResponseHandshake($data)
+    public function getResponseHandshake($key, array $headers = array())
     {
+        $headers = array_merge(
+            $this->getDefaultResponseHeaders(
+                $key
+            ),
+            $headers
+        );
 
-		// generate headers array:
-		$headers = array();
-        foreach($lines as $line)
-		{
-            $line = chop($line);
-            if(preg_match('/\A(\S+): (.*)\z/', $line, $matches))
-			{
-                $headers[$matches[1]] = $matches[2];
-            }
+        $handshake = array(
+            sprintf(self::RESPONSE_LINE_FORMAT, 101, 'Switching Protocols')
+        );
+
+        foreach ($headers as $name => $value) {
+            $handshake[] = sprintf(self::HEADER_LINE_FORMAT, $name, $value);
         }
 
-
-
-		// check origin:
-		if($this->server->getCheckOrigin() === true)
-		{
-			$origin = (isset($headers['Sec-WebSocket-Origin'])) ? $headers['Sec-WebSocket-Origin'] : false;
-			$origin = (isset($headers['Origin'])) ? $headers['Origin'] : $origin;
-			if($origin === false)
-			{
-				$this->log('No origin provided.');
-				$this->sendHttpResponse(401);
-				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-				$this->server->removeClientOnError($this);
-				return false;
-			}
-
-			if(empty($origin))
-			{
-				$this->log('Empty origin provided.');
-				$this->sendHttpResponse(401);
-				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-				$this->server->removeClientOnError($this);
-				return false;
-			}
-
-			if($this->server->checkOrigin($origin) === false)
-			{
-				$this->log('Invalid origin provided.');
-				$this->sendHttpResponse(401);
-				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-				$this->server->removeClientOnError($this);
-				return false;
-			}
-		}
-
-		// do handyshake: (hybi-10)
-		$secKey = $headers['Sec-WebSocket-Key'];
-		$secAccept = base64_encode(pack('H*', sha1($secKey . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
-		$response = "HTTP/1.1 101 Switching Protocols\r\n";
-		$response.= "Upgrade: websocket\r\n";
-		$response.= "Connection: Upgrade\r\n";
-		$response.= "Sec-WebSocket-Accept: " . $secAccept . "\r\n";
-		$response.= "Sec-WebSocket-Protocol: " . substr($path, 1) . "\r\n\r\n";
-		if(false === ($this->server->writeBuffer($this->socket, $response)))
-		{
-			return false;
-		}
-		$this->handshaked = true;
-		$this->log('Handshake sent');
-		$this->application->onConnect($this);
-
-		// trigger status application:
-		if($this->server->getApplication('status') !== false)
-		{
-			$this->server->getApplication('status')->clientConnected($this->ip, $this->port);
-		}
-
-		return true;
+        return implode($handshake, "\r\n") . "\r\n\r\n";
     }
-
-
-
-
-
-
 
     /**
      * @todo better header handling
@@ -280,141 +293,108 @@ abstract class Protocol
             throw new HandshakeException('Invalid accept header');
         }
 
-        $expected = $this->getExpectedAcceptValue($key);
-
+        $expected = $this->getAcceptValue($key);
 
         preg_match('#Sec-WebSocket-Accept:\s(.*)$#mU', $response, $matches);
         $keyAccept = trim($matches[1]);
 
-        $expectedResonse = base64_encode(pack('H*', sha1($key . self::MAGIC_GUID)));
-
-        return ($keyAccept === $expectedResonse) ? true : false;
+        return ($keyAccept === $this->getEncodedHash($key)) ? true : false;
     }
 
-    public function validateRequestHandshake($request)
+    public function getEncodedHash($key)
     {
+        return base64_encode(pack('H*', sha1($key . self::MAGIC_GUID)));
+    }
+
+    public function validateRequestHandshake(
+        $request
+    ) {
         if (!$request) {
             return false;
         }
 
         list($request, $headers) = $this->getRequestHeaders($request);
+
         $path = $this->validateRequestLine($request);
 
-        var_dump($headers);
-        die('asdasdkdas');
-
-
-            $this->log('Performing handshake');
-        $lines = preg_split("/\r\n/", $data);
-
-		// check for valid http-header:
-            $this->log('Invalid request: ' . $lines[0]);
-			$this->sendHttpResponse(400);
-            stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-            return false;
-
-		// check for valid application:
-		$path = $matches[1];
-		$this->application = $this->server->getApplication(substr($path, 1));
-        if(!$this->application)
-		{
-            $this->log('Invalid application: ' . $path);
-			$this->sendHttpResponse(404);
-			stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-			$this->server->removeClientOnError($this);
-            return false;
-        }
-    		// check for supported websocket version:
-		if(!isset($headers['Sec-WebSocket-Version']) || $headers['Sec-WebSocket-Version'] < 6)
-		{
-			$this->log('Unsupported websocket version.');
-			$this->sendHttpResponse(501);
-			stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-			$this->server->removeClientOnError($this);
-            return false;
-		}
-    }
-
-    /**
-     * Validates a request line
-     *
-     * @param string $line
-     * @throws BadRequestException
-     */
-    protected function validateRequestLine($line)
-    {
-        $matches = array(0 => null, 1 => null);
-
-        if (!preg_match(self::REQUEST_LINE_REGEX, $line, $matches) || !$matches[1]) {
-            throw new BadRequestException('Invalid request line', 400);
+        if (!isset($headers[self::HEADER_ORIGIN]) || !$headers[self::HEADER_ORIGIN]) {
+            throw new BadRequestException('No origin header');
         }
 
-        return $matches[1];
-    }
+        $origin = $headers[self::HEADER_ORIGIN];
 
-    /**
-     * Gets the expected accept value in the server's response
-     *
-     * @param string $key
-     */
-    protected function getExpectedAcceptValue($key)
-    {
-        $expected = sha1($key . self::MAGIC_GUID, true);
-        return $this->encodeKey($key);
-    }
-
-    /**
-     * Gets the headers from a full response
-     *
-     * @param string $response
-     * @return array()
-     * @throws InvalidArgumentException
-     */
-    protected function getHeaders($response, &$request_line = null)
-    {
-        $parts = explode("\r\n\r\n", $response, 2);
-
-        if (count($parts) != 2) {
-            throw new InvalidArgumentException('No headers in response');
+        if (!isset($headers[self::HEADER_UPGRADE])
+                || $headers[self::HEADER_UPGRADE] != self::UPGRADE_VALUE
+        ) {
+            throw new BadRequestException('Invalid upgrade header');
         }
 
-        list($headers, $body) = $parts;
+        if (!isset($headers[self::HEADER_CONNECTION])
+                || $headers[self::HEADER_CONNECTION] != self::CONNECTION_VALUE
+        ) {
+            throw new BadRequestException('Invalid connection header');
+        }
 
-        $return = array();
-        foreach (explode("\r\n", $headers) as $header) {
-            $parts = explode(': ', $header, 2);
+        if (!isset($headers[self::HEADER_HOST])) {
+            // @todo Validate host == listening socket? Or would that break
+            //        TCP proxies?
+            throw new BadRequestException('No host header');
+        }
 
-            if (count($parts) != 2) {
-                throw new InvalidArgumentException('Invalid header');
+        if (!isset($headers[self::HEADER_VERSION])) {
+            throw new BadRequestException('No version header receieved on handshake request');
+        }
+
+        if (!$this->acceptsVersion($headers[self::HEADER_VERSION])) {
+            throw new BadRequestException('Unsupported version: ' . $version);
+        }
+
+        if (!isset($headers[self::HEADER_KEY])) {
+            throw new BadRequestException('No key header received');
+        }
+
+        $key = trim($headers[self::HEADER_KEY]);
+
+        if (!$key) {
+            throw new BadRequestException('Invalid key');
+        }
+
+        $extensions = array();
+        if (isset($headers[self::HEADER_EXTENSIONS]) && $headers[self::HEADER_EXTENSIONS]) {
+            $extensions = $headers[self::HEADER_EXTENSIONS];
+            if (is_scalar($extensions)) {
+                $extensions = array($extensions);
             }
-
-            list($name, $value) = $parts;
-            $return[$name] = $value;
         }
 
-        return $return;
+        return array($path, $origin, $key, $extensions);
     }
 
     /**
-     * Gets request headers
+     * Gets a suitable HTTP error response
      *
-     * @param string $response
-     * @return array<string, array<string>> The request line, and an array of
-     *             headers
-     * @throws InvalidArgumentException
+     * @param Exception $e
      */
-    protected function getRequestHeaders($response)
+    public function getErrorHandshake(Exception $e)
     {
-        $eol = strpos($response, "\r\n");
+        // TODO: error handshake
+        die('TODO: error handshake');
+    }
 
-        if ($eol === false) {
-            throw new InvalidArgumentException('Invalid request line');
+    /**
+     * Gets a suitable WebSocket close frame
+     *
+     * @param Exception $e
+     */
+    public function getCloseFrame(Exception $e)
+    {
+        $code = $e->getCode();
+
+        if (!$code || $code < 1000 || $code > 2000) {
+            $code = self::CLOSE_UNEXPECTED;
         }
 
-        $request = substr($response, 0, $eol);
-        $headers = $this->getHeaders(substr($response, $eol + 2));
-
-        return array($request, $headers);
+        die('TODO: close frame');
     }
 
     /**
@@ -509,6 +489,91 @@ abstract class Protocol
     }
 
     /**
+     * Validates a request line
+     *
+     * @param string $line
+     * @throws BadRequestException
+     */
+    protected function validateRequestLine($line)
+    {
+        $matches = array(0 => null, 1 => null);
+
+        if (!preg_match(self::REQUEST_LINE_REGEX, $line, $matches) || !$matches[1]) {
+            throw new BadRequestException('Invalid request line', 400);
+        }
+
+        return $matches[1];
+    }
+
+    /**
+     * Gets the expected accept value for a handshake response
+     *
+     * Note that the protocol calls for the base64 encoded value to be hashed,
+     * not the original 16 byte random key.
+     *
+     * @see http://tools.ietf.org/html/rfc6455#section-4.2.2
+     * @param string $key
+     */
+    protected function getAcceptValue($encoded_key)
+    {
+        return base64_encode(sha1($encoded_key . self::MAGIC_GUID, true));
+    }
+
+    /**
+     * Gets the headers from a full response
+     *
+     * @param string $response
+     * @return array()
+     * @throws InvalidArgumentException
+     */
+    protected function getHeaders($response, &$request_line = null)
+    {
+        $parts = explode("\r\n\r\n", $response, 2);
+
+        if (count($parts) != 2) {
+            throw new InvalidArgumentException('No headers in response');
+        }
+
+        list($headers, $body) = $parts;
+
+        $return = array();
+        foreach (explode("\r\n", $headers) as $header) {
+            $parts = explode(': ', $header, 2);
+
+            if (count($parts) != 2) {
+                throw new InvalidArgumentException('Invalid header');
+            }
+
+            list($name, $value) = $parts;
+            $return[$name] = $value;
+        }
+
+        return $return;
+    }
+
+    /**
+     * Gets request headers
+     *
+     * @param string $response
+     * @return array<string, array<string>> The request line, and an array of
+     *             headers
+     * @throws InvalidArgumentException
+     */
+    protected function getRequestHeaders($response)
+    {
+        $eol = strpos($response, "\r\n");
+
+        if ($eol === false) {
+            throw new InvalidArgumentException('Invalid request line');
+        }
+
+        $request = substr($response, 0, $eol);
+        $headers = $this->getHeaders(substr($response, $eol + 2));
+
+        return array($request, $headers);
+    }
+
+    /**
      * Validates a scheme
      *
      * @param string $scheme
@@ -554,6 +619,20 @@ abstract class Protocol
     }
 
     /**
+     * Gets the default response headers
+     *
+     * @param string $key
+     */
+    protected function getDefaultResponseHeaders($key)
+    {
+        return array(
+            self::HEADER_UPGRADE    => self::UPGRADE_VALUE,
+            self::HEADER_CONNECTION => self::CONNECTION_VALUE,
+            self::HEADER_ACCEPT     => $this->getAcceptValue($key)
+        );
+    }
+
+    /**
      * Gets the default port for a scheme
      *
      * By default, the WebSocket Protocol uses port 80 for regular WebSocket
@@ -576,16 +655,5 @@ abstract class Protocol
         } else {
             throw new InvalidArgumentException('Unknown websocket scheme');
         }
-    }
-
-    /**
-     * Encodes a key for use in headers
-     *
-     * @param string $key
-     * @return string
-     */
-    protected function encodeKey($key)
-    {
-        return base64_encode($key);
     }
 }
