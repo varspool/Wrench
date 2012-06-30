@@ -1,9 +1,9 @@
 {
-    "name": "varspool/WebSocket",
+    "name": "wrench/wrench",
     "type": "library",
-    "description": "A simple WebSocket server implementation for PHP 5.3",
+    "description": "PHP WebSocket client/server library",
     "keywords": ["websocket", "websockets", "hybi"],
-    "homepage": "http://github.com/varspool/WebSocket",
+    "homepage": "http://github.com/varspool/Wrench",
     "license": "WTFPL",
     "authors": [
         {
@@ -27,7 +27,7 @@
     },
     "autoload": {
         "psr-0": {
-            "WebSocket": "lib/"
+            "Wrench": "lib/"
         }
     }
 }
