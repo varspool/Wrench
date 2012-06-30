@@ -1,14 +1,14 @@
 <?php
 
-namespace WebSocket\Tests\Protocol;
+namespace Wrench\Tests\Protocol;
 
-use WebSocket\Protocol\Rfc6455Protocol;
-use WebSocket\Tests\Protocol\ProtocolTest;
+use Wrench\Protocol\Rfc6455Protocol;
+use Wrench\Tests\Protocol\ProtocolTest;
 
 class Rfc6455ProtocolTest extends ProtocolTest
 {
     protected function getClass()
     {
-        return 'WebSocket\Protocol\Rfc6455Protocol';
+        return 'Wrench\Protocol\Rfc6455Protocol';
     }
 }

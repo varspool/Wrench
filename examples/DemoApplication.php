@@ -1,6 +1,6 @@
 <?php
 
-namespace WebSocket\Application;
+namespace Wrench\Application;
 
 /**
  * Websocket-Server demo and test application.

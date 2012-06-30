@@ -1,10 +1,10 @@
 <?php
 
-namespace WebSocket\Tests;
+namespace Wrench\Tests;
 
-use WebSocket\Protocol\Rfc6455Protocol;
+use Wrench\Protocol\Rfc6455Protocol;
 
-use WebSocket\Socket\ClientSocket;
+use Wrench\Socket\ClientSocket;
 
 use \stdClass;
 use \InvalidArgumentException;
@@ -17,25 +17,25 @@ class ClientSocketTest extends Test
         $socket = null;
 
         $this->assertInstanceOf(
-            'WebSocket\Socket\ClientSocket',
+            'Wrench\Socket\ClientSocket',
             $socket = new ClientSocket('ws://localhost/'),
             'ws:// scheme, default port'
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket\ClientSocket',
+            'Wrench\Socket\ClientSocket',
             $socket = new ClientSocket('ws://localhost/some-arbitrary-path'),
             'with path'
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket\ClientSocket',
+            'Wrench\Socket\ClientSocket',
             $socket = new ClientSocket('wss://localhost/test', array()),
             'empty options'
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket\ClientSocket',
+            'Wrench\Socket\ClientSocket',
             $socket = new ClientSocket('ws://localhost:8000/foo'),
             'specified port'
         );
@@ -46,7 +46,7 @@ class ClientSocketTest extends Test
         $socket = null;
 
         $this->assertInstanceOf(
-            'WebSocket\Socket\ClientSocket',
+            'Wrench\Socket\ClientSocket',
             $socket = new ClientSocket(
                 'ws://localhost:8000/foo', array(
                     'timeout_connect' => 10
@@ -56,7 +56,7 @@ class ClientSocketTest extends Test
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket\ClientSocket',
+            'Wrench\Socket\ClientSocket',
             $socket = new ClientSocket(
                 'ws://localhost:8000/foo', array(
                     'timeout_socket' => 10
@@ -66,7 +66,7 @@ class ClientSocketTest extends Test
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Socket\ClientSocket',
+            'Wrench\Socket\ClientSocket',
             $socket = new ClientSocket(
                 'ws://localhost:8000/foo', array(
                     'protocol' => new Rfc6455Protocol()

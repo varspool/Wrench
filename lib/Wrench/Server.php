@@ -1,10 +1,10 @@
 <?php
-namespace WebSocket;
+namespace Wrench;
 
-use WebSocket\Util\Configurable;
+use Wrench\Util\Configurable;
 
-use WebSocket\Socket;
-use WebSocket\Resource;
+use Wrench\Socket;
+use Wrench\Resource;
 
 use \Closure;
 use \InvalidArgumentException;
@@ -112,7 +112,7 @@ class Server extends Configurable
     protected function configure(array $options)
     {
         $options = array_merge(array(
-            'connection_manager_class'   => 'WebSocket\ConnectionManager',
+            'connection_manager_class'   => 'Wrench\ConnectionManager',
             'connection_manager_options' => array()
         ), $options);
 

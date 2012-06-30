@@ -1,20 +1,20 @@
 <?php
-namespace WebSocket;
+namespace Wrench;
 
-use WebSocket\Exception\CloseException;
+use Wrench\Exception\CloseException;
 
-use WebSocket\Exception\ConnectionException;
+use Wrench\Exception\ConnectionException;
 
-use WebSocket\Exception\HandshakeException;
+use Wrench\Exception\HandshakeException;
 
-use WebSocket\Exception\BadRequestException;
+use Wrench\Exception\BadRequestException;
 
-use WebSocket\Util\Configurable;
+use Wrench\Util\Configurable;
 
-use WebSocket\Socket;
-use WebSocket\Server;
+use Wrench\Socket;
+use Wrench\Server;
 use \RuntimeException;
-use WebSocket\Exception as WebSocketException;
+use Wrench\Exception as WrenchException;
 use \Exception;
 
 /**
@@ -100,12 +100,12 @@ class Connection extends Configurable
     }
 
     /**
-     * @see WebSocket\Util.Configurable::configure()
+     * @see Wrench\Util.Configurable::configure()
      */
     protected function configure(array $options)
     {
         $options = array_merge(array(
-            'socket_class'         => 'WebSocket\Socket\ServerClientSocket',
+            'socket_class'         => 'Wrench\Socket\ServerClientSocket',
             'socket_options'       => array(),
             'connection_id_secret' => 'asu5gj656h64Da(0crt8pud%^WAYWW$u76dwb',
             'connection_id_algo'   => 'sha512',
@@ -224,7 +224,7 @@ class Connection extends Configurable
             );
 
             $this->application->onConnect($this);
-        } catch (WebSocketException $e) {
+        } catch (WrenchException $e) {
             $this->log('Handshake failed: ' . $e, 'err');
             throw $e;
         }

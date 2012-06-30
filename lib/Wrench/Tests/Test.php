@@ -1,6 +1,6 @@
 <?php
 
-namespace WebSocket\Tests;
+namespace Wrench\Tests;
 
 /**
  * Test base class

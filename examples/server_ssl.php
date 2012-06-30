@@ -10,7 +10,7 @@ error_reporting(E_ALL);
 
 require(__DIR__ . '/../lib/SplClassLoader.php');
 
-$classLoader = new SplClassLoader('WebSocket', __DIR__ . '/../lib');
+$classLoader = new SplClassLoader('Wrench', __DIR__ . '/../lib');
 $classLoader->register();
 
 // Generate PEM file
@@ -24,7 +24,7 @@ $organizationalUnitName = "none";
 $commonName =  "foo.lh";
 $emailAddress = "baz@foo.lh";
 
-\WebSocket\Socket::generatePEMFile(
+\Wrench\Socket::generatePEMFile(
 	$pemFile, 
 	$pemPassphrase, 
 	$countryName, 
@@ -37,7 +37,7 @@ $emailAddress = "baz@foo.lh";
 );
 
 // User can use tls in place of ssl
-$server = new \WebSocket\Server('127.0.0.1', 8000, 'ssl', $pemFile, $pemPassphrase);
+$server = new \Wrench\Server('127.0.0.1', 8000, 'ssl', $pemFile, $pemPassphrase);
 
 // server settings:
 $server->setMaxClients(100);
@@ -47,7 +47,7 @@ $server->setMaxConnectionsPerIp(100);
 $server->setMaxRequestsPerMinute(2000);
 
 // Hint: Status application should not be removed as it displays usefull server informations:
-$server->registerApplication('status', \WebSocket\Application\StatusApplication::getInstance());
-$server->registerApplication('demo', \WebSocket\Application\DemoApplication::getInstance());
+$server->registerApplication('status', \Wrench\Application\StatusApplication::getInstance());
+$server->registerApplication('demo', \Wrench\Application\DemoApplication::getInstance());
 
 $server->run();

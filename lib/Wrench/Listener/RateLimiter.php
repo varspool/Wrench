@@ -1,8 +1,8 @@
 <?php
 
-namespace WebSocket\Listener;
+namespace Wrench\Listener;
 
-use WebSocket\Server;
+use Wrench\Server;
 
 class RateLimiter implements Listener
 {

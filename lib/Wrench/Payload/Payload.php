@@ -1,6 +1,6 @@
 <?php
 
-namespace WebSocket\Payload;
+namespace Wrench\Payload;
 
 abstract class Payload
 {

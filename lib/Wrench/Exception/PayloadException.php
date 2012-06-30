@@ -1,8 +1,8 @@
 <?php
-namespace WebSocket\Exception;
+namespace Wrench\Exception;
 
-use WebSocket\Exception\Exception as WebSocketException;
+use Wrench\Exception\Exception as WrenchException;
 
-class PayloadException extends WebSocketException
+class PayloadException extends WrenchException
 {
 }

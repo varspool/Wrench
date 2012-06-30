@@ -1,8 +1,8 @@
 <?php
 
-namespace WebSocket\Socket;
+namespace Wrench\Socket;
 
-use WebSocket\Socket\Socket;
+use Wrench\Socket\Socket;
 
 abstract class UriSocket extends Socket
 {
@@ -16,7 +16,7 @@ abstract class UriSocket extends Socket
      * @param string $uri     WebSocket URI, e.g. ws://example.org:8000/chat
      * @param array  $options (optional)
      *   Options:
-     *     - protocol             => WebSocket\Protocol object, latest protocol
+     *     - protocol             => Wrench\Protocol object, latest protocol
      *                                 version used if not specified
      *     - timeout_socket       => int, seconds, default 5
      *     - server_ssl_cert_file => string, server SSL certificate

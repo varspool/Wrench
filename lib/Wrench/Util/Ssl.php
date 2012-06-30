@@ -1,6 +1,6 @@
 <?php
 
-namespace WebSocket\Util;
+namespace Wrench\Util;
 
 class Ssl
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace WebSocket\Listener;
+namespace Wrench\Listener;
 
 interface Listener
 {

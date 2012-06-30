@@ -1,5 +1,5 @@
 <?php
-namespace WebSocket\Application;
+namespace Wrench\Application;
 
 /**
  * Shiny WSS Status Application

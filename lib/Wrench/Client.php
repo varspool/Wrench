@@ -1,10 +1,10 @@
 <?php
 
-namespace WebSocket;
+namespace Wrench;
 
-use WebSocket\Socket\ClientSocket;
-use WebSocket\Protocol\Protocol;
-use WebSocket\Protocol\Rfc6455Protocol;
+use Wrench\Socket\ClientSocket;
+use Wrench\Protocol\Protocol;
+use Wrench\Protocol\Rfc6455Protocol;
 
 use \InvalidArgumentException;
 use \RuntimeException;
@@ -12,7 +12,7 @@ use \RuntimeException;
 /**
  * Client class
  *
- * Represents a WebSocket client
+ * Represents a Wrench client
  */
 class Client
 {
@@ -137,7 +137,7 @@ class Client
     }
 
     /**
-     * Connect to the WebSocket server
+     * Connect to the Wrench server
      *
      * @return boolean Whether a new connection was made
      */

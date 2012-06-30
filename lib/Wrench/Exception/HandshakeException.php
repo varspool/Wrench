@@ -1,6 +1,6 @@
 <?php
 
-namespace WebSocket\Exception;
+namespace Wrench\Exception;
 
 class HandshakeException extends Exception
 {

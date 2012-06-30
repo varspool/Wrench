@@ -1,10 +1,10 @@
 <?php
 
-namespace WebSocket\Tests;
+namespace Wrench\Tests;
 
-use WebSocket\Client;
-use WebSocket\Tests\Test;
-use WebSocket\Socket;
+use Wrench\Client;
+use Wrench\Tests\Test;
+use Wrench\Socket;
 
 use \InvalidArgumentException;
 use \PHPUnit_Framework_Error;
@@ -16,7 +16,7 @@ class ClientTest extends Test
         $client = null;
 
         $this->assertInstanceOf(
-            'WebSocket\Client',
+            'Wrench\Client',
             $client = new Client(
                 'ws://localhost/test', 'http://example.org/'
             ),
@@ -24,7 +24,7 @@ class ClientTest extends Test
         );
 
         $this->assertInstanceOf(
-            'WebSocket\Client',
+            'Wrench\Client',
             $client = new Client(
                 'ws://localhost/test', 'http://example.org/',
                 array('socket' => $this->getMockSocket())
@@ -40,12 +40,12 @@ class ClientTest extends Test
      */
     protected function getMockSocket()
     {
-        return $this->getMock('WebSocket\Socket\ClientSocket', array(), array('wss://localhost:8000'));
+        return $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
     }
 
     protected function getMockProtocol()
     {
-        return $this->getMock('WebSocket\Protocol\Rfc6455Protocol');
+        return $this->getMock('Wrench\Protocol\Rfc6455Protocol');
     }
 
     /**

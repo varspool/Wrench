@@ -1,10 +1,10 @@
 <?php
 
-namespace WebSocket\Socket;
+namespace Wrench\Socket;
 
-use WebSocket\Exception\ConnectionException;
+use Wrench\Exception\ConnectionException;
 
-use WebSocket\Socket\UriSocket;
+use Wrench\Socket\UriSocket;
 
 /**
  * Server socket
@@ -24,7 +24,7 @@ class ServerSocket extends UriSocket
     protected $listening = false;
 
     /**
-     * @see WebSocket\Socket.Socket::configure()
+     * @see Wrench\Socket.Socket::configure()
      *   Options include:
      *     - backlog               => int, used to limit the number of outstanding
      *                                 connections in the socket's listen queue

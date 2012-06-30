@@ -1,14 +1,14 @@
 <?php
 
-namespace WebSocket\Protocol;
+namespace Wrench\Protocol;
 
-use WebSocket\Exception\BadRequestException;
+use Wrench\Exception\BadRequestException;
 
 use \Exception;
 use \InvalidArgumentException;
 
 /**
- * Definitions and implementation helpers for the WebSockets protocol
+ * Definitions and implementation helpers for the Wrenchs protocol
  *
  * Based on RFC 6455: http://tools.ietf.org/html/rfc6455
  */

@@ -1,12 +1,12 @@
 <?php
 
-namespace WebSocket\Socket;
+namespace Wrench\Socket;
 
-use WebSocket\Resource;
-use WebSocket\Exception\ConnectionException;
-use WebSocket\Util\Configurable;
-use WebSocket\Protocol\Protocol;
-use WebSocket\Protocol\Rfc6455Protocol;
+use Wrench\Resource;
+use Wrench\Exception\ConnectionException;
+use Wrench\Util\Configurable;
+use Wrench\Protocol\Protocol;
+use Wrench\Protocol\Rfc6455Protocol;
 
 use \InvalidArgumentException;
 use \RuntimeException;

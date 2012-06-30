@@ -1,8 +1,8 @@
 <?php
 
-namespace WebSocket;
+namespace Wrench;
 
-use WebSocket\Server;
+use Wrench\Server;
 
 class BasicServer extends Server
 {
@@ -24,15 +24,15 @@ class BasicServer extends Server
     }
 
     /**
-     * @see WebSocket.Server::configure()
+     * @see Wrench.Server::configure()
      */
     public function configure($options)
     {
         $options = array_merge(array(
             'check_origin'        => true,
             'allowed_origins'     => array(),
-            'origin_policy_class' => 'WebSocket\OriginPolicy',
-            'rate_limiter_class'  => 'WebSocket\RateLimiter\ConnectionRateLimiter'
+            'origin_policy_class' => 'Wrench\OriginPolicy',
+            'rate_limiter_class'  => 'Wrench\RateLimiter\ConnectionRateLimiter'
         ), $options);
 
         parent::configure($options);

@@ -1,8 +1,8 @@
 <?php
 
-namespace WebSocket\Tests\Protocol;
+namespace Wrench\Tests\Protocol;
 
-use WebSocket\Tests\Test;
+use Wrench\Tests\Test;
 use \Exception;
 
 abstract class ProtocolTest extends Test

@@ -1,8 +1,8 @@
 <?php
 
-namespace WebSocket\Protocol;
+namespace Wrench\Protocol;
 
-use WebSocket\Protocol\HybiProtocol;
+use Wrench\Protocol\HybiProtocol;
 
 /**
  * This is the version of websockets used by Chrome versions 17 through 19.
@@ -14,7 +14,7 @@ class Rfc6455Protocol extends HybiProtocol
     const VERSION = 13;
 
     /**
-     * @see WebSocket\Protocol.Protocol::getVersion()
+     * @see Wrench\Protocol.Protocol::getVersion()
      */
     public function getVersion()
     {
@@ -24,7 +24,7 @@ class Rfc6455Protocol extends HybiProtocol
     /**
      * This is our most recent protocol class
      *
-     * @see WebSocket\Protocol.Protocol::acceptsVersion()
+     * @see Wrench\Protocol.Protocol::acceptsVersion()
      */
     public function acceptsVersion($version)
     {

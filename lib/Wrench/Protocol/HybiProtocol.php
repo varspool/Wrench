@@ -1,12 +1,12 @@
 <?php
 
-namespace WebSocket\Protocol;
+namespace Wrench\Protocol;
 
-use WebSocket\Payload\HybiPayload;
+use Wrench\Payload\HybiPayload;
 
-use WebSocket\Exception\ConnectionException;
+use Wrench\Exception\ConnectionException;
 
-use WebSocket\Protocol\Protocol;
+use Wrench\Protocol\Protocol;
 use \InvalidArgumentException;
 
 /**
@@ -15,7 +15,7 @@ use \InvalidArgumentException;
 abstract class HybiProtocol extends Protocol
 {
     /**
-     * @see WebSocket\Protocol.Protocol::getPayload()
+     * @see Wrench\Protocol.Protocol::getPayload()
      */
     public function getPayload()
     {

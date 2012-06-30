@@ -1,6 +1,6 @@
 <?php
 
-namespace WebSocket;
+namespace Wrench;
 
 /**
  * Resource interface

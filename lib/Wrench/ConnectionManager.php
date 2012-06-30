@@ -1,13 +1,13 @@
 <?php
-namespace WebSocket;
+namespace Wrench;
 
-use WebSocket\Protocol\Protocol;
+use Wrench\Protocol\Protocol;
 
-use WebSocket\Exception\CloseException;
+use Wrench\Exception\CloseException;
 
-use WebSocket\Resource;
-use WebSocket\Util\Configurable;
-use WebSocket\Exception\Exception as WebSocketException;
+use Wrench\Resource;
+use Wrench\Util\Configurable;
+use Wrench\Exception\Exception as WrenchException;
 
 class ConnectionManager extends Configurable
 {
@@ -53,7 +53,7 @@ class ConnectionManager extends Configurable
     }
 
     /**
-     * @see WebSocket\Socket.Socket::configure()
+     * @see Wrench\Socket.Socket::configure()
      *   Options include:
      *     - timeout_select       => int, seconds, default 5
      *     - timeout_accept       => int, seconds, default 5
@@ -61,9 +61,9 @@ class ConnectionManager extends Configurable
     protected function configure(array $options)
     {
         $options = array_merge(array(
-            'socket_master_class'   => 'WebSocket\Socket\ServerSocket',
+            'socket_master_class'   => 'Wrench\Socket\ServerSocket',
             'socket_master_options' => array(),
-            'connection_class'      => 'WebSocket\Connection',
+            'connection_class'      => 'Wrench\Connection',
             'connection_options'    => array(),
             'timeout_select'        => self::TIMEOUT_SELECT,
 
@@ -209,7 +209,7 @@ class ConnectionManager extends Configurable
 
         try {
             $connection->process();
-        } catch (WebSocketException $e) {
+        } catch (WrenchException $e) {
             $this->log('Error on client socket: ' . $e, 'err');
             $connection->processException($e);
             $this->removeConnection($connection);
@@ -252,7 +252,7 @@ class ConnectionManager extends Configurable
 
     /**
      * @deprecated
-     * @return \WebSocket\Server
+     * @return \Wrench\Server
      */
     public function getServer()
     {

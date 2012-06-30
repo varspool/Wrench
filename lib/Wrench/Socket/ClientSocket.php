@@ -1,7 +1,7 @@
 <?php
-namespace WebSocket\Socket;
+namespace Wrench\Socket;
 
-use WebSocket\Socket\UriSocket;
+use Wrench\Socket\UriSocket;
 
 /**
  * Options:
@@ -17,7 +17,7 @@ class ClientSocket extends UriSocket
     const TIMEOUT_CONNECT = 2;
 
     /**
-     * @see WebSocket\Socket.Socket::configure()
+     * @see Wrench\Socket.Socket::configure()
      */
     protected function configure(array $options)
     {

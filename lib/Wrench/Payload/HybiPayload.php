@@ -1,8 +1,8 @@
 <?php
 
-namespace WebSocket\Payload;
+namespace Wrench\Payload;
 
-use WebSocket\Payload\Payload;
+use Wrench\Payload\Payload;
 
 class HybiPayload extends Payload
 {

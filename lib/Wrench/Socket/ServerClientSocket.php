@@ -1,8 +1,8 @@
 <?php
 
-namespace WebSocket\Socket;
+namespace Wrench\Socket;
 
-use WebSocket\Socket\Socket;
+use Wrench\Socket\Socket;
 
 class ServerClientSocket extends Socket
 {

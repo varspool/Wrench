@@ -1,12 +1,12 @@
 <?php
 
-namespace WebSocket\Exception;
+namespace Wrench\Exception;
 
-use WebSocket\Exception\Exception as WebSocketException;
+use Wrench\Exception\Exception as WrenchException;
 
 /**
  * Close connection exception
  */
-class CloseException extends WebSocketException
+class CloseException extends WrenchException
 {
 }

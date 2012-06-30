@@ -1,9 +1,9 @@
 <?php
 
-namespace WebSocket\Application;
+namespace Wrench\Application;
 
 /**
- * WebSocket Server Application
+ * Wrench Server Application
  * 
  * @author Nico Kaiser <nico@kaiser.me>
  */
