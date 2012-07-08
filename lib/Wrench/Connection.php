@@ -455,15 +455,12 @@ class Connection extends Configurable
             $this->log('Unable to send close message', 'warning');
         }
 
-
-
-
-		if($this->application)
-		{
+		if ($this->application) {
             $this->application->onDisconnect($this);
         }
-		stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-		$this->server->removeClientOnClose($this);
+
+        $this->socket->disconnect();
+		$this->manager->removeConnection($this);
 	}
 
 	/**
