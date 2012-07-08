@@ -2,9 +2,11 @@
 
 namespace Wrench\Listener;
 
+use Wrench\Exception\InvalidOriginException;
+
 use Wrench\Server;
 
-class OriginPolicy implements Listener
+class OriginPolicy implements Listener, HandshakeRequestListener
 {
     protected $allowed = array();
 
@@ -13,47 +15,35 @@ class OriginPolicy implements Listener
         $this->allowed = $allowed;
     }
 
+    /**
+     * Handshake request listener
+     *
+     * Closes the connection on handshake from an origin that isn't allowed
+     *
+     * @param Connection $connection
+     * @param string $path
+     * @param string $origin
+     * @param string $key
+     * @param array $extensions
+     */
+    public function onHandshakeRequest(Connection $connection, $path, $origin, $key, $extensions)
+    {
+        if (!$this->isAllowed($origin)) {
+            $connection->close(new InvalidOriginException('Origin not allowed'));
+        }
+    }
+
+    /**
+     * Whether the specified origin is allowed under this policy
+     *
+     * @param string $origin
+     * @return boolean
+     */
     public function isAllowed($origin)
     {
         if (in_array($origin, $this->allowed)) {
             return true;
         }
-
-        die('TODO better originc hecking required');
-
-    		// check origin:
-// 		if($this->server->getCheckOrigin() === true)
-// 		{
-// 			$origin = (isset($headers['Sec-WebSocket-Origin'])) ? $headers['Sec-WebSocket-Origin'] : false;
-// 			$origin = (isset($headers['Origin'])) ? $headers['Origin'] : $origin;
-// 			if($origin === false)
-// 			{
-// 				$this->log('No origin provided.');
-// 				$this->sendHttpResponse(401);
-// 				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-// 				$this->server->removeClientOnError($this);
-// 				return false;
-// 			}
-
-// 			if(empty($origin))
-// 			{
-// 				$this->log('Empty origin provided.');
-// 				$this->sendHttpResponse(401);
-// 				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-// 				$this->server->removeClientOnError($this);
-// 				return false;
-// 			}
-
-// 			if($this->server->checkOrigin($origin) === false)
-// 			{
-// 				$this->log('Invalid origin provided.');
-// 				$this->sendHttpResponse(401);
-// 				stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-// 				$this->server->removeClientOnError($this);
-// 				return false;
-// 			}
-// 		}
-
         return false;
     }
 

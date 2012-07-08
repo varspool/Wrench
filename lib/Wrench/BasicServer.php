@@ -26,13 +26,13 @@ class BasicServer extends Server
     /**
      * @see Wrench.Server::configure()
      */
-    public function configure($options)
+    protected function configure(array $options)
     {
         $options = array_merge(array(
             'check_origin'        => true,
             'allowed_origins'     => array(),
             'origin_policy_class' => 'Wrench\OriginPolicy',
-            'rate_limiter_class'  => 'Wrench\RateLimiter\ConnectionRateLimiter'
+            'rate_limiter_class'  => 'Wrench\Listener\RateLimiter'
         ), $options);
 
         parent::configure($options);
@@ -40,6 +40,7 @@ class BasicServer extends Server
 
     protected function configureRateLimiter()
     {
+        $class = $this->options['rate_limiter_class'];
         $this->rateLimiter = new $class();
         $this->rateLimiter->listen($this);
     }
@@ -49,8 +50,12 @@ class BasicServer extends Server
      */
     protected function configureOriginPolicy()
     {
+        $class = $this->options['origin_policy_class'];
         $this->originPolicy = new $class($this->options['allowed_origins']);
-        $this->originPolicy->listen($this);
+
+        if ($this->options['check_origin']) {
+            $this->originPolicy->listen($this);
+        }
     }
 
     /**
@@ -61,14 +66,5 @@ class BasicServer extends Server
     public function addAllowedOrigin($origin)
     {
         $this->originPolicy->addAllowedOrigin($origin);
-    }
-
-
-    public function run()
-    {
-
-
-
-        parent::run();
     }
 }
