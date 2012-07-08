@@ -2,16 +2,16 @@
 namespace Wrench;
 
 use Wrench\Protocol\Protocol;
-
-use Wrench\Exception\CloseException;
-
 use Wrench\Resource;
 use Wrench\Util\Configurable;
 use Wrench\Exception\Exception as WrenchException;
+use Wrench\Exception\CloseException;
+use \Exception;
 
 class ConnectionManager extends Configurable
 {
-    const TIMEOUT_SELECT = 5;
+    const TIMEOUT_SELECT          = 0;
+    const TIMEOUT_SELECT_MICROSEC = 200000;
 
     /**
      * @var Server
@@ -55,17 +55,19 @@ class ConnectionManager extends Configurable
     /**
      * @see Wrench\Socket.Socket::configure()
      *   Options include:
-     *     - timeout_select       => int, seconds, default 5
-     *     - timeout_accept       => int, seconds, default 5
+     *     - timeout_select          => int, seconds, default 0
+     *     - timeout_select_microsec => int, microseconds (NB: not milli), default: 200000
+     *     - timeout_accept          => int, seconds, default 5
      */
     protected function configure(array $options)
     {
         $options = array_merge(array(
-            'socket_master_class'   => 'Wrench\Socket\ServerSocket',
-            'socket_master_options' => array(),
-            'connection_class'      => 'Wrench\Connection',
-            'connection_options'    => array(),
-            'timeout_select'        => self::TIMEOUT_SELECT,
+            'socket_master_class'     => 'Wrench\Socket\ServerSocket',
+            'socket_master_options'   => array(),
+            'connection_class'        => 'Wrench\Connection',
+            'connection_options'      => array(),
+            'timeout_select'          => self::TIMEOUT_SELECT,
+            'timeout_select_microsec' => self::TIMEOUT_SELECT_MICROSEC
 
         ), $options);
 
@@ -106,7 +108,7 @@ class ConnectionManager extends Configurable
     public function listen()
     {
         $this->socket->listen();
-        $this->resources[] = $this->socket->getResource();
+        $this->resources[$this->socket->getResourceId()] = $this->socket->getResource();
     }
 
     /**
@@ -116,7 +118,9 @@ class ConnectionManager extends Configurable
      */
     protected function getAllResources()
     {
-        return array_merge($this->resources, array($this->socket->getResource()));
+        return array_merge($this->resources, array(
+            $this->socket->getResourceId() => $this->socket->getResource()
+        ));
     }
 
     /**
@@ -148,7 +152,8 @@ class ConnectionManager extends Configurable
             $read,
             $unused_write,
             $unused_exception,
-            $this->options['timeout_select']
+            $this->options['timeout_select'],
+            $this->options['timeout_select_microsec']
         );
 
         foreach ($read as $socket) {
@@ -202,8 +207,9 @@ class ConnectionManager extends Configurable
 
         $connection = new $class($this, $resource, $options);
 
-        $this->resources[] = $resource;
-        $this->connections[$this->resourceId($resource)] = $connection;
+        $id = $this->resourceId($resource);
+        $this->resources[$id] = $resource;
+        $this->connections[$id] = $connection;
 
         return $connection;
     }
@@ -226,8 +232,8 @@ class ConnectionManager extends Configurable
             $connection->process();
         } catch (WrenchException $e) {
             $this->log('Error on client socket: ' . $e, 'err');
-            $connection->processException($e);
-            $this->removeConnection($connection);
+            $connection->close($e);
+            //$this->removeConnection($connection); // extra?
         }
     }
 
@@ -286,16 +292,26 @@ class ConnectionManager extends Configurable
      *
      * @param Connection $connection
      */
-    public function removeConnection($connection)
+    public function removeConnection(Connection $connection)
     {
-        unset($this->connections[$connection->getResourceId()]);
+        $socket = $connection->getSocket();
 
-        $index = array_search($connection->getResource(), $this->resources);
-        unset($this->resources[$index], $client);
+        if ($socket->getResource()) {
+            $index = $socket->getResourceId();
+        } else {
+            $index = array_search($connection, $this->connections);
+        }
+
+        if (!$index) {
+            $this->log('Could not remove connection: not found', 'warning');
+        }
+
+        unset($this->connections[$index]);
+        unset($this->resources[$index]);
 
         $this->server->notify(
             Server::EVENT_SOCKET_DISCONNECT,
-            array($connection->getResource())
+            array($connection->getSocket())
         );
     }
 
