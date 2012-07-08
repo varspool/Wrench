@@ -25,6 +25,11 @@ use \RuntimeException;
  */
 class Connection extends Configurable
 {
+    /**
+     * The connection manager
+     *
+     * @var Wrench\ConnectionManager
+     */
     protected $manager;
 
     /**
@@ -71,11 +76,10 @@ class Connection extends Configurable
 	 */
 	protected $id = null;
 
-	public $waitingForData = false;
-
+    /**
+     * The current payload
+     */
 	protected $payload;
-
-	private $_dataBuffer = '';
 
     /**
      * Constructor
@@ -239,43 +243,6 @@ class Connection extends Configurable
         }
     }
 
-    /**
-     * Sends an HTTP response to the client
-     *
-     * @param int $httpStatusCode
-     */
-	public function sendHttpResponse($httpStatusCode = 400)
-	{
-	    throw new Exception("no longer implemented");
-
-// 		$httpHeader = 'HTTP/1.1 ';
-// 		switch($httpStatusCode)
-// 		{
-// 			case 400:
-// 				$httpHeader .= '400 Bad Request';
-// 			break;
-
-// 			case 401:
-// 				$httpHeader .= '401 Unauthorized';
-// 			break;
-
-// 			case 403:
-// 				$httpHeader .= '403 Forbidden';
-// 			break;
-
-// 			case 404:
-// 				$httpHeader .= '404 Not Found';
-// 			break;
-
-// 			case 501:
-// 				$httpHeader .= '501 Not Implemented';
-// 			break;
-// 		}
-// 		$httpHeader .= "\r\n";
-// 		$this->server->writeBuffer($this->socket, $httpHeader);
-	}
-
-
 	/**
 	 * Handle data received from the client
 	 *
@@ -415,17 +382,6 @@ class Connection extends Configurable
     }
 
     /**
-     * Processes an exception which occured on the connection
-     *
-     * @param Exception $e
-     */
-    public function processException(Exception $e)
-    {
-        throw new Exception('Just call close!');
-        $this->close($e);
-    }
-
-    /**
      * Processes data on the socket
      *
      * @throws CloseException
@@ -469,18 +425,6 @@ class Connection extends Configurable
         $this->socket->disconnect();
 		$this->manager->removeConnection($this);
 	}
-
-	/**
-	 * Event handler for disconnections
-	 *
-	 * @deprecated Just use close
-	 */
-	public function onDisconnect()
-    {
-        throw new Exception('Deprecated: just use close');
-        $this->log('Disconnected', 'info');
-        $this->close(1000);
-    }
 
     /**
      * Logs a message
