@@ -235,13 +235,13 @@ class Server extends Configurable
      * @return void
      * @throws InvalidArgumentException
      */
-    public function addListener($event, Closure $callback)
+    public function addListener($event, $callback)
     {
         if (!isset($this->listeners[$event])) {
             $this->listeners[$event] = array();
         }
 
-        if (!($callback instanceof Closure)) {
+        if (!is_callable($callback)) {
             throw new InvalidArgumentException('Invalid listener');
         }
 
