@@ -357,15 +357,22 @@ class Connection extends Configurable
 			break;
 
 			case 'ping':
-				$this->send($decodedData['payload'], 'pong', false);
-				$this->log('Ping? Pong!');
+			    $this->log('Ping received', 'notice');
+				$this->send($payload->getPayload(), Protocol::TYPE_PONG);
+				$this->log('Pong!', 'debug');
 			break;
 
+			/**
+			 * A Pong frame MAY be sent unsolicited.  This serves as a
+             * unidirectional heartbeat.  A response to an unsolicited Pong
+             * frame is not expected.
+			 */
 			case 'pong':
-				// server currently not sending pings, so no pong should be received.
+			    $this->log('Received unsolicited pong', 'info');
 			break;
 
 			case 'close':
+			    $this->log('Close frame received', 'notice');
 				$this->close();
 				$this->log('Disconnected');
 			break;
