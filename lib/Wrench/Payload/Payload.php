@@ -2,6 +2,8 @@
 
 namespace Wrench\Payload;
 
+use Wrench\Exception\FrameException;
+
 use Wrench\Socket\Socket;
 
 /**
@@ -92,6 +94,42 @@ abstract class Payload
     }
 
     /**
+     * Gets the number of remaining bytes before this payload will be
+     * complete
+     *
+     * May return 0 (no more bytes required) or null (unknown number of bytes
+     * required).
+     *
+     * @return number|NULL
+     */
+    public function getRemainingData()
+    {
+        if ($this->isComplete()) {
+            return 0;
+        }
+
+        try {
+            if ($this->getCurrentFrame()->isFinal()) {
+                return $this->getCurrentFrame()->getRemainingData();
+            }
+        } catch (FrameException $e) {
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether this payload is waiting for more data
+     *
+     * @return boolean
+     */
+    public function isWaitingForData()
+    {
+        return $this->getRemainingData() > 0;
+    }
+
+    /**
      * @param Socket $socket
      * @return boolean
      */
@@ -111,8 +149,24 @@ abstract class Payload
      */
     public function receiveData($data)
     {
-        $frame = $this->getReceivingFrame();
-        $frame->receiveData($data);
+        while ($data) {
+            $frame = $this->getReceivingFrame();
+
+            $size = strlen($data);
+            $remaining = $frame->getRemainingData();
+
+            if ($remaining === null) {
+                $chunk_size = 2;
+            } elseif ($remaining > 0) {
+                $chunk_size = $remaining;
+            }
+
+            $chunk_size = min(strlen($data), $chunk_size);
+            $chunk = substr($data, 0, $chunk_size);
+            $data = substr($data, $chunk_size);
+
+            $frame->receiveData($chunk);
+        }
     }
 
     /**

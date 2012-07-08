@@ -119,6 +119,30 @@ abstract class Frame
     }
 
     /**
+     * Gets the remaining number of bytes before this frame will be complete
+     *
+     * @return number
+     */
+    public function getRemainingData()
+    {
+        try {
+            return $this->getExpectedBufferLength() - $this->getBufferLength();
+        } catch (FrameException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Whether this frame is waiting for more data
+     *
+     * @return boolean
+     */
+    public function isWaitingForData()
+    {
+        return $this->getRemainingData() > 0;
+    }
+
+    /**
      * Gets the contents of the frame payload
      *
      * The frame must be complete to call this method.

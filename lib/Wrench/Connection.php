@@ -279,6 +279,12 @@ class Connection extends Configurable
 	/**
 	 * Handle data received from the client
 	 *
+	 * The data passed in may belong to several different frames across one or
+	 * more protocols. It may not even contain a single complete frame. This method
+	 * manages slotting the data into separate payload objects.
+	 *
+	 * @todo An endpoint MUST be capable of handling control frames in the
+     *        middle of a fragmented message.
 	 * @param string $data
 	 */
     protected function handle($data)
@@ -287,11 +293,40 @@ class Connection extends Configurable
             $this->payload = $this->protocol->getPayload();
         }
 
-        $this->payload->receiveData($data);
+        while ($data) {
+            $size = strlen($data);
+            $remaining = $this->payload->getRemainingData();
 
-        if ($this->payload->isComplete()) {
-            $this->handlePayload($this->payload);
-            $this->payload = $this->protocol->getPayload(); // Start the next message
+            // If we don't yet know how much data is remaining, read data into
+            // the payload in two byte chunks (the size of a WebSocket frame
+            // header to get the initial length)
+            //
+            // Then re-loop. For extended lengths, this will happen once or four
+            // times extra, as the extended length is read in.
+            if ($remaining === null) {
+                $chunk_size = 2;
+            } elseif ($remaining > 0) {
+                $chunk_size = $remaining;
+            } elseif ($remaining === 0) {
+                $chunk_size = 0;
+            }
+
+            $chunk_size = min(strlen($data), $chunk_size);
+            $chunk = substr($data, 0, $chunk_size);
+            $data = substr($data, $chunk_size);
+
+            $this->payload->receiveData($chunk);
+
+            if ($remaining !== 0) {
+                continue;
+            }
+
+            if ($this->payload->isComplete()) {
+                $this->handlePayload($this->payload);
+                $this->payload = $this->protocol->getPayload();
+            } else {
+                throw new ConnectionException('Payload will not complete');
+            }
         }
     }
 
@@ -303,6 +338,8 @@ class Connection extends Configurable
     protected function handlePayload(Payload $payload)
     {
         $app = $this->getClientApplication();
+
+        $this->log('Handling payload: ' . $payload->getPayload(), 'debug');
 
         switch ($payload->getType()) {
             case Protocol::TYPE_TEXT:
