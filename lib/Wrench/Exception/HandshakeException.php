@@ -14,7 +14,7 @@ class HandshakeException extends WrenchException
      */
     public function __construct($message = null, $code = null, $previous = null)
     {
-        if ($code = null) {
+        if ($code == null) {
             $code = Protocol::HTTP_SERVER_ERROR;
         }
         parent::__construct($message, $code, $previous);

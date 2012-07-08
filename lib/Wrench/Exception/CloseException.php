@@ -17,7 +17,7 @@ class CloseException extends WrenchException
      */
     public function __construct($message = null, $code = null, $previous = null)
     {
-        if ($code = null) {
+        if ($code == null) {
             $code = Protocol::CLOSE_UNEXPECTED;
         }
         parent::__construct($message, $code, $previous);
