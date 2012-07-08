@@ -2,8 +2,8 @@
 
 namespace Wrench\Listener;
 
+use Wrench\Connection;
 use Wrench\Exception\InvalidOriginException;
-
 use Wrench\Server;
 
 class OriginPolicy implements Listener, HandshakeRequestListener

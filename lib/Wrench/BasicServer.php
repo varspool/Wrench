@@ -31,7 +31,7 @@ class BasicServer extends Server
         $options = array_merge(array(
             'check_origin'        => true,
             'allowed_origins'     => array(),
-            'origin_policy_class' => 'Wrench\OriginPolicy',
+            'origin_policy_class' => 'Wrench\Listener\OriginPolicy',
             'rate_limiter_class'  => 'Wrench\Listener\RateLimiter'
         ), $options);
 

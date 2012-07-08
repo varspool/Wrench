@@ -6,6 +6,9 @@ use Wrench\Server;
 
 class RateLimiter implements Listener
 {
+    /**
+     * @see Wrench\Listener.Listener::listen()
+     */
     public function listen(Server $server)
     {
         $server->addListener(
