@@ -41,9 +41,25 @@ class OriginPolicy implements Listener, HandshakeRequestListener
      */
     public function isAllowed($origin)
     {
-        if (in_array($origin, $this->allowed)) {
+        $scheme = parse_url($origin, PHP_URL_SCHEME);
+        $host = parse_url($origin, PHP_URL_HOST) ?: $origin;
+
+        foreach ($this->allowed as $allowed) {
+            $allowed_scheme = parse_url($allowed, PHP_URL_SCHEME);
+
+            if ($allowed_scheme && $scheme != $allowed_scheme) {
+                continue;
+            }
+
+            $allowed_host = parse_url($allowed, PHP_URL_HOST) ?: $allowed;
+
+            if ($host != $allowed_host) {
+                continue;
+            }
+
             return true;
         }
+
         return false;
     }
 
