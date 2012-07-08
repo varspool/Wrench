@@ -5,12 +5,12 @@
 
 Version: **2.0.0-beta**
 
-A simple websocket server and client package for PHP 5.3, using 
+A simple websocket server and client package for PHP 5.3/5.4, using
 streams.
 
 ### Features
 
-- Supports websocket draft hybi-10,13 (Currently tested with Chrome 18 and
+- Supports websocket draft hybi-10,13 (Currently tested with Chrome 20 and
   Firefox 11).
 - Supports origin-check.
 - Supports various security/performance settings.
@@ -23,23 +23,23 @@ streams.
 
 See [Frequently Asked Questions about the PHP License](http://php.net/license/index.php#fac-lic).
 Also, the namespace WebSocket is too generic; it denotes a common functionality,
-and may already be in use by application code. The BC break of a new 
+and may already be in use by application code. The BC break of a new
 [major version](http://semver.org/) was a good time to introduce this move
 to best practices.
 
 #### Public API
 
-The new vendor namespace is Wrench. This namespace begins in the `/lib` 
+The new vendor namespace is Wrench. This namespace begins in the `/lib`
 directory, rather than `server/lib`.
 
-Apart from the new namespace, the public API of this new major version is 
+Apart from the new namespace, the public API of this new major version is
 almost completely compatible with that of php-websocket 1.0.0.
 
 #### Protected API
 
-The protected API has changed, a lot. Many method have been broken up into 
+The protected API has changed, a lot. Many method have been broken up into
 simple protected methods. This makes the Server class much easier to extend. In
-fact, almost all of the classes involved in your typical daemon can now be 
+fact, almost all of the classes involved in your typical daemon can now be
 replaced or extended, including the socket handling and protocol handling.
 
 #### What happened to the `client` dir?
@@ -51,28 +51,23 @@ branch.
 
 ## Installation
 
-The library is PSR-0 compatible, with a vendor name of WebSocket (note the
-capital S). An SplClassLoader is bundled for convenience.
+The library is PSR-0 compatible, with a vendor name of **Wrench**. An
+SplClassLoader is bundled for convenience.
 
 ## Usage
 
-This creates a server on 127.0.0.1:8000 with one Application that listens on
-`ws://localhost:8000/demo`:
+This creates a server on 127.0.0.1:8000 with one Application that listens for
+WebSocket requests to `ws://localhost:8000/echo` and `ws://localhost:8000/chat`:
 
 ```php
-// $interface, $port, $ssl
-$server = new \WebSocket\Server(127.0.0.1', 8000, false);
-
-// Origin checking is supported
-$server->setCheckOrigin(true);
-$server->setAllowedOrigin('example.org')
-
-// As is basic rate limiting
-$server->setMaxClients(100);
-$server->setMaxConnectionsPerIp(20);
-$server->setMaxRequestsPerMinute(1000);
-
-$server->registerApplication('demo', \WebSocket\Application\DemoApplication::getInstance());
+$server = new \Wrench\BasicServer('ws://localhost:8000', array(
+    'allowed_origins' => array(
+        'mysite.com',
+        'mysite.dev.localdomain'
+    )
+));
+$server->registerApplication('echo', new \Wrench\Examples\EchoApplication());
+$server->registerApplication('chat', new \My\ChatApplication());
 $server->run();
 ```
 ## Authors
@@ -81,13 +76,13 @@ The original maintainer and author was
 [@nicokaiser](https://github.com/nicokaiser). Plentiful improvements were
 contributed by [@lemmingzshadow](https://github.com/lemmingzshadow) and
 [@mazhack](https://github.com/mazhack). Parts of the Socket class were written
-by Moritz Wutz. The server is licensed under the WTFPL, a free software compatible 
+by Moritz Wutz. The server is licensed under the WTFPL, a free software compatible
 license.
 
 ## Bugs/Todos/Hints
 
-- Add support for fragmented frames.
-- To report issues, see the [issue tracker](https://github.com/varspool/php-websocket/issues).
+- Add tests around fragmented payloads (split into many frames).
+- To report issues, see the [issue tracker](https://github.com/varspool/Wrench/issues).
 
 ## Examples
 
