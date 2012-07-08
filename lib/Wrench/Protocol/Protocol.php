@@ -26,7 +26,8 @@ abstract class Protocol
     /**#@-*/
 
     /**#@+
-     * Headers
+     * HTTP headers
+     *
      * @var string
      */
     const HEADER_HOST       = 'Host';
@@ -38,6 +39,20 @@ abstract class Protocol
     const HEADER_ORIGIN     = 'Origin';
     const HEADER_CONNECTION = 'Connection';
     const HEADER_UPGRADE    = 'Upgrade';
+    /**#@-*/
+
+    /**#@+
+     * HTTP error statuses
+     *
+     * @var int
+     */
+    const HTTP_SWITCHING_PROTOCOLS = 101;
+    const HTTP_BAD_REQUEST         = 400;
+    const HTTP_UNAUTHORIZED        = 401;
+    const HTTP_FORBIDDEN           = 403;
+    const HTTP_NOT_FOUND           = 404;
+    const HTTP_SERVER_ERROR        = 500;
+    const HTTP_NOT_IMPLEMENTED     = 501;
     /**#@-*/
 
     /**#@+
@@ -59,6 +74,38 @@ abstract class Protocol
     const CLOSE_EXTENSION_NEEDED  = 1010;
     const CLOSE_UNEXPECTED        = 1011;
     const CLOSE_RESERVED_TLS      = 1015;
+    /**#@-*/
+
+    /**#@+
+     * Frame types
+     *
+     *  %x0 denotes a continuation frame
+     *  %x1 denotes a text frame
+     *  %x2 denotes a binary frame
+     *  %x3-7 are reserved for further non-control frames
+     *  %x8 denotes a connection close
+     *  %x9 denotes a ping
+     *  %xA denotes a pong
+     *  %xB-F are reserved for further control frames
+     *
+     * @var int
+     */
+    const TYPE_CONTINUATION = 0;
+    const TYPE_TEXT         = 1;
+    const TYPE_BINARY       = 2;
+    const TYPE_RESERVED_3   = 3;
+    const TYPE_RESERVED_4   = 4;
+    const TYPE_RESERVED_5   = 5;
+    const TYPE_RESERVED_6   = 6;
+    const TYPE_RESERVED_7   = 7;
+    const TYPE_CLOSE        = 8;
+    const TYPE_PING         = 9;
+    const TYPE_PONG         = 10;
+    const TYPE_RESERVED_11  = 11;
+    const TYPE_RESERVED_12  = 12;
+    const TYPE_RESERVED_13  = 13;
+    const TYPE_RESERVED_14  = 14;
+    const TYPE_RESERVED_15  = 15;
     /**#@-*/
 
     /**
@@ -117,7 +164,7 @@ abstract class Protocol
      *
      * @var array<string>
      */
-    protected $schemes = array(
+    protected static $schemes = array(
         self::SCHEME_WEBSOCKET,
         self::SCHEME_WEBSOCKET_SECURE,
         self::SCHEME_UNDERLYING,
@@ -127,9 +174,9 @@ abstract class Protocol
     /**
      * Close status codes
      *
-     * @var array
+     * @var array<int => string>
      */
-    protected $closeReasons = array(
+    protected static $closeReasons = array(
         self::CLOSE_NORMAL            => 'normal close',
         self::CLOSE_GOING_AWAY        => 'going away',
         self::CLOSE_PROTOCOL_ERROR    => 'protocol error',
@@ -146,21 +193,40 @@ abstract class Protocol
     );
 
     /**
+     * Frame types
+     *
+     * @todo flip values and keys?
+     * @var array<string => int>
+     */
+    public static $frameTypes = array(
+        'continuation' => self::TYPE_CONTINUATION,
+        'text'         => self::TYPE_TEXT,
+        'binary'       => self::TYPE_BINARY,
+        'close'        => self::TYPE_CLOSE,
+        'ping'         => self::TYPE_PING,
+        'pong'         => self::TYPE_PONG
+    );
+
+    /**
+     * HTTP errors
+     *
+     * @var array<int => string>
+     */
+    protected static $httpResponses = array(
+        self::HTTP_SWITCHING_PROTOCOLS => 'Switching Protocols',
+        self::HTTP_BAD_REQUEST => 'Bad Request',
+        self::HTTP_UNAUTHORIZED => 'Unauthorized',
+        self::HTTP_FORBIDDEN => 'Forbidden',
+        self::HTTP_NOT_FOUND => 'Not Found',
+        self::HTTP_NOT_IMPLEMENTED => 'Not Implemented'
+    );
+
+    /**
      * Gets a version number
      *
      * @return
      */
     abstract public function getVersion();
-
-    /**
-     * Encodes the given binary data into a frame
-     *
-     * @param string     $data
-     * @param string|int $payload
-     * @param boolean    $masked
-     * @deprecated
-     */
-    //abstract public function encode($data, $payload = self::PAYLOAD_TEXT, $masked = true);
 
     /**
      * Subclasses should implement this method and return a boolean to the given
@@ -247,18 +313,57 @@ abstract class Protocol
         return implode($handshake, "\r\n") . "\r\n\r\n";
     }
 
-
+    /**
+     * Gets a handshake response body
+     *
+     * @param string $key
+     * @param array $headers
+     */
     public function getResponseHandshake($key, array $headers = array())
     {
         $headers = array_merge(
-            $this->getDefaultResponseHeaders(
+            $this->getSuccessResponseHeaders(
                 $key
             ),
             $headers
         );
 
+        return $this->getHttpResponse(self::HTTP_SWITCHING_PROTOCOLS, $headers);
+    }
+
+    /**
+     * Gets a response to an error in the handshake
+     *
+     * @param int|Exception $e Exception or HTTP error
+     * @param array $headers
+     */
+    public function getResponseError($e, array $headers = array())
+    {
+        $code = false;
+
+        if ($e instanceof Exception) {
+            $code = $e->getCode();
+        } elseif (is_numeric($e)) {
+            $code = (int)$e;
+        }
+
+        if (!$code || $code < 400 || $code > 599) {
+            $code = self::HTTP_SERVER_ERROR;
+        }
+
+        return $this->getHttpResponse($code, $headers);
+    }
+
+    /**
+     * Gets an HTTP response
+     *
+     * @param int $status
+     * @param array $headers
+     */
+    protected function getHttpResponse($status, array $headers = array())
+    {
         $handshake = array(
-            sprintf(self::RESPONSE_LINE_FORMAT, 101, 'Switching Protocols')
+            sprintf(self::RESPONSE_LINE_FORMAT, $status, self::$httpResponses)
         );
 
         foreach ($headers as $name => $value) {
@@ -301,11 +406,23 @@ abstract class Protocol
         return ($keyAccept === $this->getEncodedHash($key)) ? true : false;
     }
 
+    /**
+     * Gets an encoded hash for a key
+     *
+     * @param string $key
+     * @return string
+     */
     public function getEncodedHash($key)
     {
         return base64_encode(pack('H*', sha1($key . self::MAGIC_GUID)));
     }
 
+    /**
+     * Validates a request handshake
+     *
+     * @param string $request
+     * @throws BadRequestException
+     */
     public function validateRequestHandshake(
         $request
     ) {
@@ -371,30 +488,28 @@ abstract class Protocol
     }
 
     /**
-     * Gets a suitable HTTP error response
-     *
-     * @param Exception $e
-     */
-    public function getErrorHandshake(Exception $e)
-    {
-        // TODO: error handshake
-        die('TODO: error handshake');
-    }
-
-    /**
      * Gets a suitable WebSocket close frame
      *
-     * @param Exception $e
+     * @param Exception|int $e
      */
-    public function getCloseFrame(Exception $e)
+    public function getCloseFrame($e)
     {
-        $code = $e->getCode();
+        $code = false;
 
-        if (!$code || $code < 1000 || $code > 2000) {
+        if ($e instanceof Exception) {
+            $code = $e->getCode();
+        } elseif (is_numeric($e)) {
+            $code = (int)$e;
+        }
+
+        if (!$code || !key_exists($code, self::$closeReasons)) {
             $code = self::CLOSE_UNEXPECTED;
         }
 
-        die('TODO: close frame');
+        $body = pack('n', $code) . self::$closeReasons[$code];
+
+        $payload = $this->getPayload();
+        return $payload->encode($body, self::TYPE_CLOSE);
     }
 
     /**
@@ -585,7 +700,7 @@ abstract class Protocol
         if (!$scheme) {
             throw new InvalidArgumentException('No scheme specified');
         }
-        if (!in_array($scheme, $this->schemes)) {
+        if (!in_array($scheme, self::$schemes)) {
             throw new InvalidArgumentException(
                 'Unknown socket scheme: ' . $scheme
             );
@@ -623,7 +738,7 @@ abstract class Protocol
      *
      * @param string $key
      */
-    protected function getDefaultResponseHeaders($key)
+    protected function getSuccessResponseHeaders($key)
     {
         return array(
             self::HEADER_UPGRADE    => self::UPGRADE_VALUE,
