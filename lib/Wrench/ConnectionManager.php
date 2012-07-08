@@ -28,14 +28,14 @@ class ConnectionManager extends Configurable
     /**
      * An array of client connections
      *
-     * @var array<Connection>
+     * @var array<int => Connection>
      */
     protected $connections = array();
 
     /**
      * An array of raw socket resources, corresponding to connections, roughly
      *
-     * @var array<resource>
+     * @var array<int => resource>
      */
     protected $resources = array();
 
@@ -98,6 +98,11 @@ class ConnectionManager extends Configurable
     }
 
 
+    /**
+     * Listens on the main socket
+     *
+     * @return void
+     */
     public function listen()
     {
         $this->socket->listen();
@@ -106,12 +111,20 @@ class ConnectionManager extends Configurable
 
     /**
      * Gets all resources
+     *
+     * @return array<int => resource)
      */
     protected function getAllResources()
     {
         return array_merge($this->resources, array($this->socket->getResource()));
     }
 
+    /**
+     * Returns the Connection associated with the specified socket resource
+     *
+     * @param resource $socket
+     * @return Connection
+     */
     protected function getConnectionForClientSocket($socket)
     {
         if (!isset($this->connections[$this->resourceId($socket)])) {
@@ -119,9 +132,6 @@ class ConnectionManager extends Configurable
         }
         return $this->connections[$this->resourceId($socket)];
     }
-
-
-
 
     /**
      * Select and process an array of resources
@@ -172,6 +182,11 @@ class ConnectionManager extends Configurable
 
     /**
      * Creates a connection from a socket resource
+     *
+     * The create connection object is based on the options passed into the
+     * constructor ('connection_class', 'connection_options'). This connection
+     * instance and its associated socket resource are then stored in the
+     * manager.
      *
      * @param resource $resource A socket resource
      * @return Connection
@@ -224,6 +239,8 @@ class ConnectionManager extends Configurable
      * This method (and $this->getResourceId()) exist to make this assumption
      * explicit.
      *
+     * This is needed on the connection manager as well as on resources
+     *
      * @param resource $resource
      */
     protected function resourceId($resource)
@@ -241,6 +258,12 @@ class ConnectionManager extends Configurable
         return $this->server->getUri();
     }
 
+    /**
+     * Logs a message
+     *
+     * @param string $message
+     * @param string $priority
+     */
     public function log($message, $priority = 'info')
     {
         $this->server->log(sprintf(
@@ -251,7 +274,6 @@ class ConnectionManager extends Configurable
     }
 
     /**
-     * @deprecated
      * @return \Wrench\Server
      */
     public function getServer()
@@ -285,7 +307,7 @@ class ConnectionManager extends Configurable
      */
     public function removeClientOnClose($client)
     {
-        throw new \Exception('Not implemented');
+        throw new \Exception('Deprecated: just removeConnection');
 //         $clientId = $client->getClientId();
 //         $clientIp = $client->getClientIp();
 //         $clientPort = $client->getClientPort();
@@ -314,29 +336,31 @@ class ConnectionManager extends Configurable
      * @deprecated
      */
     public function removeClientOnError($client)
-    {        // remove reference in clients app:
-        if($client->getClientApplication() !== false)
-        {
-            $client->getClientApplication()->onDisconnect($client);
-        }
+    {
+        throw new \Exception('Deprecated: just removeConnection');
+        // remove reference in clients app:
+//         if($client->getClientApplication() !== false)
+//         {
+//             $client->getClientApplication()->onDisconnect($client);
+//         }
 
-        $resource = $client->getClientSocket();
-        $clientId = $client->getClientId();
-        $clientIp = $client->getClientIp();
-        $clientPort = $client->getClientPort();
-        $this->_removeIpFromStorage($client->getClientIp());
-        if(isset($this->_requestStorage[$clientId]))
-        {
-            unset($this->_requestStorage[$clientId]);
-        }
-        unset($this->connections[(int)$resource]);
+//         $resource = $client->getClientSocket();
+//         $clientId = $client->getClientId();
+//         $clientIp = $client->getClientIp();
+//         $clientPort = $client->getClientPort();
+//         $this->_removeIpFromStorage($client->getClientIp());
+//         if(isset($this->_requestStorage[$clientId]))
+//         {
+//             unset($this->_requestStorage[$clientId]);
+//         }
+//         unset($this->connections[(int)$resource]);
 
 
-        // trigger status application:
-        if($this->getApplication('status') !== false)
-        {
-            $this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
-        }
-        unset($resource, $clientId, $clientIp, $clientPort);
+//         // trigger status application:
+//         if($this->getApplication('status') !== false)
+//         {
+//             $this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
+//         }
+//         unset($resource, $clientId, $clientIp, $clientPort);
     }
 }

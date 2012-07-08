@@ -62,7 +62,7 @@ class HybiFrame extends Frame
      *                                               ; length, where
      *                                               ; n >= 0
      */
-    public function encode($payload, $type = Protocol::TYPE_TEXT, $masked = true)
+    public function encode($payload, $type = Protocol::TYPE_TEXT, $masked = false)
     {
         $this->type = $type;
         $this->masked = $masked;

@@ -418,6 +418,11 @@ class Connection extends Configurable
         $this->close($e);
     }
 
+    /**
+     * Processes data on the socket
+     *
+     * @throws CloseException
+     */
     public function process()
     {
         $data = $this->socket->receive();
@@ -461,12 +466,24 @@ class Connection extends Configurable
 		$this->server->removeClientOnClose($this);
 	}
 
+	/**
+	 * Event handler for disconnections
+	 *
+	 * @deprecated Just use close
+	 */
 	public function onDisconnect()
     {
+        throw new Exception('Deprecated: just use close');
         $this->log('Disconnected', 'info');
         $this->close(1000);
     }
 
+    /**
+     * Logs a message
+     *
+     * @param string $message
+     * @param string $priority
+     */
     public function log($message, $priority = 'info')
     {
         $this->manager->log(sprintf(
@@ -479,26 +496,51 @@ class Connection extends Configurable
         ), $priority);
     }
 
+    /**
+     * Gets the IP address of the connection
+     *
+     * @return string Usually dotted quad notation
+     */
 	public function getIp()
 	{
 		return $this->ip;
 	}
 
+	/**
+	 * Gets the port of the connection
+	 *
+	 * @return int
+	 */
 	public function getPort()
 	{
 		return $this->port;
 	}
 
+	/**
+	 * Gets the connection ID
+	 *
+	 * @return string
+	 */
 	public function getId()
 	{
 		return $this->id;
 	}
 
+	/**
+	 * Gets the socket object
+	 *
+	 * @return Socket\ServerClientSocket
+	 */
 	public function getSocket()
 	{
 		return $this->socket;
 	}
 
+	/**
+	 * Gets the client application
+	 *
+	 * @return Application
+	 */
 	public function getClientApplication()
 	{
 		return (isset($this->application)) ? $this->application : false;
