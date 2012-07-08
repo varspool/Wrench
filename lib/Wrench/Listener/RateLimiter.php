@@ -24,14 +24,12 @@ class RateLimiter implements Listener
 
     public function onSocketConnect($socket, $connection)
     {
-        throw new \Exception();
-        die('eyah!');
+        // throw new \Exception('connect');
     }
 
     public function onClientData($socket, $connection)
     {
-        throw new \Exception();
-        die('do some rate limiting');
+        // throw new \Exception('do some rate limiting');
     }
 
     /**
