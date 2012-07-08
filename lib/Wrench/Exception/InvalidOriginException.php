@@ -3,9 +3,12 @@
 namespace Wrench\Exception;
 
 use Wrench\Protocol\Protocol;
-use Wrench\Exception\Exception as WrenchException;
+use Wrench\Exception\HandshakeException;
 
-class HandshakeException extends WrenchException
+/**
+ * Invalid origin exception
+ */
+class InvalidOriginException extends HandshakeException
 {
     /**
      * @param string    $message
@@ -15,7 +18,7 @@ class HandshakeException extends WrenchException
     public function __construct($message = null, $code = null, $previous = null)
     {
         if ($code = null) {
-            $code = Protocol::HTTP_SERVER_ERROR;
+            $code = Protocol::HTTP_FORBIDDEN;
         }
         parent::__construct($message, $code, $previous);
     }
