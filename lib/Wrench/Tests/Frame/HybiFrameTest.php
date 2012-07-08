@@ -1,6 +1,6 @@
 <?php
 
-namespace Wrench\Tests\Protocol;
+namespace Wrench\Tests\Frame;
 
 use Wrench\Frame\HybiFrame;
 use Wrench\Tests\Frame\FrameTest;

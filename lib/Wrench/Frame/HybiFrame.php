@@ -78,7 +78,7 @@ class HybiFrame extends Frame
             | (self::BITFIELD_FINAL & PHP_INT_MAX)
         );
 
-        $masked_bit = (self::BITFIELD_MASKED & $this->masked ? PHP_INT_MAX : 0);
+        $masked_bit = (self::BITFIELD_MASKED & ($this->masked ? PHP_INT_MAX : 0));
 
         if ($this->length <= 125) {
             $this->buffer[self::BYTE_INITIAL_LENGTH] = chr(
