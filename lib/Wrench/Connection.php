@@ -217,6 +217,10 @@ class Connection extends Configurable
 
             $response = $this->protocol->getResponseHandshake($key);
 
+            if (!$this->socket->isConnected()) {
+                throw new HandshakeException('Socket is not connected');
+            }
+
             if ($this->socket->send($response) === false) {
                 throw new HandshakeException('Could not send handshake response');
             }
@@ -239,7 +243,7 @@ class Connection extends Configurable
             $this->application->onConnect($this);
         } catch (WrenchException $e) {
             $this->log('Handshake failed: ' . $e, 'err');
-            throw $e;
+            $this->close($e);
         }
     }
 
