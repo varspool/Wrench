@@ -7,29 +7,12 @@ use \Exception;
 
 abstract class ProtocolTest extends Test
 {
-    abstract protected function getClass();
-
-    protected $protocol;
-
     /**
      * @see PHPUnit_Framework_TestCase::setUp()
      */
     public function setUp()
     {
         parent::setUp();
-
-        $class = $this->getClass();
-        $this->protocol = new $class();
-    }
-
-    /**
-     * @see PHPUnit_Framework_TestCase::tearDown()
-     */
-    protected function tearDown()
-    {
-        parent::tearDown();
-
-        unset($this->protocol);
     }
 
     /**
@@ -38,7 +21,7 @@ abstract class ProtocolTest extends Test
     public function testValidateHandshakeResponseValid($response, $key)
     {
         try {
-            $response = $this->protocol->validateResponseHandshake($response, $key);
+            $response = $this->getInstance()->validateResponseHandshake($response, $key);
         } catch (Exception $e) {
             $this->fail('Validated valid response handshake as invalid');
         }
@@ -50,7 +33,7 @@ abstract class ProtocolTest extends Test
     public function testValidateOriginUriValid($uri)
     {
         try {
-            $this->protocol->validateOriginUri($uri);
+            $this->getInstance()->validateOriginUri($uri);
         } catch (\Exception $e) {
             $this->fail('Valid URI validated as invalid');
         }
@@ -62,7 +45,7 @@ abstract class ProtocolTest extends Test
      */
     public function testValidateOriginUriInvalid($uri)
     {
-        $this->protocol->validateOriginUri($uri);
+        $this->getInstance()->validateOriginUri($uri);
     }
 
     public function getValidOriginUris()

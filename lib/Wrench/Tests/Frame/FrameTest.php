@@ -13,13 +13,6 @@ use \Exception;
 abstract class FrameTest extends Test
 {
     /**
-     * Gets the class under test
-     *
-     * @return string
-     */
-    abstract protected function getClass();
-
-    /**
      * A fresh instance of the class being tested
      *
      * @var Frame

@@ -9,30 +9,35 @@ use Wrench\Socket;
 use \InvalidArgumentException;
 use \PHPUnit_Framework_Error;
 
+/**
+ * Tests the client class
+ */
 class ClientTest extends Test
 {
+    /**
+     * @see Wrench\Tests.Test::getClass()
+     */
+    protected function getClass()
+    {
+        return 'Wrench\Client';
+    }
+
     public function testConstructor()
     {
-        $client = null;
-
-        $this->assertInstanceOf(
-            'Wrench\Client',
+        $this->assertInstanceOfClass(
             $client = new Client(
                 'ws://localhost/test', 'http://example.org/'
             ),
             'ws:// scheme, default socket'
         );
 
-        $this->assertInstanceOf(
-            'Wrench\Client',
+        $this->assertInstanceOfClass(
             $client = new Client(
                 'ws://localhost/test', 'http://example.org/',
                 array('socket' => $this->getMockSocket())
             ),
             'ws:// scheme, socket specified'
         );
-
-        return $client;
     }
 
     /**
@@ -41,11 +46,6 @@ class ClientTest extends Test
     protected function getMockSocket()
     {
         return $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
-    }
-
-    protected function getMockProtocol()
-    {
-        return $this->getMock('Wrench\Protocol\Rfc6455Protocol');
     }
 
     /**
@@ -103,6 +103,4 @@ class ClientTest extends Test
     {
         $w = new Client('ws://localhost:8000', 'NOTAVALIDURI');
     }
-
-
 }

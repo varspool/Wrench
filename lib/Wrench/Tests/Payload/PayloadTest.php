@@ -13,13 +13,6 @@ use \Exception;
 abstract class PayloadTest extends Test
 {
     /**
-     * Gets the class under test
-     *
-     * @return string
-     */
-    abstract protected function getClass();
-
-    /**
      * A fresh instance of the class being tested
      *
      * @var Payload
@@ -32,22 +25,16 @@ abstract class PayloadTest extends Test
     public function setUp()
     {
         parent::setUp();
-        $this->payload = $this->getNewPayload();
-    }
 
-    protected function getNewPayload()
-    {
-        $class = $this->getClass();
-        return new $class();
+        $this->payload = $this->getInstance();
     }
 
     /**
-     * @see PHPUnit_Payloadwork_TestCase::tearDown()
+     * Tests the constructor
      */
-    protected function tearDown()
+    public function testConstructor()
     {
-        parent::tearDown();
-        unset($this->payload);
+        $this->assertInstanceOfClass($this->getInstance());
     }
 
     /**
@@ -60,7 +47,7 @@ abstract class PayloadTest extends Test
         $this->payload->encode($payload, $type);
 
         // Create a new payload and read the data in with encode
-        $payload = $this->getNewPayload();
+        $payload = $this->getInstance();
         $payload->encode($this->payload->getPayload(), $type);
 
         // These still match

@@ -12,30 +12,31 @@ use \PHPUnit_Framework_Error;
 
 class ClientSocketTest extends Test
 {
+    public function getClass()
+    {
+        return 'Wrench\Socket\ClientSocket';
+    }
+
     public function testConstructor()
     {
         $socket = null;
 
-        $this->assertInstanceOf(
-            'Wrench\Socket\ClientSocket',
+        $this->assertInstanceOfClass(
             $socket = new ClientSocket('ws://localhost/'),
             'ws:// scheme, default port'
         );
 
-        $this->assertInstanceOf(
-            'Wrench\Socket\ClientSocket',
+        $this->assertInstanceOfClass(
             $socket = new ClientSocket('ws://localhost/some-arbitrary-path'),
             'with path'
         );
 
-        $this->assertInstanceOf(
-            'Wrench\Socket\ClientSocket',
+        $this->assertInstanceOfClass(
             $socket = new ClientSocket('wss://localhost/test', array()),
             'empty options'
         );
 
-        $this->assertInstanceOf(
-            'Wrench\Socket\ClientSocket',
+        $this->assertInstanceOfClass(
             $socket = new ClientSocket('ws://localhost:8000/foo'),
             'specified port'
         );
@@ -45,8 +46,7 @@ class ClientSocketTest extends Test
     {
         $socket = null;
 
-        $this->assertInstanceOf(
-            'Wrench\Socket\ClientSocket',
+        $this->assertInstanceOfClass(
             $socket = new ClientSocket(
                 'ws://localhost:8000/foo', array(
                     'timeout_connect' => 10
@@ -55,8 +55,7 @@ class ClientSocketTest extends Test
             'connect timeout'
         );
 
-        $this->assertInstanceOf(
-            'Wrench\Socket\ClientSocket',
+        $this->assertInstanceOfClass(
             $socket = new ClientSocket(
                 'ws://localhost:8000/foo', array(
                     'timeout_socket' => 10
@@ -65,8 +64,7 @@ class ClientSocketTest extends Test
             'socket timeout'
         );
 
-        $this->assertInstanceOf(
-            'Wrench\Socket\ClientSocket',
+        $this->assertInstanceOfClass(
             $socket = new ClientSocket(
                 'ws://localhost:8000/foo', array(
                     'protocol' => new Rfc6455Protocol()
