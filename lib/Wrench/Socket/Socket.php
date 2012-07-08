@@ -56,6 +56,11 @@ abstract class Socket extends Configurable implements Resource
      */
     protected $connected = false;
 
+    /**
+     * Whether the current read is the first one to the socket
+     *
+     * @var boolean
+     */
     protected $firstRead = true;
 
     /**
@@ -77,6 +82,31 @@ abstract class Socket extends Configurable implements Resource
         parent::configure($options);
     }
 
+
+    /**
+     * Get the last error that occurred on the socket
+     *
+     * @return int|string
+     */
+    public function getLastError()
+    {
+        if ($this->isConnected() && $this->socket) {
+            return socket_last_error($this->socket);
+        } else {
+            return 'Not connected';
+        }
+    }
+
+    /**
+     * Whether the socket is currently connected
+     *
+     * @return boolean
+     */
+    public function isConnected()
+    {
+        return $this->connected;
+    }
+
     /**
      * Disconnect the socket
      *
@@ -91,38 +121,27 @@ abstract class Socket extends Configurable implements Resource
         $this->connected = false;
     }
 
-    /**
-     * Gets a stream context
+ /**
+     * @see Wrench.Resource::getResource()
      */
-    protected function getStreamContext($listen = false)
-    {
-        $options = array();
-
-        if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE
-            || $this->scheme == Protocol::SCHEME_UNDERLYING) {
-            $options['socket'] = $this->getSocketStreamContextOptions();
-        }
-
-        if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE) {
-            $options['ssl'] = $this->getSslStreamContextOptions();
-        }
-
-        return stream_context_create(
-            $options,
-            array()
-        );
-    }
-
     public function getResource()
     {
         return $this->socket;
     }
 
+    /**
+     * @see Wrench.Resource::getResourceId()
+     */
     public function getResourceId()
     {
         return (int)$this->socket;
     }
 
+    /**
+     * @param unknown_type $data
+     * @throws RuntimeException
+     * @return boolean|int The number of bytes sent or false on error
+     */
     public function send($data)
     {
         if (!$this->isConnected()) {
@@ -132,7 +151,7 @@ abstract class Socket extends Configurable implements Resource
         $length = strlen($data);
 
         if ($length == 0) {
-            return true;
+            return 0;
         }
 
         for ($i = $length; $i > 0; $i -= $written) {
@@ -147,6 +166,13 @@ abstract class Socket extends Configurable implements Resource
         return $length;
     }
 
+    /**
+     * Recieve data from the socket
+     *
+     * @param int $length
+     * @throws RuntimeException
+     * @return string
+     */
     public function receive($length = self::DEFAULT_RECEIVE_LENGTH)
     {
         if (!$this->isConnected()) {
@@ -200,12 +226,24 @@ abstract class Socket extends Configurable implements Resource
     }
 
     /**
-     * Whether the socket is currently connected
-     *
-     * @return boolean
+     * Gets a stream context
      */
-    public function isConnected()
+    protected function getStreamContext($listen = false)
     {
-        return $this->connected;
+        $options = array();
+
+        if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE
+            || $this->scheme == Protocol::SCHEME_UNDERLYING) {
+            $options['socket'] = $this->getSocketStreamContextOptions();
+        }
+
+        if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE) {
+            $options['ssl'] = $this->getSslStreamContextOptions();
+        }
+
+        return stream_context_create(
+            $options,
+            array()
+        );
     }
 }

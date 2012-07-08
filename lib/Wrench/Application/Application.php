@@ -32,7 +32,7 @@ abstract class Application
 
 	abstract public function onDisconnect($connection);
 
-	abstract public function onData($data, $client);
+	abstract public function onData($payload, $client);
 
 	// Common methods:
 

@@ -1,29 +1,27 @@
 <?php
+
 namespace Wrench;
 
-use Wrench\Exception\CloseException;
+use Wrench\Protocol\Protocol;
 
-use Wrench\Exception\ConnectionException;
-
-use Wrench\Exception\HandshakeException;
-
-use Wrench\Exception\BadRequestException;
+use Wrench\Payload\Payload;
 
 use Wrench\Util\Configurable;
-
 use Wrench\Socket;
 use Wrench\Server;
-use \RuntimeException;
 use Wrench\Exception as WrenchException;
+use Wrench\Exception\CloseException;
+use Wrench\Exception\ConnectionException;
+use Wrench\Exception\HandshakeException;
+use Wrench\Exception\BadRequestException;
+
 use \Exception;
+use \RuntimeException;
 
 /**
  * Represents a client connection on the server side
  *
- * i.e. the `Server` manages a bunch of `Connection`s
- *
- * @author Nico Kaiser <nico@kaiser.me>
- * @author Simon Samtleben <web@lemmingzshadow.net>
+ * i.e. the `Server` manages a bunch of `Connections
  */
 class Connection extends Configurable
 {
@@ -74,6 +72,9 @@ class Connection extends Configurable
 	protected $id = null;
 
 	public $waitingForData = false;
+
+	protected $payload;
+
 	private $_dataBuffer = '';
 
     /**
@@ -186,6 +187,14 @@ class Connection extends Configurable
         return $this->handle($data);
     }
 
+    /**
+     * Performs a websocket handshake
+     *
+     * @param string $data
+     * @throws BadRequestException
+     * @throws HandshakeException
+     * @throws WrenchException
+     */
     public function handshake($data)
     {
         try {
@@ -230,67 +239,82 @@ class Connection extends Configurable
         }
     }
 
+    /**
+     * Sends an HTTP response to the client
+     *
+     * @param int $httpStatusCode
+     */
 	public function sendHttpResponse($httpStatusCode = 400)
 	{
-		$httpHeader = 'HTTP/1.1 ';
-		switch($httpStatusCode)
-		{
-			case 400:
-				$httpHeader .= '400 Bad Request';
-			break;
+	    throw new Exception("no longer implemented");
 
-			case 401:
-				$httpHeader .= '401 Unauthorized';
-			break;
+// 		$httpHeader = 'HTTP/1.1 ';
+// 		switch($httpStatusCode)
+// 		{
+// 			case 400:
+// 				$httpHeader .= '400 Bad Request';
+// 			break;
 
-			case 403:
-				$httpHeader .= '403 Forbidden';
-			break;
+// 			case 401:
+// 				$httpHeader .= '401 Unauthorized';
+// 			break;
 
-			case 404:
-				$httpHeader .= '404 Not Found';
-			break;
+// 			case 403:
+// 				$httpHeader .= '403 Forbidden';
+// 			break;
 
-			case 501:
-				$httpHeader .= '501 Not Implemented';
-			break;
-		}
-		$httpHeader .= "\r\n";
-		$this->server->writeBuffer($this->socket, $httpHeader);
+// 			case 404:
+// 				$httpHeader .= '404 Not Found';
+// 			break;
+
+// 			case 501:
+// 				$httpHeader .= '501 Not Implemented';
+// 			break;
+// 		}
+// 		$httpHeader .= "\r\n";
+// 		$this->server->writeBuffer($this->socket, $httpHeader);
 	}
 
 
-    private function handle($data)
+	/**
+	 * Handle data received from the client
+	 *
+	 * @param string $data
+	 */
+    protected function handle($data)
     {
-		if ($this->waitingForData === true) {
-			$data = $this->_dataBuffer . $data;
-			$this->_dataBuffer = '';
-			$this->waitingForData = false;
-		}
+        if (!$this->payload) {
+            $this->payload = $this->protocol->getPayload();
+        }
 
-		$decoded = $this->protocol->decode($data);
+        $this->payload->receiveData($data);
 
-		if ($decoded === false) {
-			$this->waitingForData = true;
-			$this->_dataBuffer .= $data;
-			return false;
-		} else {
-			$this->_dataBuffer = '';
-			$this->waitingForData = false;
-		}
+        if ($this->payload->isComplete()) {
+            $this->handlePayload($this->payload);
+            $this->payload = $this->protocol->getPayload(); // Start the next message
+        }
+    }
 
-		switch ($decoded['type']) {
-			case 'text':
-				$this->application->onData($decodedData['payload'], $this);
-			break;
+    /**
+     * Handle a complete payload received from the client
+     *
+     * @param string $payload
+     */
+    protected function handlePayload(Payload $payload)
+    {
+        $app = $this->getClientApplication();
 
-			case 'binary':
-				if(method_exists($this->application, 'onBinaryData'))
-				{
-					$this->application->onBinaryData($decodedData['payload'], $this);
-				}
-				else
-				{
+        switch ($payload->getType()) {
+            case Protocol::TYPE_TEXT:
+                if (method_exists($app, 'onData')) {
+                    $app->onData($payload, $this);
+                }
+                return;
+
+			case Protocol::TYPE_BINARY:
+				if(method_exists($app, 'onBinaryData')) {
+					$app->onBinaryData($payload, $this);
+				} else {
 					$this->close(1003);
 				}
 			break;
@@ -308,9 +332,10 @@ class Connection extends Configurable
 				$this->close();
 				$this->log('Disconnected');
 			break;
-		}
 
-		return true;
+            default:
+                throw new ConnectionException('Unhandled payload type');
+        }
     }
 
     /**
@@ -323,9 +348,9 @@ class Connection extends Configurable
      * @throws ConnectionException
      * @return boolean
      */
-    public function send($payload, $type = 'text', $masked = false)
+    public function send($data, $type = Protocol::TYPE_TEXT, $masked = true)
     {
-        if (!$payload) {
+        if (!$data) {
             return false;
         }
 
@@ -333,36 +358,26 @@ class Connection extends Configurable
             throw new HandshakeException('Connection is not handshaked');
         }
 
-        $encoded = $this->protocol->encode($payload, $type, $masked);
+        $payload = $this->protocol->getPayload();
+        $payload->encode($data, $type, $masked);
 
-        if (!$encoded) {
-            $this->log('Could not send message: encoded message is empty', 'warn');
-            return false;
-        }
-
-        if (!$this->socket->send($encoded)) {
+        if (!$payload->sendToSocket($this->socket)) {
             $this->log('Could not send payload to client', 'warn');
-            throw new ConnectionException('Could not send data to connection');
+            throw new ConnectionException('Could not send data to connection: ' . $this->socket->getLastError());
         }
 
 		return true;
     }
 
+    /**
+     * Processes an exception which occured on the connection
+     *
+     * @param Exception $e
+     */
     public function processException(Exception $e)
     {
-        try {
-            if (!$this->handshaked) {
-                $response = $this->protocol->getErrorHandshake($e);
-                $this->socket->send($response);
-            } else {
-                $response = $this->protocol->getCloseFrame($e);
-                $this->socket->send($response);
-            }
-        } catch (Exception $e) {
-            $this->log('Unable to send error response', 'warning');
-        }
-
-        $connection->close();
+        throw new Exception('Just call close!');
+        $this->close($e);
     }
 
     public function process()
@@ -371,54 +386,34 @@ class Connection extends Configurable
         $bytes = strlen($data);
 
         if ($bytes === 0 || $data === false) {
-            throw new CloseException('Error reading data from socket');
+            throw new CloseException('Error reading data from socket: ' . $this->socket->getLastError());
         }
 
         $this->onData($data);
     }
 
-	public function close($statusCode = 1000)
+    /**
+     * Closes the connection according to the WebSocket protocol
+     *
+     * @param int|Exception $statusCode
+     * @return boolean
+     */
+	public function close($code = Protocol::CLOSE_NORMAL)
 	{
-		$payload = str_split(sprintf('%016b', $statusCode), 8);
-		$payload[0] = chr(bindec($payload[0]));
-		$payload[1] = chr(bindec($payload[1]));
-		$payload = implode('', $payload);
+	    try {
+	        if (!$this->handshaked) {
+                $response = $this->protocol->getResponseError($e);
+                $this->socket->send($response);
+            } else {
+                $response = $this->protocol->getCloseFrame($e);
+                $this->socket->send($response);
+            }
+	    } catch (Exception $e) {
+            $this->log('Unable to send close message', 'warning');
+        }
 
-		switch($statusCode)
-		{
-			case 1000:
-				$payload .= 'normal closure';
-			break;
 
-			case 1001:
-				$payload .= 'going away';
-			break;
 
-			case 1002:
-				$payload .= 'protocol error';
-			break;
-
-			case 1003:
-				$payload .= 'unknown data (opcode)';
-			break;
-
-			case 1004:
-				$payload .= 'frame too large';
-			break;
-
-			case 1007:
-				$payload .= 'utf8 expected';
-			break;
-
-			case 1008:
-				$payload .= 'message violates server policy';
-			break;
-		}
-
-		if($this->send($payload, 'close', false) === false)
-		{
-			return false;
-		}
 
 		if($this->application)
 		{

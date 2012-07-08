@@ -2,86 +2,73 @@
 
 namespace Wrench\Payload;
 
+use Wrench\Socket\Socket;
+
+/**
+ * Payload class
+ *
+ * Represents a WebSocket protocol payload, which may be made up of multiple
+ * frames.
+ */
 abstract class Payload
 {
-    /**#@+
-     * Payload types
+    /**
+     * A payload may consist of one or more frames
      *
-     *  %x0 denotes a continuation frame
-     *  %x1 denotes a text frame
-     *  %x2 denotes a binary frame
-     *  %x3-7 are reserved for further non-control frames
-     *  %x8 denotes a connection close
-     *  %x9 denotes a ping
-     *  %xA denotes a pong
-     *  %xB-F are reserved for further control frames
-     *
-     * @var int
+     * @var array<Frame>
      */
-    const TYPE_CONTINUATION = 0;
-    const TYPE_TEXT         = 1;
-    const TYPE_BINARY       = 2;
-    const TYPE_RESERVED_3   = 3;
-    const TYPE_RESERVED_4   = 4;
-    const TYPE_RESERVED_5   = 5;
-    const TYPE_RESERVED_6   = 6;
-    const TYPE_RESERVED_7   = 7;
-    const TYPE_CLOSE        = 8;
-    const TYPE_PING         = 9;
-    const TYPE_PONG         = 10;
-    const TYPE_RESERVED_11  = 11;
-    const TYPE_RESERVED_12  = 12;
-    const TYPE_RESERVED_13  = 13;
-    const TYPE_RESERVED_14  = 14;
-    const TYPE_RESERVED_15  = 15;
-    /**#@-*/
+    protected $frames = array();
 
     /**
-     * Payload types
+     * Gets the current frame for the payload
      *
-     * @var array
+     * @return mixed
      */
-    protected $payloadTypes = array(
-        'continuation' => self::TYPE_CONTINUATION,
-        'text'         => self::TYPE_TEXT,
-        'binary'       => self::TYPE_BINARY,
-        'close'        => self::TYPE_CLOSE,
-        'ping'         => self::TYPE_PING,
-        'pong'         => self::TYPE_PONG
-    );
+    protected function getCurrentFrame()
+    {
+        if (empty($this->frames)) {
+            array_push($this->frames, $this->getFrame());
+        }
+        return end($this->frames);
+    }
 
     /**
-     * The type of this payload
+     * Gets the frame into which data should be receieved
+     *
+     * @throws PayloadException
+     * @return Frame
      */
-    protected $type = null;
+    protected function getReceivingFrame()
+    {
+        $current = $this->getCurrentFrame();
+
+        if ($current->isComplete()) {
+            if ($current->isFinal()) {
+                throw new PayloadException('Payload cannot receieve data: it is already complete');
+            } else {
+                $current = array_push($this->frames, $this->getFrame());
+            }
+        }
+
+        return $current;
+    }
 
     /**
-     * Whether the payload is masked
+     * Get a frame object
      *
-     * @var boolean
+     * @return Frame
      */
-    protected $masked = false;
+    abstract protected function getFrame();
 
     /**
-     * Masking key
+     * Whether the payload is complete
      *
-     * @var string
+     * @return boolean
      */
-    protected $mask = null;
-
-    /**
-     * Whether this is the final payload in a series
-     *
-     * @var boolean
-     */
-    protected $final = true;
-
-    /**
-     * The payload data length
-     *
-     * @var int
-     */
-    protected $length = null;
+    public function isComplete()
+    {
+        return $this->getCurrentFrame()->isComplete() && $this->getCurrentFrame()->isFinal();
+    }
 
     /**
      * Encodes a payload
@@ -89,23 +76,80 @@ abstract class Payload
      * @param string $data
      * @param int $type
      * @param boolean $masked
+     * @return Payload
+     * @todo No splitting into multiple frames just yet
      */
-    abstract protected function encode($data, $type = self::TYPE_TEXT, $masked = false);
+    public function encode($data, $type = Protocol::TYPE_TEXT, $masked = false)
+    {
+        $this->frames = array();
+
+        $frame = $this->getFrame();
+        array_push($this->frames, $frame);
+
+        $frame->encode($data, $type, $masked);
+
+        return $this;
+    }
 
     /**
-     * Decodes a payload
-     *
-     * @param string $encoded
-     */
-    abstract protected function decode($encoded);
-
-    /**
-     * Whether the frame is masked
-     *
+     * @param Socket $socket
      * @return boolean
      */
-    public function isMasked()
+    public function sendToSocket(Socket $socket)
     {
-        return $this->masked;
+        $success = true;
+        foreach ($this->frames as $frame) {
+            $success = $success && ($socket->send($frame->getFrameBuffer()) !== false);
+        }
+        return $success;
+    }
+
+    /**
+     * Receive raw data into the payload
+     *
+     * @param string $data
+     */
+    public function receiveData($data)
+    {
+        $frame = $this->getReceivingFrame();
+        $frame->receiveData($data);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPayload()
+    {
+        $this->buffer = '';
+
+        foreach ($this->frames as $frame) {
+            $this->buffer .= $frame->getFramePayload();
+        }
+
+        return $this->buffer;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->getPayload();
+    }
+
+    /**
+     * Gets the type of the payload
+     *
+     * The type of a payload is taken from its first frame
+     *
+     * @throws PayloadException
+     * @return int
+     */
+    public function getType()
+    {
+        if (!isset($this->frames[0])) {
+            throw new PayloadException('Cannot tell payload type yet');
+        }
+        return $this->frames[0]->getType();
     }
 }
