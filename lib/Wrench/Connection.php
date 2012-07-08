@@ -380,12 +380,11 @@ class Connection extends Configurable
      *
      * @param string $payload
      * @param string $type
-     * @param boolean $masked
      * @throws HandshakeException
      * @throws ConnectionException
      * @return boolean
      */
-    public function send($data, $type = Protocol::TYPE_TEXT, $masked = true)
+    public function send($data, $type = Protocol::TYPE_TEXT)
     {
         if (!$data) {
             return false;
@@ -396,7 +395,9 @@ class Connection extends Configurable
         }
 
         $payload = $this->protocol->getPayload();
-        $payload->encode($data, $type, $masked);
+
+        // Servers don't send masked payloads
+        $payload->encode($data, $type, false);
 
         if (!$payload->sendToSocket($this->socket)) {
             $this->log('Could not send payload to client', 'warn');
