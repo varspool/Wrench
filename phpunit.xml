@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpunit bootstrap="lib/Wrench/Tests/bootstrap.php">
+	<testsuites>
+		<testsuite name="Default Testsuite">
+			<directory>lib/Wrench/Tests</directory>
+		</testsuite>
+	</testsuites>
+</phpunit>
+

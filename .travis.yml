@@ -6,6 +6,8 @@ php:
 
 branches:
   only:
+    - master
+    - devel
     - 2.0
 
 notifications:

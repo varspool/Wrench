@@ -1,10 +1,12 @@
 <!-- vim: set tw=79 sw=4 ts=4 et ft=markdown : -->
-# PHP WebSocket
-## Simple WebSocket server for PHP
+# Wrench
+## Simple WebSocket Client/Server for PHP
+### Formerly known as php-websocket
 
-Version: **1.0.0**
+Version: **2.0.0-beta**
 
-A simple websocket server for PHP 5.3, using streams.
+A simple websocket server and client package for PHP 5.3, using 
+streams.
 
 ### Features
 
@@ -15,14 +17,37 @@ A simple websocket server for PHP 5.3, using streams.
 - Supports binary frames. (Currently receive only)
 - Supports wss. (Needs valid certificate in Firefox.)
 
-
 ### Backward compatibility
 
-The public API of the server should remain compatible with early versions of
-php-websocket. The WebSocket namespace begins in the `/server/lib` directory.
-The client-side libraries are deprecated and may be removed in future: the
-exist as an example. You're free to use whatever client-side libraries you'd
-like with the server.
+#### Why the name change?
+
+See [Frequently Asked Questions about the PHP License](http://php.net/license/index.php#fac-lic).
+Also, the namespace WebSocket is too generic; it denotes a common functionality,
+and may already be in use by application code. The BC break of a new 
+[major version](http://semver.org/) was a good time to introduce this move
+to best practices.
+
+#### Public API
+
+The new vendor namespace is Wrench. This namespace begins in the `/lib` 
+directory, rather than `server/lib`.
+
+Apart from the new namespace, the public API of this new major version is 
+almost completely compatible with that of php-websocket 1.0.0.
+
+#### Protected API
+
+The protected API has changed, a lot. Many method have been broken up into 
+simple protected methods. This makes the Server class much easier to extend. In
+fact, almost all of the classes involved in your typical daemon can now be 
+replaced or extended, including the socket handling and protocol handling.
+
+#### What happened to the `client` dir?
+
+The client-side libraries are no longer supported: some libraries are included
+but are packaged only as examples. You're free to use whatever client-side
+libraries you'd like with the server. If you're still using them, see the 1.0
+branch.
 
 ## Installation
 
@@ -55,8 +80,9 @@ $server->run();
 The original maintainer and author was
 [@nicokaiser](https://github.com/nicokaiser). Plentiful improvements were
 contributed by [@lemmingzshadow](https://github.com/lemmingzshadow) and
-[@mazhack](https://github.com/mazhack). The server is licensed under the WTFPL,
-a free software compatible license.
+[@mazhack](https://github.com/mazhack). Parts of the Socket class were written
+by Moritz Wutz. The server is licensed under the WTFPL, a free software compatible 
+license.
 
 ## Bugs/Todos/Hints
 
@@ -66,3 +92,5 @@ a free software compatible license.
 ## Examples
 
 - [Jitt.li](http://jitt.li), a Twitter API sample project.
+- For Symfony2, [VarspoolWebsocketBundle](https://github.com/varspool/WebsocketBundle)
+  extends this library for use with the Service Container.
