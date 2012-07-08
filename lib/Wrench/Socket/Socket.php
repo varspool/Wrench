@@ -91,7 +91,14 @@ abstract class Socket extends Configurable implements Resource
     public function getLastError()
     {
         if ($this->isConnected() && $this->socket) {
-            return socket_last_error($this->socket);
+            $err = @socket_last_error($this->socket);
+            if ($err) {
+                $err = socket_strerror($err);
+            }
+            if (!$err) {
+                $err = 'Unknown error';
+            }
+            return $err;
         } else {
             return 'Not connected';
         }
@@ -115,7 +122,7 @@ abstract class Socket extends Configurable implements Resource
     public function disconnect()
     {
         if ($this->socket) {
-            fclose($this->socket);
+            stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
         }
         $this->socket = null;
         $this->connected = false;
@@ -155,7 +162,8 @@ abstract class Socket extends Configurable implements Resource
         }
 
         for ($i = $length; $i > 0; $i -= $written) {
-            $written = fwrite($this->socket, substr($data, -1 * $i));
+            $written = @fwrite($this->socket, substr($data, -1 * $i));
+
             if ($written === false) {
                 return false;
             } elseif ($written === 0) {
@@ -175,10 +183,6 @@ abstract class Socket extends Configurable implements Resource
      */
     public function receive($length = self::DEFAULT_RECEIVE_LENGTH)
     {
-        if (!$this->isConnected()) {
-            throw new RuntimeException('Socket is not connected');
-        }
-
         $remaining = $length;
 
         $buffer = '';
@@ -211,7 +215,6 @@ abstract class Socket extends Configurable implements Resource
 
             if (strlen($result) == $length) {
                 $continue = true;
-                die('TODO perhaps continue?');
             }
 
             // Continue if more data to be read
