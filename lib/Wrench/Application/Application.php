@@ -4,20 +4,20 @@ namespace Wrench\Application;
 
 /**
  * Wrench Server Application
- * 
+ *
  * @author Nico Kaiser <nico@kaiser.me>
  */
 abstract class Application
 {
     protected static $instances = array();
-    
+
     /**
-     * Singleton 
+     * Singleton
      */
     protected function __construct() { }
 
     final private function __clone() { }
-    
+
     final public static function getInstance()
     {
         $calledClassName = get_called_class();
@@ -35,7 +35,7 @@ abstract class Application
 	abstract public function onData($data, $client);
 
 	// Common methods:
-	
+
 	protected function _decodeData($data)
 	{
 		$decodedData = json_decode($data, true);
@@ -43,27 +43,27 @@ abstract class Application
 		{
 			return false;
 		}
-		
+
 		if(isset($decodedData['action'], $decodedData['data']) === false)
 		{
 			return false;
 		}
-		
+
 		return $decodedData;
 	}
-	
+
 	protected function _encodeData($action, $data)
 	{
 		if(empty($action))
 		{
 			return false;
 		}
-		
+
 		$payload = array(
 			'action' => $action,
 			'data' => $data
 		);
-		
+
 		return json_encode($payload);
 	}
 }
