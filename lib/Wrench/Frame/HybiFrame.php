@@ -78,21 +78,20 @@ class HybiFrame extends Frame
             | (self::BITFIELD_FINAL & PHP_INT_MAX)
         );
 
+        $masked_bit = (self::BITFIELD_MASKED & $this->masked ? PHP_INT_MAX : 0);
+
         if ($this->length <= 125) {
             $this->buffer[self::BYTE_INITIAL_LENGTH] = chr(
-                (self::BITFIELD_MASKED & PHP_INT_MAX)
-                | (self::BITFIELD_INITIAL_LENGTH & $this->length)
+                (self::BITFIELD_INITIAL_LENGTH & $this->length) | $masked_bit
             );
         } elseif ($this->length <= 65536) {
             $this->buffer[self::BYTE_INITIAL_LENGTH] = chr(
-                (self::BITFIELD_MASKED & PHP_INT_MAX)
-                | (self::BITFIELD_INITIAL_LENGTH & 126)
+                (self::BITFIELD_INITIAL_LENGTH & 126) | $masked_bit
             );
             $this->buffer .= pack('n', $this->length);
         } else {
             $this->buffer[self::BYTE_INITIAL_LENGTH] = chr(
-                (self::BITFIELD_MASKED & PHP_INT_MAX)
-                | (self::BITFIELD_INITIAL_LENGTH & 127)
+                (self::BITFIELD_INITIAL_LENGTH & 127) | $masked_bit
             );
 
             if (PHP_INT_MAX > 2147483647) {
@@ -259,6 +258,10 @@ class HybiFrame extends Frame
                 // Extended payload length: 2 or 8 bytes
                 $start = self::BYTE_INITIAL_LENGTH + 1;
                 $end = self::BYTE_INITIAL_LENGTH + $this->getLengthSize();
+
+                if ($end > $this->getBufferLength()) {
+                    throw new FrameException('Cannot get extended length: need more data');
+                }
 
                 $length = 0;
                 for ($i = $start; $i <= $end; $i++) {
