@@ -151,7 +151,9 @@ class Connection extends Configurable
             $hash = hash($algo, $message, true);
             $hash = gmp_strval(gmp_init($hash, 16), 62);
         } else {
+            // @codeCoverageIgnoreStart
             $hash = hash($algo, $message);
+            // @codeCoverageIgnoreEnd
         }
 
         $this->id = $hash;
