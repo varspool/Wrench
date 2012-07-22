@@ -393,10 +393,10 @@ class Connection extends Configurable
 	{
 	    try {
 	        if (!$this->handshaked) {
-                $response = $this->protocol->getResponseError($e);
+                $response = $this->protocol->getResponseError($code);
                 $this->socket->send($response);
             } else {
-                $response = $this->protocol->getCloseFrame($e);
+                $response = $this->protocol->getCloseFrame($code);
                 $this->socket->send($response);
             }
 	    } catch (Exception $e) {
