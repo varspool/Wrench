@@ -49,12 +49,27 @@ abstract class UriSocket extends Socket
         );
     }
 
-    protected function getHost()
+    /**
+     * @todo DNS lookup? Override getIp()?
+     * @see Wrench\Socket.Socket::getName()
+     */
+    protected function getName()
+    {
+        return sprintf('%s:%s', $this->host, $this->port);
+    }
+
+    /**
+     * Gets the host name
+     */
+    public function getHost()
     {
         return $this->host;
     }
 
-    protected function getPort()
+    /**
+     * @see Wrench\Socket.Socket::getPort()
+     */
+    public function getPort()
     {
         return $this->port;
     }

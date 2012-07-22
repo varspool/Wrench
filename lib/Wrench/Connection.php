@@ -7,7 +7,7 @@ use Wrench\Protocol\Protocol;
 use Wrench\Payload\Payload;
 
 use Wrench\Util\Configurable;
-use Wrench\Socket;
+use Wrench\Socket\ClientSocket;
 use Wrench\Server;
 use Wrench\Exception as WrenchException;
 use Wrench\Exception\CloseException;
@@ -85,20 +85,20 @@ class Connection extends Configurable
      * Constructor
      *
      * @param Server $server
-     * @param resource $socket
+     * @param ClientSocket $socket
      * @param array $options
      * @throws InvalidArgumentException
      */
 	public function __construct(
 	    ConnectionManager $manager,
-	    $socket,
+	    ClientSocket $socket,
 	    array $options = array()
     ) {
         $this->manager = $manager;
+        $this->socket = $socket;
 
         parent::__construct($options);
 
-        $this->configureSocket($socket);
         $this->configureClientInformation();
 
 		$this->log('Connected');
@@ -110,8 +110,6 @@ class Connection extends Configurable
     protected function configure(array $options)
     {
         $options = array_merge(array(
-            'socket_class'         => 'Wrench\Socket\ServerClientSocket',
-            'socket_options'       => array(),
             'connection_id_secret' => 'asu5gj656h64Da(0crt8pud%^WAYWW$u76dwb',
             'connection_id_algo'   => 'sha512',
         ), $options);
@@ -120,30 +118,13 @@ class Connection extends Configurable
     }
 
     /**
-     * @param resource $socket
-     */
-    protected function configureSocket($socket)
-    {
-        $class   = $this->options['socket_class'];
-        $options = $this->options['socket_options'];
-        $this->socket = new $class($socket, $options);
-    }
-
-    /**
      * @throws RuntimeException
      */
     protected function configureClientInformation()
     {
-		$name = stream_socket_get_name($this->socket->getResource(), true);
-
-		$tmp = explode(':', $name);
-		if (count($tmp) == 2) {
-    		$this->ip = $tmp[0];
-    		$this->port = $tmp[1];
-    		$this->configureClientId();
-		} else {
-		    throw new RuntimeException('Could not get client information');
-		}
+		$this->ip = $this->socket->getIp();
+		$this->port = $this->socket->getPort();
+		$this->configureClientId();
     }
 
     /**

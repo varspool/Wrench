@@ -57,23 +57,23 @@ class ConnectionManager extends Configurable
      *   Options include:
      *     - timeout_select          => int, seconds, default 0
      *     - timeout_select_microsec => int, microseconds (NB: not milli), default: 200000
-     *     - timeout_accept          => int, seconds, default 5
      */
     protected function configure(array $options)
     {
         $options = array_merge(array(
             'socket_master_class'     => 'Wrench\Socket\ServerSocket',
             'socket_master_options'   => array(),
+            'socket_client_class'     => 'Wrench\Socket\ClientSocket',
+            'socket_client_options'   => array(),
             'connection_class'        => 'Wrench\Connection',
             'connection_options'      => array(),
             'timeout_select'          => self::TIMEOUT_SELECT,
             'timeout_select_microsec' => self::TIMEOUT_SELECT_MICROSEC
-
         ), $options);
 
         parent::configure($options);
 
-        $this->configureSocket();
+        $this->configureMasterSocket();
     }
 
     /**
@@ -92,13 +92,12 @@ class ConnectionManager extends Configurable
      *
      * @param string $uri
      */
-    protected function configureSocket()
+    protected function configureMasterSocket()
     {
         $class   = $this->options['socket_master_class'];
         $options = $this->options['socket_master_options'];
         $this->socket = new $class($this->server->getUri(), $options);
     }
-
 
     /**
      * Listens on the main socket
@@ -202,10 +201,14 @@ class ConnectionManager extends Configurable
             throw new InvalidArgumentException('Invalid connection resource');
         }
 
-        $class = $this->options['connection_class'];
-        $options = $this->options['connection_options'];
+        $socket_class = $this->options['socket_client_class'];
+        $socket_options = $this->options['socket_client_options'];
 
-        $connection = new $class($this, $resource, $options);
+        $connection_class = $this->options['connection_class'];
+        $connection_options = $this->options['connection_options'];
+
+        $socket = new $socket_class($resource, $socket_options);
+        $connection = new $class($this, $socket, $options);
 
         $id = $this->resourceId($resource);
         $this->resources[$id] = $resource;

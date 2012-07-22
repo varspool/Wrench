@@ -42,6 +42,8 @@ class ClientTest extends Test
 
     /**
      * Gets a mock socket
+     *
+     * @return Socket
      */
     protected function getMockSocket()
     {

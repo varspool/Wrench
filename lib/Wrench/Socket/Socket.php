@@ -2,6 +2,8 @@
 
 namespace Wrench\Socket;
 
+use Wrench\Exception\SocketException;
+
 use Wrench\Resource;
 use Wrench\Exception\ConnectionException;
 use Wrench\Util\Configurable;
@@ -82,6 +84,56 @@ abstract class Socket extends Configurable implements Resource
         parent::configure($options);
     }
 
+    /**
+     * Gets the name of the socket
+     */
+    protected function getName()
+    {
+        return @stream_socket_get_name($this->resource, true);
+    }
+
+    /**
+     * Gets part of the name of the socket
+     *
+     * @param int<0, 1> $part
+     * @throws SocketException
+     */
+    protected function getNamePart($part)
+    {
+        $name = $this->getName();
+
+        if (!$name) {
+            throw new SocketException('Could not get socket IP address');
+        }
+
+        $parts = explode(':', $name);
+
+        if (count($parts) != 2) {
+            throw new SocketException('Could not parse socket IP address');
+        }
+
+        return $parts[$part];
+    }
+
+    /**
+     * Gets the IP address of the socket
+     *
+     * @return string
+     */
+    public function getIp()
+    {
+        return $this->getNamePart(0);
+    }
+
+    /**
+     * Gets the port of the socket
+     *
+     * @return int
+     */
+    public function getPort()
+    {
+        return $this->getNamePart(1);
+    }
 
     /**
      * Get the last error that occurred on the socket
