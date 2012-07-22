@@ -176,7 +176,7 @@ abstract class Protocol
      *
      * @var array<int => string>
      */
-    protected static $closeReasons = array(
+    public static $closeReasons = array(
         self::CLOSE_NORMAL            => 'normal close',
         self::CLOSE_GOING_AWAY        => 'going away',
         self::CLOSE_PROTOCOL_ERROR    => 'protocol error',
