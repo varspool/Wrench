@@ -212,7 +212,7 @@ abstract class Protocol
      *
      * @var array<int => string>
      */
-    protected static $httpResponses = array(
+    public static $httpResponses = array(
         self::HTTP_SWITCHING_PROTOCOLS => 'Switching Protocols',
         self::HTTP_BAD_REQUEST => 'Bad Request',
         self::HTTP_UNAUTHORIZED => 'Unauthorized',
@@ -362,8 +362,14 @@ abstract class Protocol
      */
     protected function getHttpResponse($status, array $headers = array())
     {
+        if (!in_array($status, self::$httpResponses)) {
+            $response = 'Unknown Status';
+        } else {
+            $response = self::$httpResponses[$status];
+        }
+
         $handshake = array(
-            sprintf(self::RESPONSE_LINE_FORMAT, $status, self::$httpResponses)
+            sprintf(self::RESPONSE_LINE_FORMAT, $status, $response)
         );
 
         foreach ($headers as $name => $value) {
