@@ -178,7 +178,7 @@ class ConnectionTest extends Test
      */
     protected function getMockSocket()
     {
-        return $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
+        return $this->getMock('Wrench\Socket\ServerClientSocket', array(), array(), '', false);
     }
 
     /**

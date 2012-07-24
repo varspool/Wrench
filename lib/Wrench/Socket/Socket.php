@@ -89,7 +89,7 @@ abstract class Socket extends Configurable implements Resource
      */
     protected function getName()
     {
-        return @stream_socket_get_name($this->resource, true);
+        return stream_socket_get_name($this->socket, true);
     }
 
     /**

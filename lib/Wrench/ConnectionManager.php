@@ -63,7 +63,7 @@ class ConnectionManager extends Configurable
         $options = array_merge(array(
             'socket_master_class'     => 'Wrench\Socket\ServerSocket',
             'socket_master_options'   => array(),
-            'socket_client_class'     => 'Wrench\Socket\ClientSocket',
+            'socket_client_class'     => 'Wrench\Socket\ServerClientSocket',
             'socket_client_options'   => array(),
             'connection_class'        => 'Wrench\Connection',
             'connection_options'      => array(),
@@ -208,7 +208,7 @@ class ConnectionManager extends Configurable
         $connection_options = $this->options['connection_options'];
 
         $socket = new $socket_class($resource, $socket_options);
-        $connection = new $class($this, $socket, $options);
+        $connection = new $connection_class($this, $socket, $connection_options);
 
         $id = $this->resourceId($resource);
         $this->resources[$id] = $resource;

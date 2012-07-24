@@ -7,7 +7,7 @@ use Wrench\Protocol\Protocol;
 use Wrench\Payload\Payload;
 
 use Wrench\Util\Configurable;
-use Wrench\Socket\ClientSocket;
+use Wrench\Socket\ServerClientSocket;
 use Wrench\Server;
 use Wrench\Exception as WrenchException;
 use Wrench\Exception\CloseException;
@@ -85,13 +85,13 @@ class Connection extends Configurable
      * Constructor
      *
      * @param Server $server
-     * @param ClientSocket $socket
+     * @param ServerClientSocket $socket
      * @param array $options
      * @throws InvalidArgumentException
      */
 	public function __construct(
 	    ConnectionManager $manager,
-	    ClientSocket $socket,
+	    ServerClientSocket $socket,
 	    array $options = array()
     ) {
         $this->manager = $manager;
