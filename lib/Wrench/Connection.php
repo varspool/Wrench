@@ -223,7 +223,9 @@ class Connection extends Configurable
                 array($this)
             );
 
-            $this->application->onConnect($this);
+            if (method_exists($this->application, 'onConnect')) {
+                $this->application->onConnect($this);
+            }
         } catch (WrenchException $e) {
             $this->log('Handshake failed: ' . $e, 'err');
             $this->close($e);
