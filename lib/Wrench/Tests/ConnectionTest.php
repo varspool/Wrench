@@ -2,6 +2,8 @@
 
 namespace Wrench\Tests;
 
+use Wrench\Application\EchoApplication;
+
 use Wrench\Protocol\Protocol;
 
 use Wrench\Connection;
@@ -32,13 +34,15 @@ class ConnectionTest extends Test
     public function testConstructor($manager, $socket, array $options)
     {
         $this->assertInstanceOfClass(
-            $this->getInstance(
+            $instance = $this->getInstance(
                 $manager,
                 $socket,
                 $options
             ),
             'Valid constructor arguments'
         );
+
+        return $instance;
     }
 
     /**
@@ -63,6 +67,103 @@ class ConnectionTest extends Test
     }
 
     /**
+     * @dataProvider getValidHandshakeData
+     */
+    public function testHandshake($path, $request)
+    {
+        $connection = $this->getConnectionForHandshake(
+            $this->getConnectedSocket(),
+            $path,
+            $request
+        );
+        $connection->handshake($request);
+        $connection->onData('somedata');
+        $this->assertTrue($connection->send('someotherdata'));
+        return $connection;
+    }
+
+    /**
+     * @dataProvider getValidHandshakeData
+     * @expectedException Wrench\Exception\HandshakeException
+     */
+    public function testHandshakeBadSocket($path, $request)
+    {
+        $connection = $this->getConnectionForHandshake(
+            $this->getNotConnectedSocket(),
+            $path,
+            $request
+        );
+        $connection->handshake($request);
+    }
+
+    /**
+     * Because expectation is that only $path application is available
+     *
+     * @dataProvider getWrongPathHandshakeData
+     * @expectedException PHPUnit_Framework_ExpectationFailedException
+     */
+    public function testWrongPathHandshake($path, $request)
+    {
+        $connection = $this->getConnectionForHandshake(
+            $this->getConnectedSocket(),
+            $path,
+            $request
+        );
+        $connection->handshake($request);
+    }
+
+    /**
+     * @return Socket
+     */
+    protected function getConnectedSocket()
+    {
+        $socket = $this->getMockSocket();
+
+        $socket->expects($this->any())
+                ->method('isConnected')
+                ->will($this->returnValue(true));
+
+        return $socket;
+    }
+
+    /**
+     * @return Socket
+     */
+    protected function getNotConnectedSocket()
+    {
+        $socket = $this->getMockSocket();
+
+        $socket->expects($this->any())
+                ->method('isConnected')
+                ->will($this->returnValue(false));
+
+        return $socket;
+    }
+
+    protected function getConnectionForHandshake($socket, $path, $request)
+    {
+        $manager = $this->getMockConnectionManager();
+
+        $application = $this->getMockApplication();
+
+        $server = $this->getMock('Wrench\Server', array(), array(), '', false);
+        $server->registerApplication($path, $application);
+
+        $manager->expects($this->any())
+                ->method('getApplicationForPath')
+                ->with($path)
+                ->will($this->returnValue($application));
+
+        $manager->expects($this->any())
+                ->method('getServer')
+                ->will($this->returnValue($server));
+
+        $connection = $this->getInstance($manager, $socket);
+
+        return $connection;
+    }
+
+    /**
      * @return ConnectionManager
      */
     protected function getMockConnectionManager()
@@ -78,6 +179,16 @@ class ConnectionTest extends Test
     protected function getMockSocket()
     {
         return $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
+    }
+
+    /**
+     * Gets a mock application
+     *
+     * @return EchoApplication
+     */
+    protected function getMockApplication()
+    {
+        return new EchoApplication();
     }
 
     /**
@@ -122,8 +233,47 @@ class ConnectionTest extends Test
             array(
                 $manager,
                 $socket,
-                array('logger' => function () {})
+                array('logger' => function () {},
+                      'connection_id_algo' => 'sha512')
             )
+        );
+    }
+
+    /**
+     * Data provider
+     */
+    public function getValidHandshakeData()
+    {
+        return array(
+            array(
+                '/chat',
+"GET /chat HTTP/1.1\r
+Host: server.example.com\r
+Upgrade: websocket\r
+Connection: Upgrade\r
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r
+Origin: http://example.com\r
+Sec-WebSocket-Version: 13\r\n\r\n"
+            )
+        );
+    }
+
+    /**
+     * Data provider
+     */
+    public function getWrongPathHandshakeData()
+    {
+        return array(
+            array(
+                '/foobar',
+"GET /chat HTTP/1.1\r
+Host: server.example.com\r
+Upgrade: websocket\r
+Connection: Upgrade\r
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r
+Origin: http://example.com\r
+Sec-WebSocket-Version: 13\r\n\r\n"
+            ),
         );
     }
 }

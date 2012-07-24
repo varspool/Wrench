@@ -119,7 +119,7 @@ abstract class FrameTest extends Test
      */
     public function testEncodeTypeReflection($type, $payload, $masked)
     {
-        $this->frame->encode($payload, Protocol::TYPE_TEXT);
+        $this->frame->encode($payload, $type);
         $this->assertEquals(Protocol::TYPE_TEXT, $this->frame->getType(), 'Encode retains type information');
     }
 
@@ -129,7 +129,7 @@ abstract class FrameTest extends Test
      */
     public function testEncodeLengthReflection($type, $payload, $masked)
     {
-        $this->frame->encode($payload, Protocol::TYPE_TEXT);
+        $this->frame->encode($payload, $type);
         $this->assertEquals(strlen($payload), $this->frame->getLength(), 'Encode does not alter payload length');
     }
 
@@ -139,7 +139,7 @@ abstract class FrameTest extends Test
      */
     public function testEncodePayloadReflection($type, $payload, $masked)
     {
-        $this->frame->encode($payload, Protocol::TYPE_TEXT);
+        $this->frame->encode($payload, $type, $masked);
         $this->assertEquals($payload, $this->frame->getFramePayload(), 'Encode retains payload information');
     }
 

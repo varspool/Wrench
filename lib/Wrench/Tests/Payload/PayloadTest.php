@@ -85,6 +85,39 @@ abstract class PayloadTest extends Test
     }
 
     /**
+     * Tests sending to a socket
+     * @dataProvider getValidEncodePayloads
+     */
+    public function testSendToSocket($type, $payload)
+    {
+        $successfulSocket = $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
+        $failedSocket = clone $successfulSocket;
+
+        $successfulSocket->expects($this->any())
+                ->method('send')
+                ->will($this->returnValue(true));
+
+        $failedSocket->expects($this->any())
+                ->method('send')
+                ->will($this->returnValue(false));
+
+        $this->payload->encode($payload, $type);
+
+        $this->assertTrue($this->payload->sendToSocket($successfulSocket));
+        $this->assertFalse($this->payload->sendToSocket($failedSocket));
+    }
+
+    /**
+     * Tests receiving data
+     * @dataProvider getValidEncodePayloads
+     */
+    public function testReceieveData($type, $payload)
+    {
+        $payload = $this->getInstance();
+        $payload->receiveData($payload);
+    }
+
+    /**
      * Data provider
      *
      * @return array<string>
