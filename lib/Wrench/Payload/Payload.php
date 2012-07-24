@@ -146,6 +146,7 @@ abstract class Payload
      * Receive raw data into the payload
      *
      * @param string $data
+     * @return void
      */
     public function receiveData($data)
     {
@@ -188,7 +189,12 @@ abstract class Payload
      */
     public function __toString()
     {
-        return $this->getPayload();
+        try {
+            return $this->getPayload();
+        } catch (\Exception $e) {
+            // __toString must not throw an exception
+            return '';
+        }
     }
 
     /**
