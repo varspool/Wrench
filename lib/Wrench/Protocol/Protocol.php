@@ -465,7 +465,7 @@ abstract class Protocol
         }
 
         if (!isset($headers[self::HEADER_VERSION])) {
-            throw new BadRequestException('No version header recieved on handshake request');
+            throw new BadRequestException('No version header received on handshake request');
         }
 
         if (!$this->acceptsVersion($headers[self::HEADER_VERSION])) {
