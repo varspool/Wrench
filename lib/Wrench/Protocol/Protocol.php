@@ -362,10 +362,10 @@ abstract class Protocol
      */
     protected function getHttpResponse($status, array $headers = array())
     {
-        if (!in_array($status, self::$httpResponses)) {
-            $response = 'Unknown Status';
-        } else {
+        if (array_key_exists($status, self::$httpResponses)) {
             $response = self::$httpResponses[$status];
+        } else {
+            $response = self::$httpResponses[self::HTTP_NOT_IMPLEMENTED];
         }
 
         $handshake = array(
