@@ -453,7 +453,7 @@ abstract class Protocol
         }
 
         if (!isset($headers[self::HEADER_CONNECTION])
-                || $headers[self::HEADER_CONNECTION] != self::CONNECTION_VALUE
+                || strpos($headers[self::HEADER_CONNECTION], self::CONNECTION_VALUE) === false
         ) {
             throw new BadRequestException('Invalid connection header');
         }
@@ -465,7 +465,7 @@ abstract class Protocol
         }
 
         if (!isset($headers[self::HEADER_VERSION])) {
-            throw new BadRequestException('No version header receieved on handshake request');
+            throw new BadRequestException('No version header recieved on handshake request');
         }
 
         if (!$this->acceptsVersion($headers[self::HEADER_VERSION])) {
