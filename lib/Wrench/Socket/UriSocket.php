@@ -2,6 +2,8 @@
 
 namespace Wrench\Socket;
 
+use Wrench\Protocol\Protocol;
+
 use Wrench\Socket\Socket;
 
 abstract class UriSocket extends Socket
@@ -73,4 +75,44 @@ abstract class UriSocket extends Socket
     {
         return $this->port;
     }
+
+    /**
+     * Gets a stream context
+     */
+    protected function getStreamContext($listen = false)
+    {
+        $options = array();
+
+        if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE
+            || $this->scheme == Protocol::SCHEME_UNDERLYING) {
+            $options['socket'] = $this->getSocketStreamContextOptions();
+        }
+
+        if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE) {
+            $options['ssl'] = $this->getSslStreamContextOptions();
+        }
+
+        return stream_context_create(
+            $options,
+            array()
+        );
+    }
+
+    /**
+     * Returns an array of socket stream context options
+     *
+     * See http://php.net/manual/en/context.socket.php
+     *
+     * @return array
+     */
+    abstract protected function getSocketStreamContextOptions();
+
+    /**
+     * Returns an array of ssl stream context options
+     *
+     * See http://php.net/manual/en/context.ssl.php
+     *
+     * @return array
+     */
+    abstract protected function getSslStreamContextOptions();
 }

@@ -2,16 +2,14 @@
 
 namespace Wrench\Socket;
 
-use Wrench\Exception\SocketException;
-
 use Wrench\Resource;
 use Wrench\Exception\ConnectionException;
+use Wrench\Exception\SocketException;
 use Wrench\Util\Configurable;
 use Wrench\Protocol\Protocol;
 use Wrench\Protocol\Rfc6455Protocol;
 
 use \InvalidArgumentException;
-use \RuntimeException;
 
 /**
  * Socket class
@@ -89,7 +87,7 @@ abstract class Socket extends Configurable implements Resource
      */
     protected function getName()
     {
-        return stream_socket_get_name($this->socket, true);
+        return @stream_socket_get_name($this->socket, true);
     }
 
     /**
@@ -198,13 +196,13 @@ abstract class Socket extends Configurable implements Resource
 
     /**
      * @param unknown_type $data
-     * @throws RuntimeException
+     * @throws SocketException
      * @return boolean|int The number of bytes sent or false on error
      */
     public function send($data)
     {
         if (!$this->isConnected()) {
-            throw new RuntimeException('Socket is not connected');
+            throw new SocketException('Socket is not connected');
         }
 
         $length = strlen($data);
@@ -230,7 +228,6 @@ abstract class Socket extends Configurable implements Resource
      * Recieve data from the socket
      *
      * @param int $length
-     * @throws RuntimeException
      * @return string
      */
     public function receive($length = self::DEFAULT_RECEIVE_LENGTH)
@@ -278,27 +275,5 @@ abstract class Socket extends Configurable implements Resource
         } while ($continue);
 
         return $buffer;
-    }
-
-    /**
-     * Gets a stream context
-     */
-    protected function getStreamContext($listen = false)
-    {
-        $options = array();
-
-        if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE
-            || $this->scheme == Protocol::SCHEME_UNDERLYING) {
-            $options['socket'] = $this->getSocketStreamContextOptions();
-        }
-
-        if ($this->scheme == Protocol::SCHEME_UNDERLYING_SECURE) {
-            $options['ssl'] = $this->getSslStreamContextOptions();
-        }
-
-        return stream_context_create(
-            $options,
-            array()
-        );
     }
 }

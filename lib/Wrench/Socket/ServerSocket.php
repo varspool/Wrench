@@ -32,10 +32,7 @@ class ServerSocket extends UriSocket
      *                                 file location. File should contain
      *                                 certificate and private key
      *     - ssl_passphrase        => string, passphrase for the key
-     *     - ssl_allow_self_signed => boolean, whether to allows self-
-     *                                 signed certs
-
-     *     - timeout_connect      => int, seconds, default 2
+     *     - timeout_accept        => int, seconds, default 5
      */
     protected function configure(array $options)
     {
@@ -96,6 +93,9 @@ class ServerSocket extends UriSocket
         return $new;
     }
 
+    /**
+     * @see Wrench\Socket.UriSocket::getSocketStreamContextOptions()
+     */
     protected function getSocketStreamContextOptions()
     {
         $options = array();
@@ -107,6 +107,9 @@ class ServerSocket extends UriSocket
         return $options;
     }
 
+    /**
+     * @see Wrench\Socket.UriSocket::getSslStreamContextOptions()
+     */
     protected function getSslStreamContextOptions()
     {
         $options = array();
@@ -118,15 +121,6 @@ class ServerSocket extends UriSocket
             }
         }
 
-        if ($this->options['server_ssl_allow_self_signed']) {
-            $options['allow_self_signed'] = true;
-        }
-
-        return array(
-            'local_cert'        => $this->options['server_ssl_cert_file'],
-            'passphrase'        => $this->options['server_ssl_passphrase'],
-            'allow_self_signed' => true,
-            'verify_peer'       => false
-        );
+        return $options;
     }
 }
