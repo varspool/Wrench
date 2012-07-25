@@ -18,11 +18,19 @@ class ClientSocket extends UriSocket
 
     /**
      * @see Wrench\Socket.Socket::configure()
+     *   Options include:
+     *     - ssl_verify_peer       => boolean, whether to perform peer verification
+     *                                 of SSL certificate used
+     *     - ssl_allow_self_signed => boolean, whether ssl_verify_peer allows
+     *                                 self-signed certs
+     *     - timeout_connect       => int, seconds, default 2
      */
     protected function configure(array $options)
     {
         $options = array_merge(array(
-            'timeout_connect' => self::TIMEOUT_CONNECT
+            'timeout_connect'       => self::TIMEOUT_CONNECT,
+            'ssl_verify_peer'       => false,
+            'ssl_allow_self_signed' => true
         ), $options);
 
         parent::configure($options);
@@ -66,5 +74,32 @@ class ClientSocket extends UriSocket
     {
         $this->disconnect();
         $this->connect();
+    }
+
+    /**
+     * @see Wrench\Socket.UriSocket::getSocketStreamContextOptions()
+     */
+    protected function getSocketStreamContextOptions()
+    {
+        $options = array();
+        return $options;
+    }
+
+    /**
+     * @see Wrench\Socket.UriSocket::getSslStreamContextOptions()
+     */
+    protected function getSslStreamContextOptions()
+    {
+        $options = array();
+
+        if ($this->options['ssl_verify_peer']) {
+            $options['verify_peer'] = true;
+        }
+
+        if ($this->options['ssl_allow_self_signed']) {
+            $options['allow_self_signed'] = true;
+        }
+
+        return $options;
     }
 }
