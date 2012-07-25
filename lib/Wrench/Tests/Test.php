@@ -44,4 +44,18 @@ abstract class Test extends PHPUnit_Framework_TestCase
         $reflection = new ReflectionClass($this->getClass());
         return $reflection->newInstanceArgs(func_get_args());
     }
+
+    /**
+     * Logging function
+     *
+     * Passed into some classes under test as a callable
+     *
+     * @param string $message
+     * @param string $priority
+     * @return void
+     */
+    public function log($message, $priority = 'info')
+    {
+        // nothing
+    }
 }

@@ -164,8 +164,11 @@ class Server extends Configurable
      * @param Closure $logger
      * @return void
      */
-    public function setLogger(Closure $logger)
+    public function setLogger($logger)
     {
+        if (!is_callable($logger)) {
+            throw new \InvalidArgumentException('Logger must be callable');
+        }
         $this->logger = $logger;
     }
 
@@ -201,8 +204,7 @@ class Server extends Configurable
      */
     public function log($message, $priority = 'info')
     {
-        $log = $this->logger;
-        $log($message, $priority);
+        call_user_func($this->logger, $message, $priority);
     }
 
     /**

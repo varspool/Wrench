@@ -66,11 +66,11 @@ class ServerTest extends Test
         return array(
             array(
                 'ws://localhost:8000',
-                array('logger' => function() {})
+                array('logger' => array($this, 'log'))
             ),
             array(
                 'ws://localhost',
-                array('logger' => function () {})
+                array('logger' => array($this, 'log'))
             )
         );
     }

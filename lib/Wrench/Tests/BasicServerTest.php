@@ -32,7 +32,7 @@ class BasicServerTest extends ServerTest
     {
         $server = $this->getInstance('ws://localhost:8000', array(
             'allowed_origins' => $allowed,
-            'logger' => function () {}
+            'logger' => array($this, 'log')
         ));
 
         $connection = $this->getMockBuilder('Wrench\Connection')
@@ -59,7 +59,7 @@ class BasicServerTest extends ServerTest
     {
         $server = $this->getInstance('ws://localhost:8000', array(
             'allowed_origins' => $allowed,
-            'logger' => function () {}
+            'logger' => array($this, 'log')
         ));
 
         $connection = $this->getMockBuilder('Wrench\Connection')
