@@ -407,7 +407,7 @@ class Connection extends Configurable
             $this->log('Unable to send close message', 'warning');
         }
 
-		if ($this->application) {
+		if ($this->application && method_exists($this->application, 'onDisconnect')) {
             $this->application->onDisconnect($this);
         }
 
