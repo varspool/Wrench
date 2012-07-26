@@ -16,7 +16,7 @@ class ClientSocketTest extends UriSocketTest
 
     protected $port = null;
     protected $process = null;
-    protected $pipes = null;
+    protected $pipes = array();
 
     /**
      * Gets the next available port number to start a server on
@@ -30,6 +30,14 @@ class ClientSocketTest extends UriSocketTest
     }
 
     /**
+     * @see Wrench\Tests.Test::getClass()
+     */
+    public function getClass()
+    {
+        return 'Wrench\Socket\ClientSocket';
+    }
+
+    /**
      * Gets the server command
      *
      * @return string
@@ -40,12 +48,10 @@ class ClientSocketTest extends UriSocketTest
     }
 
     /**
-     * @see PHPUnit_Framework_TestCase::setUp()
+     * Starts a listening server
      */
-    protected function setUp()
+    protected function startProcess()
     {
-        parent::setUp();
-
         $this->port = self::getNextPort();
 
         $this->process = proc_open(
@@ -59,16 +65,14 @@ class ClientSocketTest extends UriSocketTest
             __DIR__ . '../'
         );
 
-        sleep(2);
+        sleep(3);
     }
 
     /**
-     * @see PHPUnit_Framework_TestCase::tearDown()
+     * Stops the listening server
      */
-    protected function tearDown()
+    protected function stopProcess()
     {
-        parent::tearDown();
-
         if ($this->process) {
             foreach ($this->pipes as &$pipe) {
                 fclose($pipe);
@@ -81,30 +85,35 @@ class ClientSocketTest extends UriSocketTest
             if ($status && isset($status['pid'])) {
                 // More sigh, this is the pid of the parent sh process, we want
                 //  to terminate the server directly
-                exec('/bin/ps -o pid,ppid | tail -n +2 | grep \'  ' . $status['pid'] . "'", $processes, $return);
+                $this->log('Command: /bin/ps -ao pid,ppid | /usr/bin/col | /usr/bin/tail -n +2 | /bin/grep \'  ' . $status['pid'] . "'", 'info');
+                exec('/bin/ps -ao pid,ppid | /usr/bin/col | /usr/bin/tail -n +2 | /bin/grep \' ' . $status['pid'] . "'", $processes, $return);
 
                 if ($return === 0) {
                     foreach ($processes as $process) {
-                        list($pid, $ppid) = explode('  ', $process);
-                        exec('/bin/kill ' . $pid . ' > /dev/null 2>&1');
+                        list($pid, $ppid) = explode(' ', str_replace('  ', ' ', $process));
+                        $this->log('Killing ' . $pid, 'info');
+                        exec('/bin/kill ' . $pid . '');
                     }
+                } else {
+                    $this->log('Unable to find child processes', 'warning');
                 }
 
-                exec('/bin/kill ' . $status['pid'] . ' > /dev/null 2>&1');
+                sleep(1);
+
+                $this->log('Killing ' . $status['pid'], 'info');
+                exec('/bin/kill ' . $status['pid'] . '');
+
+                sleep(1);
             }
 
-            // Desperate measures
             proc_close($this->process);
             unset($this->process);
         }
     }
 
-    /**
-     * @see Wrench\Tests.Test::getClass()
-     */
-    public function getClass()
+    public function log($message, $priority = 'info')
     {
-        return 'Wrench\Socket\ClientSocket';
+        //echo $message . "\n";
     }
 
     /**
@@ -221,45 +230,30 @@ class ClientSocketTest extends UriSocketTest
     }
 
     /**
-     * Test the connect method
+     * Test the connect, send, receive method
      */
     public function testConnect()
     {
+        $this->startProcess();
+
         // Wait for server to come up
-        $instance = $this->getInstance('ws://127.0.0.1:' . $this->port);
+        $instance = $this->getInstance('ws://localhost:' . $this->port);
         $success = $instance->connect();
 
         $this->assertTrue($success, 'Client socket can connect to test server');
 
-        return $instance;
-    }
-
-    /**
-     * @depends testConnect
-     * @param ClientSocket $instance
-     */
-    public function testSend($instance)
-    {
         $sent = $instance->send("GET /echo HTTP/1.1\r
-Host: server.example.com\r
+Host: localhost\r
 Upgrade: websocket\r
 Connection: Upgrade\r
 Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r
-Origin: http://example.com\r
+Origin: http://localhost\r
 Sec-WebSocket-Version: 13\r\n\r\n");
         $this->assertNotEquals(false, $sent, 'Client socket can send to test server');
 
-        return $instance;
-    }
-
-    /**
-     * @param ClientSocket $instance
-     * @depends testSend
-     */
-    public function testReceive($instance)
-    {
         $response = $instance->receive();
-
         $this->assertStringStartsWith('HTTP', $response, 'Response looks like HTTP handshake response');
+
+        $this->stopProcess();
     }
 }
