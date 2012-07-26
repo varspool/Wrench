@@ -44,7 +44,7 @@ class ClientSocketTest extends UriSocketTest
      */
     protected function getCommand()
     {
-        return sprintf('/usr/bin/php %s/../server.php %d', __DIR__, $this->port);
+        return sprintf('/usr/bin/env php %s/../server.php %d', __DIR__, $this->port);
     }
 
     /**
