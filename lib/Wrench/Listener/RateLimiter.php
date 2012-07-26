@@ -2,18 +2,71 @@
 
 namespace Wrench\Listener;
 
+use Wrench\Util\Configurable;
 use Wrench\Server;
 
-class RateLimiter implements Listener
+class RateLimiter extends Configurable implements Listener
 {
+    /**
+     * The server being limited
+     *
+     * @var Server
+     */
+    protected $server;
+
+    /**
+     * Connection counts per IP address
+     *
+     * @var array<int>
+     */
+    protected $ips = array();
+
+    /**
+     * Request tokens per IP address
+     *
+     * @var array<array<int>>
+     */
+    protected $requests = array();
+
+    /**
+     * Constructor
+     *
+     * @param array $options
+     */
+    public function __construct(array $options = array())
+    {
+        parent::__construct($options);
+    }
+
+    /**
+     * @param array $options
+     */
+    protected function configure(array $options)
+    {
+        $options = array_merge(array(
+            'connections'         => 200, // Total
+            'connections_per_ip'  => 5,   // At once
+            'requests_per_minute' => 200  // Per connection
+        ), $options);
+
+        parent::configure($options);
+    }
+
     /**
      * @see Wrench\Listener.Listener::listen()
      */
     public function listen(Server $server)
     {
+        $this->server = $server;
+
         $server->addListener(
             Server::EVENT_SOCKET_CONNECT,
             array($this, 'onSocketConnect')
+        );
+
+        $server->addListener(
+            Server::EVENT_SOCKET_DISCONNECT,
+            array($this, 'onSocketDisconnect')
         );
 
         $server->addListener(
@@ -22,221 +75,156 @@ class RateLimiter implements Listener
         );
     }
 
+    /**
+     * Event listener
+     *
+     * @param resource $socket
+     * @param Connection $connection
+     */
     public function onSocketConnect($socket, $connection)
     {
-        // throw new \Exception('connect');
+        $this->checkConnections($connection);
+        $this->checkConnectionsPerIp($connection);
     }
 
+    /**
+     * Event listener
+     *
+     * @param resource $socket
+     * @param Connection $connection
+     */
+    public function onSocketDisconnect($socket, $connection)
+    {
+        $this->releaseConnection($connection);
+    }
+
+    /**
+     * Event listener
+     *
+     * @param resource $socket
+     * @param Connection $connection
+     */
     public function onClientData($socket, $connection)
     {
-        // throw new \Exception('do some rate limiting');
+        $this->checkRequestsPerMinute($connection);
     }
 
     /**
-     * Adds a new ip to ip storage.
+     * Idempotent
      *
-     * @param string $ip An ip address.
+     * @param Connection $connection
      */
-    private function _addIpToStorage($ip)
+    protected function checkConnections($connection)
     {
-        if(isset($this->_ipStorage[$ip]))
-        {
-            $this->_ipStorage[$ip]++;
-        }
-        else
-        {
-            $this->_ipStorage[$ip] = 1;
+        $connections = $connection->getConnectionManager()->count();
+
+        if ($connections > $this->options['connections']) {
+            $this->limit($connection, 'Max connections');
         }
     }
 
     /**
-     * Removes an ip from ip storage.
+     * NOT idempotent, call once per connection
      *
-     * @param string $ip An ip address.
-     * @return bool True if ip could be removed.
+     * @param Connection $connection
      */
-    private function _removeIpFromStorage($ip)
+    protected function checkConnectionsPerIp($connection)
     {
-        if(!isset($this->_ipStorage[$ip]))
-        {
-            return false;
-        }
-        if($this->_ipStorage[$ip] === 1)
-        {
-            unset($this->_ipStorage[$ip]);
-            return true;
-        }
-        $this->_ipStorage[$ip]--;
+        $ip = $connection->getIp();
 
-        return true;
-    }
-
-    /**
-     * Checks if an ip has reached the maximum connection limit.
-     *
-     * @param string $ip An ip address.
-     * @return bool False if ip has reached max. connection limit. True if connection is allowed.
-     */
-    private function _checkMaxConnectionsPerIp($ip)
-    {
-        if(empty($ip))
-        {
-            return false;
+        if (!$ip) {
+            $this->log('Cannot check connections per IP', 'warning');
+            return;
         }
-        if(!isset ($this->_ipStorage[$ip]))
-        {
-            return true;
-        }
-        return ($this->_ipStorage[$ip] > $this->_maxConnectionsPerIp) ? false : true;
-    }
 
-    /**
-     * Checkes if a client has reached its max. requests per minute limit.
-     *
-     * @param string $clientId A client id. (unique client identifier)
-     * @return bool True if limit is not yet reached. False if request limit is reached.
-     */
-    private function _checkRequestLimit($clientId)
-    {
-        // no data in storage - no danger:
-        if(!isset($this->_requestStorage[$clientId]))
-        {
-            $this->_requestStorage[$clientId] = array(
-                'lastRequest' => time(),
-                'totalRequests' => 1
+        if (!isset($this->ips[$ip])) {
+            $this->ips[$ip] = 1;
+        } else {
+            $this->ips[$ip] = min(
+                $this->options['connections_per_ip'],
+                $this->ips[$ip] + 1
             );
-            return true;
         }
 
-        // time since last request > 1min - no danger:
-        if(time() - $this->_requestStorage[$clientId]['lastRequest'] > 60)
-        {
-            $this->_requestStorage[$clientId] = array(
-                'lastRequest' => time(),
-                'totalRequests' => 1
-            );
-            return true;
+        if ($this->ips[$ip] > $this->options['connections_per_ip']) {
+            $this->limit($connection, 'Connections per IP');
         }
-
-        // did requests in last minute - check limits:
-        if($this->_requestStorage[$clientId]['totalRequests'] > $this->_maxRequestsPerMinute)
-        {
-            return false;
-        }
-
-        $this->_requestStorage[$clientId]['totalRequests']++;
-        return true;
     }
 
     /**
-     * Adds a domain to the allowed origin storage.
+     * NOT idempotent, call once per disconnection
      *
-     * @param sting $domain A domain name from which connections to server are allowed.
-     * @return bool True if domain was added to storage.
+     * @param Connection $connection
      */
-    public function setAllowedOrigin($domain)
+    protected function releaseConnection($connection)
     {
-        $domain = str_replace('http://', '', $domain);
-        $domain = str_replace('www.', '', $domain);
-        $domain = (strpos($domain, '/') !== false) ? substr($domain, 0, strpos($domain, '/')) : $domain;
-        if(empty($domain))
-        {
-            return false;
+        $ip = $connection->getIp();
+
+        if (!$ip) {
+            $this->log('Cannot release connection', 'warning');
+            return;
         }
-        $this->_allowedOrigins[$domain] = true;
-        return true;
-    }
 
-    /**
-     * Sets value for the max. connection per ip to this server.
-     *
-     * @param int $limit Connection limit for an ip.
-     * @return bool True if value could be set.
-     */
-    public function setMaxConnectionsPerIp($limit)
-    {
-        if(!is_int($limit))
-        {
-            return false;
+        if (!isset($this->ips[$ip])) {
+            $this->ips[$ip] = 0;
+        } else {
+            $this->ips[$ip] = max(0, $this->ips[$ip] - 1);
         }
-        $this->_maxConnectionsPerIp = $limit;
-        return true;
+
+        unset($this->requests[$connection->getId()]);
     }
 
     /**
-     * Returns the max. connections per ip value.
+     * NOT idempotent, call once per data
      *
-     * @return int Max. simoultanous  allowed connections for an ip to this server.
+     * @param Connection $connection
      */
-    public function getMaxConnectionsPerIp()
+    protected function checkRequestsPerMinute($connection)
     {
-        return $this->_maxConnectionsPerIp;
-    }
+        $id = $connection->getId();
 
-    /**
-     * Sets how many requests a client is allowed to do per minute.
-     *
-     * @param int $limit Requets/Min limit (per client).
-     * @return bool True if value could be set.
-     */
-    public function setMaxRequestsPerMinute($limit)
-    {
-        if(!is_int($limit))
-        {
-            return false;
+        if (!isset($this->requests[$id])) {
+            $this->requests[$id] = array();
         }
-        $this->_maxRequestsPerMinute = $limit;
-        return true;
-    }
 
-    /**
-     * Sets how many clients are allowed to connect to server until no more
-     * connections are accepted.
-     *
-     * @param in $max Max. total connections to server.
-     * @return bool True if value could be set.
-     */
-    public function setMaxClients($max)
-    {
-        if((int)$max === 0)
-        {
-            return false;
+        // Add current token
+        $this->requests[$id][] = time();
+
+        // Expire old tokens
+        while (reset($this->requests[$id]) < time() - 60) {
+            array_shift($this->requests[$id]);
         }
-        $this->_maxClients = (int)$max;
-        return true;
+
+        if (count($this->requests[$id]) > $this->options['requests_per_minute']) {
+            $this->limit($connection, 'Requests per minute');
+        }
     }
 
     /**
-     * Returns total max. connection limit of server.
+     * Limits the given connection
      *
-     * @return int Max. connections to this server.
+     * @param Connection $connection
+     * @param string $limit Reason
      */
-    public function getMaxClients()
+    protected function limit($connection, $limit)
     {
-        return $this->_maxClients;
+        $this->log(sprintf(
+            'Limiting connection %s: %s',
+            $connection->getIp(),
+            $limit
+        ), 'notice');
+
+        $connection->close(new RateLimiterException($limit));
     }
 
-    public function onConnect(Connection $connection)
+    /**
+     * Logger
+     *
+     * @param string $message
+     * @param string $priority
+     */
+    public function log($message, $priority = 'info')
     {
-                if(count($this->clients) > $this->_maxClients)
-            {
-                $connection->onDisconnect();
-                if($this->getApplication('status') !== false)
-                {
-                    $this->getApplication('status')->statusMsg('Attention: Client Limit Reached!', 'warning');
-                }
-                continue;
-            }
-
-            $this->_addIpToStorage($connection->getClientIp());
-            if($this->_checkMaxConnectionsPerIp($connection->getClientIp()) === false)
-            {
-                $connection->onDisconnect();
-                if($this->getApplication('status') !== false)
-                {
-                    $this->getApplication('status')->statusMsg('Connection/Ip limit for ip ' . $connection->getClientIp() . ' was reached!', 'warning');
-                }
-                continue;
-            }
+        $this->server->log('RateLimiter: ' . $message, $priority);
     }
 }

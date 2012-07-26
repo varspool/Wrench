@@ -51,6 +51,7 @@ abstract class Protocol
     const HTTP_UNAUTHORIZED        = 401;
     const HTTP_FORBIDDEN           = 403;
     const HTTP_NOT_FOUND           = 404;
+    const HTTP_RATE_LIMITED        = 420;
     const HTTP_SERVER_ERROR        = 500;
     const HTTP_NOT_IMPLEMENTED     = 501;
     /**#@-*/
@@ -214,11 +215,12 @@ abstract class Protocol
      */
     public static $httpResponses = array(
         self::HTTP_SWITCHING_PROTOCOLS => 'Switching Protocols',
-        self::HTTP_BAD_REQUEST => 'Bad Request',
-        self::HTTP_UNAUTHORIZED => 'Unauthorized',
-        self::HTTP_FORBIDDEN => 'Forbidden',
-        self::HTTP_NOT_FOUND => 'Not Found',
-        self::HTTP_NOT_IMPLEMENTED => 'Not Implemented'
+        self::HTTP_BAD_REQUEST         => 'Bad Request',
+        self::HTTP_UNAUTHORIZED        => 'Unauthorized',
+        self::HTTP_FORBIDDEN           => 'Forbidden',
+        self::HTTP_NOT_FOUND           => 'Not Found',
+        self::HTTP_NOT_IMPLEMENTED     => 'Not Implemented',
+        self::HTTP_RATE_LIMITED        => 'Enhance Your Calm'
     );
 
     /**

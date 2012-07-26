@@ -105,6 +105,16 @@ class Connection extends Configurable
     }
 
     /**
+     * Gets the connection manager of this connection
+     *
+     * @return \Wrench\ConnectionManager
+     */
+    public function getConnectionManager()
+    {
+        return $this->manager;
+    }
+
+    /**
      * @see Wrench\Util.Configurable::configure()
      */
     protected function configure(array $options)

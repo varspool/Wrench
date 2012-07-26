@@ -28,7 +28,7 @@ class ConnectionManagerTest extends Test
      *
      * @dataProvider getValidConstructorArguments
      */
-    public function testConstructor($server, array $options)
+    public function testValidConstructorArguments($server, array $options)
     {
         $this->assertInstanceOfClass(
             $instance = $this->getInstance(
@@ -37,7 +37,30 @@ class ConnectionManagerTest extends Test
             ),
             'Valid constructor arguments'
         );
+    }
+
+    /**
+     * Tests the constructor
+     */
+    public function testConstructor()
+    {
+        $this->assertInstanceOfClass(
+            $instance = $this->getInstance(
+                $this->getMockServer(),
+                array()
+            ),
+            'Constructor'
+        );
         return $instance;
+    }
+
+    /**
+     * @depends testConstructor
+     * @param ConnectionManager $instance
+     */
+    public function testCount($instance)
+    {
+        $this->assertTrue(is_numeric($instance->count()));
     }
 
     /**

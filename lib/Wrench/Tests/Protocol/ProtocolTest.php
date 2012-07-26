@@ -53,6 +53,12 @@ abstract class ProtocolTest extends Test
         $this->assertStringEndsWith("\r\n", $response, $message . ' - response ends well');
     }
 
+    public function testGetVersion()
+    {
+        $version = $this->getInstance()->getVersion();
+        $this->assertTrue(is_int($version));
+    }
+
     public function testGetResponseError()
     {
         $response = $this->getInstance()->getResponseError(400);

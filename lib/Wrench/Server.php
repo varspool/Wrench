@@ -151,6 +151,16 @@ class Server extends Configurable
     }
 
     /**
+     * Gets the connection manager
+     *
+     * @return \Wrench\ConnectionManager
+     */
+    public function getConnectionManager()
+    {
+        return $this->connectionManager;
+    }
+
+    /**
      * @return string
      */
     public function getUri()

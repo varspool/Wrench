@@ -1,4 +1,5 @@
 <?php
+
 namespace Wrench;
 
 use Wrench\Protocol\Protocol;
@@ -7,8 +8,9 @@ use Wrench\Util\Configurable;
 use Wrench\Exception\Exception as WrenchException;
 use Wrench\Exception\CloseException;
 use \Exception;
+use \Countable;
 
-class ConnectionManager extends Configurable
+class ConnectionManager extends Configurable implements Countable
 {
     const TIMEOUT_SELECT          = 0;
     const TIMEOUT_SELECT_MICROSEC = 200000;
@@ -50,6 +52,14 @@ class ConnectionManager extends Configurable
         $this->server = $server;
 
         parent::__construct($options);
+    }
+
+    /**
+     * @see Countable::count()
+     */
+    public function count()
+    {
+        return count($this->connections);
     }
 
     /**
@@ -316,70 +326,5 @@ class ConnectionManager extends Configurable
             Server::EVENT_SOCKET_DISCONNECT,
             array($connection->getSocket())
         );
-    }
-
-    /**
-     * Removes a client from client storage.
-     *
-     * @param Object $client Client object.
-     * @deprecated
-     */
-    public function removeClientOnClose($client)
-    {
-        throw new \Exception('Deprecated: just removeConnection');
-//         $clientId = $client->getClientId();
-//         $clientIp = $client->getClientIp();
-//         $clientPort = $client->getClientPort();
-//         $resource = $client->getClientSocket();
-
-//         $this->_removeIpFromStorage($client->getClientIp());
-//         if(isset($this->_requestStorage[$clientId]))
-//         {
-//             unset($this->_requestStorage[$clientId]);
-//         }
-//         unset($this->connections[(int)$resource]);
-//         $index = array_search($resource, $this->resources);
-//         unset($this->resources[$index], $client);
-
-//         // trigger status application:
-//         if($this->getApplication('status') !== false)
-//         {
-//             $this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
-//         }
-//         unset($clientId, $clientIp, $clientPort, $resource);
-    }
-
-    /**
-     * Removes a client and all references in case of timeout/error.
-     * @param object $client The client object to remove.
-     * @deprecated
-     */
-    public function removeClientOnError($client)
-    {
-        throw new \Exception('Deprecated: just removeConnection');
-        // remove reference in clients app:
-//         if($client->getClientApplication() !== false)
-//         {
-//             $client->getClientApplication()->onDisconnect($client);
-//         }
-
-//         $resource = $client->getClientSocket();
-//         $clientId = $client->getClientId();
-//         $clientIp = $client->getClientIp();
-//         $clientPort = $client->getClientPort();
-//         $this->_removeIpFromStorage($client->getClientIp());
-//         if(isset($this->_requestStorage[$clientId]))
-//         {
-//             unset($this->_requestStorage[$clientId]);
-//         }
-//         unset($this->connections[(int)$resource]);
-
-
-//         // trigger status application:
-//         if($this->getApplication('status') !== false)
-//         {
-//             $this->getApplication('status')->clientDisconnected($clientIp, $clientPort);
-//         }
-//         unset($resource, $clientId, $clientIp, $clientPort);
     }
 }
