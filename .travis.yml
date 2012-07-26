@@ -10,6 +10,8 @@ branches:
     - devel
     - 2.0
 
+after_script: cat build/*.log
+
 notifications:
   email:
     - dominic@varspool.com
