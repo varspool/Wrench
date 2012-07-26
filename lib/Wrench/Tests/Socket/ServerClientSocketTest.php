@@ -35,7 +35,7 @@ class ServerClientSocketTest extends SocketTest
      * @expectedException Wrench\Exception\SocketException
      * @depends testConstructor
      */
-    public function testGetPort($instance)
+    public function testGetPortTooSoon($instance)
     {
         $instance->getPort();
     }

@@ -8,7 +8,6 @@ use Wrench\Exception\SocketException;
 use Wrench\Util\Configurable;
 use Wrench\Protocol\Protocol;
 use Wrench\Protocol\Rfc6455Protocol;
-
 use \InvalidArgumentException;
 
 /**
@@ -34,6 +33,15 @@ abstract class Socket extends Configurable implements Resource
      * @var int
      */
     const DEFAULT_RECEIVE_LENGTH = '1400';
+
+    /**#@+
+     * Socket name parts
+     *
+     * @var int
+     */
+    const NAME_PART_IP = 0;
+    const NAME_PART_PORT = 1;
+    /**#@-*/
 
     /**
      * @var resource
@@ -64,6 +72,13 @@ abstract class Socket extends Configurable implements Resource
     protected $firstRead = true;
 
     /**
+     * The socket name according to stream_socket_get_name
+     *
+     * @var string
+     */
+    protected $name;
+
+    /**
      * Configure options
      *
      * Options include
@@ -87,30 +102,46 @@ abstract class Socket extends Configurable implements Resource
      */
     protected function getName()
     {
-        return @stream_socket_get_name($this->socket, true);
+        if (!isset($this->name) || !$this->name) {
+            $this->name = @stream_socket_get_name($this->socket, true);
+        }
+        return $this->name;
     }
 
     /**
      * Gets part of the name of the socket
      *
+     * PHP seems to return IPV6 address/port combos like this:
+     *   ::1:1234, where ::1 is the address and 1234 the port
+     * So, the part number here is either the last : delimited section (the port)
+     * or all the other sections (the whole initial part, the address).
+     *
+     * @param string $name (from $this->getName() usually)
      * @param int<0, 1> $part
+     * @return string
      * @throws SocketException
      */
-    protected function getNamePart($part)
+    public static function getNamePart($name, $part)
     {
-        $name = $this->getName();
-
         if (!$name) {
-            throw new SocketException('Could not get socket IP address');
+            throw new InvalidArgumentException('Invalid name');
         }
 
         $parts = explode(':', $name);
 
-        if (count($parts) != 2) {
-            throw new SocketException('Could not parse socket IP address: ' . $name);
+        if (count($parts) < 2) {
+            throw new SocketException('Could not parse name parts: ' . $name);
         }
 
-        return $parts[$part];
+        if ($part == self::NAME_PART_PORT) {
+            return end($parts);
+        } elseif ($part == self::NAME_PART_IP) {
+            return implode(':', array_slice($parts, 0, -1));
+        } else {
+            throw new InvalidArgumentException('Invalid name part');
+        }
+
+        return null;
     }
 
     /**
@@ -120,7 +151,13 @@ abstract class Socket extends Configurable implements Resource
      */
     public function getIp()
     {
-        return $this->getNamePart(0);
+        $name = $this->getName();
+
+        if ($name) {
+            return self::getNamePart($name, self::NAME_PART_IP);
+        } else {
+            throw new SocketException('Cannot get socket IP address');
+        }
     }
 
     /**
@@ -130,7 +167,13 @@ abstract class Socket extends Configurable implements Resource
      */
     public function getPort()
     {
-        return $this->getNamePart(1);
+        $name = $this->getName();
+
+        if ($name) {
+            return self::getNamePart($name, self::NAME_PART_PORT);
+        } else {
+            throw new SocketException('Cannot get socket IP address');
+        }
     }
 
     /**
@@ -178,7 +221,7 @@ abstract class Socket extends Configurable implements Resource
         $this->connected = false;
     }
 
- /**
+    /**
      * @see Wrench.Resource::getResource()
      */
     public function getResource()
