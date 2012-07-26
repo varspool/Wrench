@@ -107,7 +107,7 @@ abstract class Socket extends Configurable implements Resource
         $parts = explode(':', $name);
 
         if (count($parts) != 2) {
-            throw new SocketException('Could not parse socket IP address');
+            throw new SocketException('Could not parse socket IP address: ' . $name);
         }
 
         return $parts[$part];
