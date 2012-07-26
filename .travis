@@ -1,0 +1,14 @@
+#!/bin/bash
+
+phpunit
+return=$?
+
+echo ""
+echo "Server error log"
+cat build/server.err.log
+
+echo ""
+echo "Server log"
+cat build/server.log
+
+exit $return
