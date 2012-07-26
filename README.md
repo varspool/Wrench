@@ -13,7 +13,7 @@ streams.
 ### Features
 
 - Supports websocket draft hybi-10,13 (Currently tested with Chrome 20 and
-  Firefox 11).
+  Firefox 14).
 - Supports origin-check.
 - Supports various security/performance settings.
 - Supports binary frames. (Currently receive only)
