@@ -82,7 +82,7 @@ class ClientSocketTest extends UriSocketTest
             // Sigh
             $status = proc_get_status($this->process);
 
-            if ($status && isset($status['pid'])) {
+            if ($status && isset($status['pid']) && $status['pid']) {
                 // More sigh, this is the pid of the parent sh process, we want
                 //  to terminate the server directly
                 $this->log('Command: /bin/ps -ao pid,ppid | /usr/bin/col | /usr/bin/tail -n +2 | /bin/grep \'  ' . $status['pid'] . "'", 'info');
@@ -91,8 +91,10 @@ class ClientSocketTest extends UriSocketTest
                 if ($return === 0) {
                     foreach ($processes as $process) {
                         list($pid, $ppid) = explode(' ', str_replace('  ', ' ', $process));
-                        $this->log('Killing ' . $pid, 'info');
-                        exec('/bin/kill ' . $pid . '');
+                        if ($pid) {
+                            $this->log('Killing ' . $pid, 'info');
+                            exec('/bin/kill ' . $pid . ' > /dev/null 2>&1');
+                        }
                     }
                 } else {
                     $this->log('Unable to find child processes', 'warning');
@@ -101,7 +103,7 @@ class ClientSocketTest extends UriSocketTest
                 sleep(1);
 
                 $this->log('Killing ' . $status['pid'], 'info');
-                exec('/bin/kill ' . $status['pid'] . '');
+                exec('/bin/kill ' . $status['pid'] . ' > /dev/null 2>&1');
 
                 sleep(1);
             }
