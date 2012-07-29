@@ -1,12 +1,13 @@
----------------
-Wrench\Resource
----------------
+----------------
+Wrench\\Resource
+----------------
 
-.. php:class:: Wrench\Resource
+.. php:namespace: Wrench
+
+.. php:class:: Resource
 
     Resource interface
 
     .. php:method:: getResourceId()
 
     .. php:method:: getResource()
-

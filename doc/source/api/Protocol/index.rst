@@ -2,6 +2,8 @@
 Wrench\\Protocol
 ::::::::::::::::
 
+.. php:namespace: Wrench\\Protocol
+
 .. toctree::
 
    Hybi10Protocol

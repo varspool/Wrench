@@ -1,43 +1,31 @@
--------------------------------
-Wrench\Exception\FrameException
--------------------------------
+---------------------------------
+Wrench\\Exception\\FrameException
+---------------------------------
 
-.. php:class:: Wrench\Exception\FrameException
+.. php:namespace: Wrench\\Exception
+
+.. php:class:: FrameException
 
     .. php:attr:: message
-    
-
 
     .. php:attr:: string
-    
-
 
     .. php:attr:: code
-    
-
 
     .. php:attr:: file
-    
-
 
     .. php:attr:: line
-    
-
 
     .. php:attr:: trace
-    
-
 
     .. php:attr:: previous
-    
-
 
     .. php:method:: __clone()
 
     .. php:method:: __construct($message, $code, $previous)
-    
-        :param unknown $message: 
-        :param unknown $code: 
+
+        :param unknown $message:
+        :param unknown $code:
         :param unknown $previous:
 
     .. php:method:: getMessage()
@@ -55,4 +43,3 @@ Wrench\Exception\FrameException
     .. php:method:: getTraceAsString()
 
     .. php:method:: __toString()
-

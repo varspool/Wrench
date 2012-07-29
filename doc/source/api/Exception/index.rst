@@ -2,6 +2,8 @@
 Wrench\\Exception
 :::::::::::::::::
 
+.. php:namespace: Wrench\\Exception
+
 .. toctree::
 
    BadRequestException

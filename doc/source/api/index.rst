@@ -2,6 +2,8 @@
 API Documentation
 `````````````````
 
+.. php:namespace: Wrench
+
 .. toctree::
 
    Application/index

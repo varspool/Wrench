@@ -1,10 +1,11 @@
-------------------------
-Wrench\Listener\Listener
-------------------------
+--------------------------
+Wrench\\Listener\\Listener
+--------------------------
 
-.. php:class:: Wrench\Listener\Listener
+.. php:namespace: Wrench\\Listener
+
+.. php:class:: Listener
 
     .. php:method:: listen(Server $server)
-    
-        :param Server $server:
 
+        :param Server $server:

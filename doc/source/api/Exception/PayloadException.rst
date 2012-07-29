@@ -1,43 +1,31 @@
----------------------------------
-Wrench\Exception\PayloadException
----------------------------------
+-----------------------------------
+Wrench\\Exception\\PayloadException
+-----------------------------------
 
-.. php:class:: Wrench\Exception\PayloadException
+.. php:namespace: Wrench\\Exception
+
+.. php:class:: PayloadException
 
     .. php:attr:: message
-    
-
 
     .. php:attr:: string
-    
-
 
     .. php:attr:: code
-    
-
 
     .. php:attr:: file
-    
-
 
     .. php:attr:: line
-    
-
 
     .. php:attr:: trace
-    
-
 
     .. php:attr:: previous
-    
-
 
     .. php:method:: __clone()
 
     .. php:method:: __construct($message, $code, $previous)
-    
-        :param unknown $message: 
-        :param unknown $code: 
+
+        :param unknown $message:
+        :param unknown $code:
         :param unknown $previous:
 
     .. php:method:: getMessage()
@@ -55,4 +43,3 @@ Wrench\Exception\PayloadException
     .. php:method:: getTraceAsString()
 
     .. php:method:: __toString()
-

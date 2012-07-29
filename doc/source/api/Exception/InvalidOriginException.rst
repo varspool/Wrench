@@ -1,43 +1,31 @@
----------------------------------------
-Wrench\Exception\InvalidOriginException
----------------------------------------
+-----------------------------------------
+Wrench\\Exception\\InvalidOriginException
+-----------------------------------------
 
-.. php:class:: Wrench\Exception\InvalidOriginException
+.. php:namespace: Wrench\\Exception
+
+.. php:class:: InvalidOriginException
 
     Invalid origin exception
 
     .. php:attr:: message
-    
-
 
     .. php:attr:: string
-    
-
 
     .. php:attr:: code
-    
-
 
     .. php:attr:: file
-    
-
 
     .. php:attr:: line
-    
-
 
     .. php:attr:: trace
-    
-
 
     .. php:attr:: previous
-    
-
 
     .. php:method:: __construct($message, $code, Exception $previous)
-    
-        :param unknown $message: 
-        :param unknown $code: 
+
+        :param unknown $message:
+        :param unknown $code:
         :param Exception $previous:
 
     .. php:method:: __clone()
@@ -57,4 +45,3 @@ Wrench\Exception\InvalidOriginException
     .. php:method:: getTraceAsString()
 
     .. php:method:: __toString()
-

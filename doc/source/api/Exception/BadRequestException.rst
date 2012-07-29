@@ -1,41 +1,29 @@
-------------------------------------
-Wrench\Exception\BadRequestException
-------------------------------------
+--------------------------------------
+Wrench\\Exception\\BadRequestException
+--------------------------------------
 
-.. php:class:: Wrench\Exception\BadRequestException
+.. php:namespace: Wrench\\Exception
+
+.. php:class:: BadRequestException
 
     .. php:attr:: message
-    
-
 
     .. php:attr:: string
-    
-
 
     .. php:attr:: code
-    
-
 
     .. php:attr:: file
-    
-
 
     .. php:attr:: line
-    
-
 
     .. php:attr:: trace
-    
-
 
     .. php:attr:: previous
-    
-
 
     .. php:method:: __construct($message, $code, Exception $previous)
-    
-        :param unknown $message: 
-        :param unknown $code: 
+
+        :param unknown $message:
+        :param unknown $code:
         :param Exception $previous:
 
     .. php:method:: __clone()
@@ -55,4 +43,3 @@ Wrench\Exception\BadRequestException
     .. php:method:: getTraceAsString()
 
     .. php:method:: __toString()
-

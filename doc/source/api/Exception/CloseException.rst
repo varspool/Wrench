@@ -1,43 +1,31 @@
--------------------------------
-Wrench\Exception\CloseException
--------------------------------
+---------------------------------
+Wrench\\Exception\\CloseException
+---------------------------------
 
-.. php:class:: Wrench\Exception\CloseException
+.. php:namespace: Wrench\\Exception
+
+.. php:class:: CloseException
 
     Close connection exception
 
     .. php:attr:: message
-    
-
 
     .. php:attr:: string
-    
-
 
     .. php:attr:: code
-    
-
 
     .. php:attr:: file
-    
-
 
     .. php:attr:: line
-    
-
 
     .. php:attr:: trace
-    
-
 
     .. php:attr:: previous
-    
-
 
     .. php:method:: __construct($message, $code, Exception $previous)
-    
-        :param unknown $message: 
-        :param unknown $code: 
+
+        :param unknown $message:
+        :param unknown $code:
         :param Exception $previous:
 
     .. php:method:: __clone()
@@ -57,4 +45,3 @@ Wrench\Exception\CloseException
     .. php:method:: getTraceAsString()
 
     .. php:method:: __toString()
-
