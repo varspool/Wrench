@@ -21,7 +21,7 @@ use \RuntimeException;
 /**
  * Represents a client connection on the server side
  *
- * i.e. the `Server` manages a bunch of `Connections
+ * i.e. the `Server` manages a bunch of `Connection`s
  */
 class Connection extends Configurable
 {
