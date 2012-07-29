@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build
+SPHPDOX       = /usr/bin/env php ~/workspace/external/sphpdox/sphpdox.php
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -40,6 +41,15 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
+
+api: buildapi clean copyapi html singlehtml
+
+buildapi:
+	cd ~/workspace/external/sphpdox && ${SPHPDOX} process -t "API Documentation" -x "Wrench\Tests" Wrench ../../wrench/lib
+
+copyapi:
+	rm -rf ~/workspace/wrench/doc/source/api
+	cp -r ~/workspace/external/sphpdox/build/Wrench ~/workspace/wrench/doc/source/api
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
