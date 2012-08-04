@@ -113,6 +113,26 @@ class ConnectionTest extends Test
     }
 
     /**
+     * @dataProvider getValidHandleData
+     */
+    public function testHandle($path, $request_handshake, array $requests)
+    {
+        $connection = $this->getConnectionForHandshake(
+            $this->getConnectedSocket(),
+            $path,
+            $request_handshake
+        );
+
+        $connection->handshake($request_handshake);
+
+        foreach ($requests as $request) {
+            $connection->handle($request);
+        }
+
+        return $connection;
+    }
+
+    /**
      * @return Socket
      */
     protected function getConnectedSocket()
@@ -159,6 +179,16 @@ class ConnectionTest extends Test
                 ->will($this->returnValue($server));
 
         $connection = $this->getInstance($manager, $socket);
+
+        return $connection;
+    }
+
+    protected function getConnectionForHandle($socket, $path, $request)
+    {
+        $connection = $this->getConnectionForHandshake($socket, $path, $request);
+
+        $valid = $this->getValidHandshakeData();
+
 
         return $connection;
     }
@@ -237,6 +267,31 @@ class ConnectionTest extends Test
                       'connection_id_algo' => 'sha512')
             )
         );
+    }
+
+    /**
+     * Data provider
+     */
+    public function getValidHandleData()
+    {
+        $data = array();
+
+        $valid_requests = array(
+            array('foobar'),
+            array('foo', 'bar')
+        );
+
+        $handshakes = $this->getValidHandshakeData();
+
+        foreach ($handshakes as $handshake) {
+            foreach ($valid_requests as $requests) {
+                $arguments = $handshake;
+                $arguments[] = $requests;
+                $data[] = $arguments;
+            }
+        }
+
+        return $data;
     }
 
     /**

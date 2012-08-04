@@ -253,7 +253,7 @@ class Connection extends Configurable
      *        middle of a fragmented message.
 	 * @param string $data
 	 */
-    protected function handle($data)
+    public function handle($data)
     {
         if (!$this->payload) {
             $this->payload = $this->protocol->getPayload();
