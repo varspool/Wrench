@@ -60,26 +60,26 @@ class Connection extends Configurable
      *
      * @var string
      */
-	protected $ip;
+    protected $ip;
 
-	/**
-	 * The port of the client
-	 *
-	 * @var int
-	 */
-	protected $port;
+    /**
+     * The port of the client
+     *
+     * @var int
+     */
+    protected $port;
 
-	/**
-	 * Connection ID
-	 *
-	 * @var string|null
-	 */
-	protected $id = null;
+    /**
+     * Connection ID
+     *
+     * @var string|null
+     */
+    protected $id = null;
 
     /**
      * The current payload
      */
-	protected $payload;
+    protected $payload;
 
     /**
      * Constructor
@@ -89,10 +89,10 @@ class Connection extends Configurable
      * @param array $options
      * @throws InvalidArgumentException
      */
-	public function __construct(
-	    ConnectionManager $manager,
-	    ServerClientSocket $socket,
-	    array $options = array()
+    public function __construct(
+        ConnectionManager $manager,
+        ServerClientSocket $socket,
+        array $options = array()
     ) {
         $this->manager = $manager;
         $this->socket = $socket;
@@ -101,7 +101,7 @@ class Connection extends Configurable
 
         $this->configureClientInformation();
 
-		$this->log('Connected');
+        $this->log('Connected');
     }
 
     /**
@@ -132,9 +132,9 @@ class Connection extends Configurable
      */
     protected function configureClientInformation()
     {
-		$this->ip = $this->socket->getIp();
-		$this->port = $this->socket->getPort();
-		$this->configureClientId();
+        $this->ip = $this->socket->getIp();
+        $this->port = $this->socket->getPort();
+        $this->configureClientId();
     }
 
     /**
@@ -148,11 +148,11 @@ class Connection extends Configurable
     protected function configureClientId()
     {
         $message = sprintf(
-		    '%s:uri=%s&ip=%s&port=%s',
+            '%s:uri=%s&ip=%s&port=%s',
             $this->options['connection_id_secret'],
-		    rawurlencode($this->manager->getUri()),
-		    rawurlencode($this->ip),
-	        rawurlencode($this->port)
+            rawurlencode($this->manager->getUri()),
+            rawurlencode($this->ip),
+            rawurlencode($this->port)
         );
 
         $algo = $this->options['connection_id_algo'];
@@ -169,14 +169,14 @@ class Connection extends Configurable
         $this->id = $hash;
     }
 
-	/**
-	 * Data receiver
-	 *
-	 * Called by the connection manager when the connection has received data
-	 *
-	 * @param string $data
-	 */
-	public function onData($data)
+    /**
+     * Data receiver
+     *
+     * Called by the connection manager when the connection has received data
+     *
+     * @param string $data
+     */
+    public function onData($data)
     {
         if (!$this->handshaked) {
             return $this->handshake($data);
@@ -242,24 +242,38 @@ class Connection extends Configurable
         }
     }
 
-	/**
-	 * Handle data received from the client
-	 *
-	 * The data passed in may belong to several different frames across one or
-	 * more protocols. It may not even contain a single complete frame. This method
-	 * manages slotting the data into separate payload objects.
-	 *
-	 * @todo An endpoint MUST be capable of handling control frames in the
+    /**
+     * Returns a string export of the given binary data
+     *
+     * @param string $data
+     * @return string
+     */
+    protected function export($data)
+    {
+        $export = '';
+        foreach (str_split($data) as $chr) {
+            $export .= '\\x' . ord($chr);
+        }
+    }
+
+    /**
+     * Handle data received from the client
+     *
+     * The data passed in may belong to several different frames across one or
+     * more protocols. It may not even contain a single complete frame. This method
+     * manages slotting the data into separate payload objects.
+     *
+     * @todo An endpoint MUST be capable of handling control frames in the
      *        middle of a fragmented message.
-	 * @param string $data
-	 */
+     * @param string $data
+     */
     public function handle($data)
     {
         if (!$this->payload) {
             $this->payload = $this->protocol->getPayload();
         }
 
-        while ($data) {
+        while ($data) { // Each iteration pulls off a single payload chunk
             $size = strlen($data);
             $remaining = $this->payload->getRemainingData();
 
@@ -314,34 +328,34 @@ class Connection extends Configurable
                 }
                 return;
 
-			case Protocol::TYPE_BINARY:
-				if(method_exists($app, 'onBinaryData')) {
-					$app->onBinaryData($payload, $this);
-				} else {
-					$this->close(1003);
-				}
-			break;
+            case Protocol::TYPE_BINARY:
+                if(method_exists($app, 'onBinaryData')) {
+                    $app->onBinaryData($payload, $this);
+                } else {
+                    $this->close(1003);
+                }
+            break;
 
-			case 'ping':
-			    $this->log('Ping received', 'notice');
-				$this->send($payload->getPayload(), Protocol::TYPE_PONG);
-				$this->log('Pong!', 'debug');
-			break;
+            case 'ping':
+                $this->log('Ping received', 'notice');
+                $this->send($payload->getPayload(), Protocol::TYPE_PONG);
+                $this->log('Pong!', 'debug');
+            break;
 
-			/**
-			 * A Pong frame MAY be sent unsolicited.  This serves as a
+            /**
+             * A Pong frame MAY be sent unsolicited.  This serves as a
              * unidirectional heartbeat.  A response to an unsolicited Pong
              * frame is not expected.
-			 */
-			case 'pong':
-			    $this->log('Received unsolicited pong', 'info');
-			break;
+             */
+            case 'pong':
+                $this->log('Received unsolicited pong', 'info');
+            break;
 
-			case 'close':
-			    $this->log('Close frame received', 'notice');
-				$this->close();
-				$this->log('Disconnected');
-			break;
+            case 'close':
+                $this->log('Close frame received', 'notice');
+                $this->close();
+                $this->log('Disconnected');
+            break;
 
             default:
                 throw new ConnectionException('Unhandled payload type');
@@ -377,7 +391,7 @@ class Connection extends Configurable
             throw new ConnectionException('Could not send data to connection: ' . $this->socket->getLastError());
         }
 
-		return true;
+        return true;
     }
 
     /**
@@ -403,27 +417,27 @@ class Connection extends Configurable
      * @param int|Exception $statusCode
      * @return boolean
      */
-	public function close($code = Protocol::CLOSE_NORMAL)
-	{
-	    try {
-	        if (!$this->handshaked) {
+    public function close($code = Protocol::CLOSE_NORMAL)
+    {
+        try {
+            if (!$this->handshaked) {
                 $response = $this->protocol->getResponseError($code);
                 $this->socket->send($response);
             } else {
                 $response = $this->protocol->getCloseFrame($code);
                 $this->socket->send($response);
             }
-	    } catch (Exception $e) {
+        } catch (Exception $e) {
             $this->log('Unable to send close message', 'warning');
         }
 
-		if ($this->application && method_exists($this->application, 'onDisconnect')) {
+        if ($this->application && method_exists($this->application, 'onDisconnect')) {
             $this->application->onDisconnect($this);
         }
 
         $this->socket->disconnect();
-		$this->manager->removeConnection($this);
-	}
+        $this->manager->removeConnection($this);
+    }
 
     /**
      * Logs a message
@@ -448,48 +462,48 @@ class Connection extends Configurable
      *
      * @return string Usually dotted quad notation
      */
-	public function getIp()
-	{
-		return $this->ip;
-	}
+    public function getIp()
+    {
+        return $this->ip;
+    }
 
-	/**
-	 * Gets the port of the connection
-	 *
-	 * @return int
-	 */
-	public function getPort()
-	{
-		return $this->port;
-	}
+    /**
+     * Gets the port of the connection
+     *
+     * @return int
+     */
+    public function getPort()
+    {
+        return $this->port;
+    }
 
-	/**
-	 * Gets the connection ID
-	 *
-	 * @return string
-	 */
-	public function getId()
-	{
-		return $this->id;
-	}
+    /**
+     * Gets the connection ID
+     *
+     * @return string
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
-	/**
-	 * Gets the socket object
-	 *
-	 * @return Socket\ServerClientSocket
-	 */
-	public function getSocket()
-	{
-		return $this->socket;
-	}
+    /**
+     * Gets the socket object
+     *
+     * @return Socket\ServerClientSocket
+     */
+    public function getSocket()
+    {
+        return $this->socket;
+    }
 
-	/**
-	 * Gets the client application
-	 *
-	 * @return Application
-	 */
-	public function getClientApplication()
-	{
-		return (isset($this->application)) ? $this->application : false;
-	}
+    /**
+     * Gets the client application
+     *
+     * @return Application
+     */
+    public function getClientApplication()
+    {
+        return (isset($this->application)) ? $this->application : false;
+    }
 }
