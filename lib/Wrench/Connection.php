@@ -283,7 +283,7 @@ class Connection extends Configurable
 
             $this->payload->receiveData($chunk);
 
-            if ($remaining !== 0) {
+            if ($remaining !== 0 && !$this->payload->isComplete()) {
                 continue;
             }
 
