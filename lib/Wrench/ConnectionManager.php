@@ -243,10 +243,12 @@ class ConnectionManager extends Configurable implements Countable
 
         try {
             $connection->process();
-        } catch (WrenchException $e) {
-            $this->log('Error on client socket: ' . $e, 'err');
+        } catch (CloseException $e) {
+            $this->log('Client connection closed: ' . $e, 'notice');
             $connection->close($e);
-            //$this->removeConnection($connection); // extra?
+        } catch (WrenchException $e) {
+            $this->log('Error on client socket: ' . $e, 'warning');
+            $connection->close($e);
         }
     }
 
