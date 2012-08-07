@@ -115,12 +115,13 @@ class ConnectionTest extends Test
     /**
      * @dataProvider getValidHandleData
      */
-    public function testHandle($path, $request_handshake, array $requests)
+    public function testHandle($path, $request_handshake, array $requests, $request_count)
     {
-        $connection = $this->getConnectionForHandshake(
+        $connection = $this->getConnectionForHandle(
             $this->getConnectedSocket(),
             $path,
-            $request_handshake
+            $request_handshake,
+            $request_count
         );
 
         $connection->handshake($request_handshake);
@@ -183,12 +184,31 @@ class ConnectionTest extends Test
         return $connection;
     }
 
-    protected function getConnectionForHandle($socket, $path, $request)
+    protected function getConnectionForHandle($socket, $path, $request, $request_count)
     {
-        $connection = $this->getConnectionForHandshake($socket, $path, $request);
+        $connection = $this->getConnectionForHandshake($socket, $path, $request, $request_count);
 
-        $valid = $this->getValidHandshakeData();
+        $manager = $this->getMockConnectionManager();
 
+        $application = $this->getMockApplication();
+
+        $application->expects($this->exactly($request_count))
+                    ->method('onData')
+                    ->will($this->returnValue(true));
+
+        $server = $this->getMock('Wrench\Server', array(), array(), '', false);
+        $server->registerApplication($path, $application);
+
+        $manager->expects($this->any())
+                ->method('getApplicationForPath')
+                ->with($path)
+                ->will($this->returnValue($application));
+
+        $manager->expects($this->any())
+                ->method('getServer')
+                ->will($this->returnValue($server));
+
+        $connection = $this->getInstance($manager, $socket);
 
         return $connection;
     }
@@ -218,7 +238,7 @@ class ConnectionTest extends Test
      */
     protected function getMockApplication()
     {
-        return new EchoApplication();
+        return $this->getMock('Wrench\Application\EchoApplication');
     }
 
     /**
@@ -271,14 +291,27 @@ class ConnectionTest extends Test
 
     /**
      * Data provider
+     *
+     * Uses this awkward valid request array so that splitting of payloads
+     * across multiple calls to handle can be tested
      */
     public function getValidHandleData()
     {
         $data = array();
 
         $valid_requests = array(
-            array('foobar'),
-            array('foo', 'bar')
+            array(
+                4, // message count
+                "\x81\xad\x2e\xab\x82\xac\x6f\xfe\xd6\xe4\x14\x8b\xf9\x8c\x0c"
+                ."\xde\xf1\xc9\x5c\xc5\xe3\xc1\x4b\x89\xb8\x8c\x0c\xcd\xed\xc3"
+                ."\x0c\x87\xa2\x8e\x5e\xca\xf1\xdf\x59\xc4\xf0\xc8\x0c\x91\xa2"
+                ."\x8e\x4c\xca\xf0\x8e\x53\x81\xad\xd4\xfd\x81\xfe\x95\xa8\xd5"
+                ."\xb6\xee\xdd\xfa\xde\xf6\x88\xf2\x9b\xa6\x93\xe0\x93\xb1\xdf"
+                ."\xbb\xde\xf6\x9b\xee\x91\xf6\xd1\xa1\xdc\xa4\x9c\xf2\x8d\xa3"
+                ."\x92\xf3\x9a\xf6\xc7\xa1\xdc\xb6\x9c\xf3\xdc\xa9\x81\x80\x8e"
+                ."\x12\xcd\x8e\x81\x8c\xf6\x8a\xf0\xee\x9a\xeb\x83\x9a\xd6\xe7"
+                ."\x95\x9d\x85\xeb\x97\x8b",
+            )
         );
 
         $handshakes = $this->getValidHandshakeData();
@@ -286,7 +319,8 @@ class ConnectionTest extends Test
         foreach ($handshakes as $handshake) {
             foreach ($valid_requests as $requests) {
                 $arguments = $handshake;
-                $arguments[] = $requests;
+                $arguments[] = array_slice($requests, 1); // requests
+                $arguments[] = $requests[0];              // request_count
                 $data[] = $arguments;
             }
         }
