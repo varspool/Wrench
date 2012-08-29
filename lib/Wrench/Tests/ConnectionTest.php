@@ -115,13 +115,13 @@ class ConnectionTest extends Test
     /**
      * @dataProvider getValidHandleData
      */
-    public function testHandle($path, $request_handshake, array $requests, $request_count)
+    public function testHandle($path, $request_handshake, array $requests, array $counts)
     {
         $connection = $this->getConnectionForHandle(
             $this->getConnectedSocket(),
             $path,
             $request_handshake,
-            $request_count
+            $counts
         );
 
         $connection->handshake($request_handshake);
@@ -184,15 +184,15 @@ class ConnectionTest extends Test
         return $connection;
     }
 
-    protected function getConnectionForHandle($socket, $path, $request, $request_count)
+    protected function getConnectionForHandle($socket, $path, $handshake, array $counts)
     {
-        $connection = $this->getConnectionForHandshake($socket, $path, $request, $request_count);
+        $connection = $this->getConnectionForHandshake($socket, $path, $handshake);
 
         $manager = $this->getMockConnectionManager();
 
         $application = $this->getMockApplication();
 
-        $application->expects($this->exactly($request_count))
+        $application->expects($this->exactly(isset($counts['onData']) ? $counts['onData'] : 0))
                     ->method('onData')
                     ->will($this->returnValue(true));
 
@@ -203,6 +203,9 @@ class ConnectionTest extends Test
                 ->method('getApplicationForPath')
                 ->with($path)
                 ->will($this->returnValue($application));
+
+        $manager->expects($this->exactly(isset($counts['removeConnection']) ? $counts['removeConnection'] : 0))
+                ->method('removeConnection');
 
         $manager->expects($this->any())
                 ->method('getServer')
@@ -294,33 +297,48 @@ class ConnectionTest extends Test
      *
      * Uses this awkward valid request array so that splitting of payloads
      * across multiple calls to handle can be tested
+     *
+     * testHandle($path, $request_handshake, array $requests, array $counts)
      */
     public function getValidHandleData()
     {
-        $data = array();
-
         $valid_requests = array(
             array(
-                4, // message count
-                "\x81\xad\x2e\xab\x82\xac\x6f\xfe\xd6\xe4\x14\x8b\xf9\x8c\x0c"
-                ."\xde\xf1\xc9\x5c\xc5\xe3\xc1\x4b\x89\xb8\x8c\x0c\xcd\xed\xc3"
-                ."\x0c\x87\xa2\x8e\x5e\xca\xf1\xdf\x59\xc4\xf0\xc8\x0c\x91\xa2"
-                ."\x8e\x4c\xca\xf0\x8e\x53\x81\xad\xd4\xfd\x81\xfe\x95\xa8\xd5"
-                ."\xb6\xee\xdd\xfa\xde\xf6\x88\xf2\x9b\xa6\x93\xe0\x93\xb1\xdf"
-                ."\xbb\xde\xf6\x9b\xee\x91\xf6\xd1\xa1\xdc\xa4\x9c\xf2\x8d\xa3"
-                ."\x92\xf3\x9a\xf6\xc7\xa1\xdc\xb6\x9c\xf3\xdc\xa9\x81\x80\x8e"
-                ."\x12\xcd\x8e\x81\x8c\xf6\x8a\xf0\xee\x9a\xeb\x83\x9a\xd6\xe7"
-                ."\x95\x9d\x85\xeb\x97\x8b",
+                'data' => array(
+                    "\x81\xad\x2e\xab\x82\xac\x6f\xfe\xd6\xe4\x14\x8b\xf9\x8c\x0c"
+                    ."\xde\xf1\xc9\x5c\xc5\xe3\xc1\x4b\x89\xb8\x8c\x0c\xcd\xed\xc3"
+                    ."\x0c\x87\xa2\x8e\x5e\xca\xf1\xdf\x59\xc4\xf0\xc8\x0c\x91\xa2"
+                    ."\x8e\x4c\xca\xf0\x8e\x53\x81\xad\xd4\xfd\x81\xfe\x95\xa8\xd5"
+                    ."\xb6\xee\xdd\xfa\xde\xf6\x88\xf2\x9b\xa6\x93\xe0\x93\xb1\xdf"
+                    ."\xbb\xde\xf6\x9b\xee\x91\xf6\xd1\xa1\xdc\xa4\x9c\xf2\x8d\xa3"
+                    ."\x92\xf3\x9a\xf6\xc7\xa1\xdc\xb6\x9c\xf3\xdc\xa9\x81\x80\x8e"
+                    ."\x12\xcd\x8e\x81\x8c\xf6\x8a\xf0\xee\x9a\xeb\x83\x9a\xd6\xe7"
+                    ."\x95\x9d\x85\xeb\x97\x8b" // Four text frames
+                ),
+                'counts' => array(
+                    'onData' => 4
+                )
+            ),
+            array(
+                'data' => array(
+                    "\x88\x80\xdc\x8e\xa2\xc5" // Close frame
+                ),
+                'counts' => array(
+                    'removeConnection' => 1
+                )
             )
         );
+
+        $data = array();
 
         $handshakes = $this->getValidHandshakeData();
 
         foreach ($handshakes as $handshake) {
-            foreach ($valid_requests as $requests) {
+            foreach ($valid_requests as $handle_args) {
                 $arguments = $handshake;
-                $arguments[] = array_slice($requests, 1); // requests
-                $arguments[] = $requests[0];              // request_count
+                $arguments[] = $handle_args['data'];
+                $arguments[] = $handle_args['counts'];
+
                 $data[] = $arguments;
             }
         }

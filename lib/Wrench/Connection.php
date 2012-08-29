@@ -414,6 +414,23 @@ class Connection extends Configurable
     /**
      * Closes the connection according to the WebSocket protocol
      *
+     * If an endpoint receives a Close frame and that endpoint did not
+     * previously send a Close frame, the endpoint MUST send a Close frame
+     * in response.  It SHOULD do so as soon as is practical.  An endpoint
+     * MAY delay sending a close frame until its current message is sent
+     * (for instance, if the majority of a fragmented message is already
+     * sent, an endpoint MAY send the remaining fragments before sending a
+     * Close frame).  However, there is no guarantee that the endpoint which
+     * has already sent a Close frame will continue to process data.
+
+     * After both sending and receiving a close message, an endpoint
+     * considers the WebSocket connection closed, and MUST close the
+     * underlying TCP connection.  The server MUST close the underlying TCP
+     * connection immediately; the client SHOULD wait for the server to
+     * close the connection but MAY close the connection at any time after
+     * sending and receiving a close message, e.g. if it has not received a
+     * TCP close from the server in a reasonable time period.
+     *
      * @param int|Exception $statusCode
      * @return boolean
      */
