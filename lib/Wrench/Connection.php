@@ -336,7 +336,7 @@ class Connection extends Configurable
                 }
             break;
 
-            case 'ping':
+            case Protocol::TYPE_PING:
                 $this->log('Ping received', 'notice');
                 $this->send($payload->getPayload(), Protocol::TYPE_PONG);
                 $this->log('Pong!', 'debug');
@@ -347,14 +347,14 @@ class Connection extends Configurable
              * unidirectional heartbeat.  A response to an unsolicited Pong
              * frame is not expected.
              */
-            case 'pong':
+            case Protocol::TYPE_PONG:
                 $this->log('Received unsolicited pong', 'info');
             break;
 
-            case 'close':
+            case Protocol::TYPE_CLOSE:
                 $this->log('Close frame received', 'notice');
                 $this->close();
-                $this->log('Disconnected');
+                $this->log('Disconnected', 'info');
             break;
 
             default:
