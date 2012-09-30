@@ -655,7 +655,7 @@ abstract class Protocol
         $parts = explode("\r\n\r\n", $response, 2);
 
         if (count($parts) != 2) {
-            throw new InvalidArgumentException('No headers in response');
+            $parts = array($parts, '');
         }
 
         list($headers, $body) = $parts;
