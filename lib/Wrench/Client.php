@@ -159,7 +159,6 @@ class Client
 
         $this->socket->send($handshake);
         $response = $this->socket->receive(self::MAX_HANDSHAKE_RESPONSE);
-        var_dump($response);
         return ($this->connected =
                     $this->protocol->validateResponseHandshake($response, $key));
     }
