@@ -734,7 +734,7 @@ abstract class Protocol
             self::HEADER_HOST       => $host,
             self::HEADER_UPGRADE    => self::UPGRADE_VALUE,
             self::HEADER_CONNECTION => self::CONNECTION_VALUE,
-            self::HEADER_KEY        => $key, //$this->encodeKey($key),
+            self::HEADER_KEY        => $key,
             self::HEADER_ORIGIN     => $origin,
             self::HEADER_VERSION    => $this->getVersion()
         );
