@@ -2,6 +2,12 @@
 
 namespace Wrench;
 
+use Wrench\Payload\Payload;
+
+use Wrench\Payload\PayloadHandler;
+
+use Wrench\Util\Configurable;
+
 use Wrench\Socket\ClientSocket;
 use Wrench\Protocol\Protocol;
 use Wrench\Protocol\Rfc6455Protocol;
@@ -14,15 +20,26 @@ use \RuntimeException;
  *
  * Represents a Wrench client
  */
-class Client
+class Client extends Configurable
 {
     /**
      * @var int bytes
      */
     const MAX_HANDSHAKE_RESPONSE = '1500';
 
+    /**
+     * @var string
+     */
     protected $uri;
+
+    /**
+     * @var string
+     */
     protected $origin;
+
+    /**
+     * @var ClientSocket
+     */
     protected $socket;
 
     /**
@@ -33,25 +50,23 @@ class Client
     protected $headers = array();
 
     /**
-     * Protocol instance
-     *
-     * @var Protocol
-     */
-    protected $protocol;
-
-    /**
-     * Options
-     *
-     * @var array
-     */
-    protected $options = array();
-
-    /**
      * Whether the client is connected
      *
      * @var boolean
      */
     protected $connected = false;
+
+    /**
+     * @var PayloadHandler
+     */
+    protected $payloadHandler = null;
+
+    /**
+     * Complete received payloads
+     *
+     * @var array<Payload>
+     */
+    protected $received = array();
 
     /**
      * Constructor
@@ -65,6 +80,8 @@ class Client
      */
     public function __construct($uri, $origin, array $options = array())
     {
+        parent::__construct($options);
+
         $uri = (string)$uri;
         if (!$uri) {
             throw new InvalidArgumentException('No URI specified');
@@ -77,13 +94,11 @@ class Client
         }
         $this->origin = $origin;
 
-        $this->configure($options);
-
-        $this->socket = $this->options['socket'];
-        $this->protocol = $this->options['protocol'];
-
         $this->protocol->validateUri($this->uri);
         $this->protocol->validateOriginUri($this->origin);
+
+        $this->configureSocket();
+        $this->configurePayloadHandler();
     }
 
     /**
@@ -94,10 +109,45 @@ class Client
      */
     protected function configure(array $options)
     {
-        $this->options = array_merge(array(
-            'protocol'        => new Rfc6455Protocol(),
-            'socket'          => new ClientSocket($this->uri)
+        $options = array_merge(array(
+            'socket_class'     => 'Wrench\\Socket\\ClientSocket',
+            'on_data_callback' => null
         ), $options);
+
+        parent::configure($options);
+    }
+
+    /**
+     * Configures the client socket
+     */
+    protected function configureSocket()
+    {
+        $class = $this->options['socket_class'];
+        $this->socket = new $class($this->uri);
+    }
+
+    /**
+     * Configures the payload handler
+     */
+    protected function configurePayloadHandler()
+    {
+        $this->payloadHandler = new PayloadHandler(array($this, 'onData'), $this->options);
+    }
+
+    /**
+     * Payload receiver
+     *
+     * Public because called from our PayloadHandler. Don't call us, we'll call
+     * you (via the on_data_callback option).
+     *
+     * @param Payload $payload
+     */
+    public function onData(Payload $payload)
+    {
+        $this->received[] = $payload;
+        if (($callback = $this->options['on_data_callback'])) {
+            call_user_func($callback, $payload);
+        }
     }
 
     /**
@@ -120,12 +170,46 @@ class Client
      * @param string $data
      * @param string $type Payload type
      * @param boolean $masked
-     * @return int bytes written
+     * @return boolean Success
      */
-    public function sendData($data, $type = 'text', $masked = true)
+    public function sendData($data, $type = Protocol::TYPE_TEXT, $masked = true)
     {
-        $encoded = $this->protocol->encode($data, $type, $masked);
-        return $this->socket->send($encoded);
+        if (is_string($type) && isset(Protocol::$frameTypes[$type])) {
+            $type = Protocol::$frameTypes[$type];
+        }
+
+        $payload = $this->protocol->getPayload();
+
+        $payload->encode(
+            $data,
+            $type,
+            $masked
+        );
+
+        return $payload->sendToSocket($this->socket);
+    }
+
+    /**
+     * Receives data sent by the server
+     *
+     * @param callable $callback
+     * @return array<Payload> Payload received since the last call to receive()
+     */
+    public function receive()
+    {
+        if (!$this->isConnected()) {
+            return false;
+        }
+
+        $data = $this->socket->receive();
+
+        if (!$data) {
+            return $data;
+        }
+
+        $old = $this->received;
+        $this->payloadHandler->handle($data);
+        return array_diff($this->received, $old);
     }
 
     /**
