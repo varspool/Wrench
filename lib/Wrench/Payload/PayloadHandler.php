@@ -89,6 +89,16 @@ class PayloadHandler extends Configurable
     }
 
     /**
+     * Get the current payload
+     *
+     * @return Payload
+     */
+    public function getCurrent()
+    {
+        return $this->getPayloadHandler->getCurrent();
+    }
+
+    /**
      * Emits a complete payload to the callback
      *
      * @param Payload $payload
