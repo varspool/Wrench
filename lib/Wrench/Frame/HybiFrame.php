@@ -3,8 +3,8 @@
 namespace Wrench\Frame;
 
 use Wrench\Protocol\Protocol;
-
 use Wrench\Exception\FrameException;
+use \InvalidArgumentException;
 
 class HybiFrame extends Frame
 {
