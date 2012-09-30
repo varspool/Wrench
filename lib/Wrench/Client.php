@@ -101,14 +101,6 @@ class Client
     }
 
     /**
-     * Destructor
-     */
-    public function __destruct()
-    {
-        $this->socket->disconnect();
-    }
-
-    /**
      * Adds a request header to be included in the initial handshake
      *
      * For example, to include a Cookie header
