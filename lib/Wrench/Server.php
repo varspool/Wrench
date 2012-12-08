@@ -198,6 +198,15 @@ class Server extends Configurable
              * this behaviour with the timeout options.
              */
             $this->connectionManager->selectAndProcess();
+
+            /*
+             * If the application wants to perform periodic operations or queries and push updates to clients based on the result then that logic can be implemented in the 'onUpdate' method.
+             */
+            foreach($this->applications as $application) {
+                if(method_exists($application, 'onUpdate')) {
+                    $application->onUpdate();
+                }
+            }
         }
     }
 
