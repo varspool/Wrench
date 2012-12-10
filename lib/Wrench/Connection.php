@@ -350,10 +350,6 @@ class Connection extends Configurable
      */
     public function send($data, $type = Protocol::TYPE_TEXT)
     {
-        if (!$data) {
-            return false;
-        }
-
         if (!$this->handshaked) {
             throw new HandshakeException('Connection is not handshaked');
         }
