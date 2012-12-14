@@ -1,34 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<link rel="stylesheet" href="css/client.css">
-	
-    <script src="js/jquery.min.js"></script>
-	<script src="js/json2.js"></script>
-	<script src="lib/coffeescript/jsmaker.php?f=client.coffee"></script>
-    
-	<meta charset=utf-8 />
+    <link rel="stylesheet" href="css/client.css">
 
-	<title>Shiny WSS Demo Application</title>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/json2.js"></script>
+    <script src="lib/coffeescript/jsmaker.php?f=client.coffee"></script>
+
+    <meta charset=utf-8/>
+
+    <title>Shiny WSS Demo Application</title>
 </head>
 <body>
-    <div id="container">
-        <h1>Shiny WSS Demo Application</h1>
-		<span id="status" class="offline">offline</span>
-		
-		<h2>Send Text Frame</h2>
-		<input id="action" placeholder="action" type="text" />
-        <input id="data" placeholder="data" type="text" />
-        <button id="send">Send Text</button>
-		
-		<h2>Send Binary Frame</h2>
-		<form name="binaryFrame" action="#">
-			<input type="file" name="file" id="file">
-			<button id="sendfile">Send Binary</button>
-		</form>
-		
-		<h2>Server-Response</h2>
-        <div id="log"></div>
-    </div>
+<div id="container">
+    <h1>Shiny WSS Demo Application</h1>
+    <span id="status" class="offline">offline</span>
+
+    <h2>Send Text Frame</h2>
+    <input id="action" placeholder="action" type="text"/>
+    <input id="data" placeholder="data" type="text"/>
+    <button id="send">Send Text</button>
+
+    <h2>Send Binary Frame</h2>
+
+    <form name="binaryFrame" action="#">
+        <input type="file" name="file" id="file">
+        <button id="sendfile">Send Binary</button>
+    </form>
+
+    <h2>Server-Response</h2>
+
+    <div id="log"></div>
+</div>
 </body>
 </html>​
