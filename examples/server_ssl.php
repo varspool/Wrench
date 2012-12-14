@@ -14,26 +14,26 @@ $classLoader = new SplClassLoader('Wrench', __DIR__ . '/../lib');
 $classLoader->register();
 
 // Generate PEM file
-$pemFile = dirname(__FILE__).'/generated.pem';
-$pemPassphrase = null;
-$countryName = "DE";
-$stateOrProvinceName = "none";
-$localityName = "none";
-$organizationName = "none";
+$pemFile                = dirname(__FILE__) . '/generated.pem';
+$pemPassphrase          = null;
+$countryName            = "DE";
+$stateOrProvinceName    = "none";
+$localityName           = "none";
+$organizationName       = "none";
 $organizationalUnitName = "none";
-$commonName =  "foo.lh";
-$emailAddress = "baz@foo.lh";
+$commonName             = "foo.lh";
+$emailAddress           = "baz@foo.lh";
 
 \Wrench\Socket::generatePEMFile(
-	$pemFile, 
-	$pemPassphrase, 
-	$countryName, 
-	$stateOrProvinceName, 
-	$localityName, 
-	$organizationName, 
-	$organizationalUnitName,
-	$commonName,
-	$emailAddress
+    $pemFile,
+    $pemPassphrase,
+    $countryName,
+    $stateOrProvinceName,
+    $localityName,
+    $organizationName,
+    $organizationalUnitName,
+    $commonName,
+    $emailAddress
 );
 
 // User can use tls in place of ssl
