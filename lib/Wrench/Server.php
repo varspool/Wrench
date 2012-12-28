@@ -1,4 +1,5 @@
 <?php
+
 namespace Wrench;
 
 use Wrench\Util\Configurable;
