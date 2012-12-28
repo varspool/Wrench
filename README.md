@@ -3,7 +3,7 @@
 ## Simple WebSocket Client/Server for PHP
 ### Formerly known as php-websocket
 
-* Version: **2.0.0-beta**
+* Version: **2.0.0**
 * Build Status: [![Build Status](https://secure.travis-ci.org/varspool/Wrench.png?branch=master)](http://travis-ci.org/varspool/Wrench)
 * Documentation: [wrench.readthedocs.org](http://wrench.readthedocs.org/en/latest/index.html)
 
