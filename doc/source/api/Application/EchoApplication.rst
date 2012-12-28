@@ -10,5 +10,5 @@ Wrench\\Application\\EchoApplication
 
     .. php:method:: onData($data, $client)
 
-        :param unknown $data:
-        :param unknown $client:
+        :param $data:
+        :param $client:

@@ -8,23 +8,26 @@ Wrench\\Exception\\BadRequestException
 
     .. php:attr:: message
 
-    .. php:attr:: string
+        protected
 
     .. php:attr:: code
 
+        protected
+
     .. php:attr:: file
+
+        protected
 
     .. php:attr:: line
 
-    .. php:attr:: trace
+        protected
 
-    .. php:attr:: previous
+    .. php:method:: __construct($message = null, $code = null, $previous = null)
 
-    .. php:method:: __construct($message, $code, Exception $previous)
-
-        :param unknown $message:
-        :param unknown $code:
-        :param Exception $previous:
+        :param $message:
+        :param $code:
+        :type $previous: Exception
+        :param $previous:
 
     .. php:method:: __clone()
 

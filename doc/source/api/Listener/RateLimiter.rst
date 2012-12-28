@@ -8,92 +8,119 @@ Wrench\\Listener\\RateLimiter
 
     .. php:attr:: server
 
+        protected Server
+
         The server being limited
 
     .. php:attr:: ips
+
+        protected array<int>
 
         Connection counts per IP address
 
     .. php:attr:: requests
 
+        protected array<array<int>>
+
         Request tokens per IP address
 
     .. php:attr:: options
 
+        protected array
+
     .. php:attr:: protocol
 
-    .. php:method:: __construct(array $options = Array)
+        protected Protocol
+
+    .. php:method:: __construct($options = array())
 
         Constructor
 
-        :param array $options:
+        :type $options: array
+        :param $options:
 
-    .. php:method:: configure(array $options)
+    .. php:method:: configure($options)
 
-        :param array $options:
+        :type $options: array
+        :param $options:
 
     .. php:method:: listen(Server $server)
 
-        :param Server $server:
+        :type $server: Server
+        :param $server:
 
-    .. php:method:: onSocketConnect(resource $socket, Connection $connection)
-
-        Event listener
-
-        :param resource $socket:
-        :param Connection $connection:
-
-    .. php:method:: onSocketDisconnect(resource $socket, Connection $connection)
+    .. php:method:: onSocketConnect($socket, $connection)
 
         Event listener
 
-        :param resource $socket:
-        :param Connection $connection:
+        :type $socket: resource
+        :param $socket:
+        :type $connection: Connection
+        :param $connection:
 
-    .. php:method:: onClientData(resource $socket, Connection $connection)
+    .. php:method:: onSocketDisconnect($socket, $connection)
 
         Event listener
 
-        :param resource $socket:
-        :param Connection $connection:
+        :type $socket: resource
+        :param $socket:
+        :type $connection: Connection
+        :param $connection:
 
-    .. php:method:: checkConnections(Connection $connection)
+    .. php:method:: onClientData($socket, $connection)
+
+        Event listener
+
+        :type $socket: resource
+        :param $socket:
+        :type $connection: Connection
+        :param $connection:
+
+    .. php:method:: checkConnections($connection)
 
         Idempotent
 
-        :param Connection $connection:
+        :type $connection: Connection
+        :param $connection:
 
-    .. php:method:: checkConnectionsPerIp(Connection $connection)
+    .. php:method:: checkConnectionsPerIp($connection)
 
         NOT idempotent, call once per connection
 
-        :param Connection $connection:
+        :type $connection: Connection
+        :param $connection:
 
-    .. php:method:: releaseConnection(Connection $connection)
+    .. php:method:: releaseConnection($connection)
 
         NOT idempotent, call once per disconnection
 
-        :param Connection $connection:
+        :type $connection: Connection
+        :param $connection:
 
-    .. php:method:: checkRequestsPerMinute(Connection $connection)
+    .. php:method:: checkRequestsPerMinute($connection)
 
         NOT idempotent, call once per data
 
-        :param Connection $connection:
+        :type $connection: Connection
+        :param $connection:
 
-    .. php:method:: limit(Connection $connection, string $limit)
+    .. php:method:: limit($connection, $limit)
 
         Limits the given connection
 
-        :param Connection $connection:
-        :param string $limit: Reason
+        :type $connection: Connection
+        :param $connection:
+        :type $limit: string
+        :param $limit: Reason
 
-    .. php:method:: log(string $message, string $priority = info)
+    .. php:method:: log($message, $priority = 'info')
 
         Logger
 
-        :param string $message:
-        :param string $priority:
+        :type $message: string
+        :param $message:
+        :type $priority: string
+        :param $priority:
 
     .. php:method:: configureProtocol()
 

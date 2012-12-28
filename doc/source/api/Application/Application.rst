@@ -8,9 +8,11 @@ Wrench\\Application\\Application
 
     Wrench Server Application
 
-    .. php:method:: onData(Payload $payload, Connection $connection)
+    .. php:method:: onData($payload, $connection)
 
         Handle data received from a client
 
-        :param Payload $payload: A payload object, that supports __toString()
-        :param Connection $connection:
+        :type $payload: Payload
+        :param $payload: A payload object, that supports __toString()
+        :type $connection: Connection
+        :param $connection:

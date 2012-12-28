@@ -10,19 +10,24 @@ Wrench\\Util\\Configurable
 
     .. php:attr:: options
 
+        protected array
+
     .. php:attr:: protocol
 
-    .. php:method:: __construct($options = Array)
+        protected Protocol
+
+    .. php:method:: __construct($options = array())
 
         Configurable constructor
 
-        :param unknown $options:
+        :param $options:
 
-    .. php:method:: configure(array $options)
+    .. php:method:: configure($options)
 
         Configures the options
 
-        :param array $options:
+        :type $options: array
+        :param $options:
 
     .. php:method:: configureProtocol()
 

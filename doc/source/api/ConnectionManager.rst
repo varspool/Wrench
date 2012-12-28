@@ -8,40 +8,55 @@ Wrench\\ConnectionManager
 
     .. php:attr:: server
 
+        protected Server
+
     .. php:attr:: socket
+
+        protected Socket
 
         Master socket
 
     .. php:attr:: connections
 
+        protected array<int
+
         An array of client connections
 
     .. php:attr:: resources
+
+        protected array<int
 
         An array of raw socket resources, corresponding to connections, roughly
 
     .. php:attr:: options
 
+        protected array
+
     .. php:attr:: protocol
 
-    .. php:method:: __construct(Server $server, array $options = Array)
+        protected Protocol
+
+    .. php:method:: __construct(Server $server, $options = array())
 
         Constructor
 
-        :param Server $server:
-        :param array $options:
+        :type $server: Server
+        :param $server:
+        :type $options: array
+        :param $options:
 
     .. php:method:: count()
 
     .. php:method:: configure($options)
 
-        :param unknown $options:
+        :param $options:
 
-    .. php:method:: getApplicationForPath(string $path)
+    .. php:method:: getApplicationForPath($path)
 
         Gets the application associated with the given path
 
-        :param string $path:
+        :type $path: string
+        :param $path:
 
     .. php:method:: configureMasterSocket()
 
@@ -59,11 +74,12 @@ Wrench\\ConnectionManager
 
         :returns: array<int => resource)
 
-    .. php:method:: getConnectionForClientSocket(resource $socket)
+    .. php:method:: getConnectionForClientSocket($socket)
 
         Returns the Connection associated with the specified socket resource
 
-        :param resource $socket:
+        :type $socket: resource
+        :param $socket:
         :returns: Connection
 
     .. php:method:: selectAndProcess()
@@ -76,7 +92,7 @@ Wrench\\ConnectionManager
 
         :returns: void
 
-    .. php:method:: createConnection(resource $resource)
+    .. php:method:: createConnection($resource)
 
         Creates a connection from a socket resource
 
@@ -85,16 +101,18 @@ Wrench\\ConnectionManager
         instance and its associated socket resource are then stored in the
         manager.
 
-        :param resource $resource: A socket resource
+        :type $resource: resource
+        :param $resource: A socket resource
         :returns: Connection
 
-    .. php:method:: processClientSocket(resource $socket)
+    .. php:method:: processClientSocket($socket)
 
         Process events on a client socket
 
-        :param resource $socket:
+        :type $socket: resource
+        :param $socket:
 
-    .. php:method:: resourceId(resource $resource)
+    .. php:method:: resourceId($resource)
 
         This server makes an explicit assumption: PHP resource types may be cast
         to a integer. Furthermore, we assume this is bijective. Both seem to be
@@ -105,7 +123,8 @@ Wrench\\ConnectionManager
 
         This is needed on the connection manager as well as on resources
 
-        :param resource $resource:
+        :type $resource: resource
+        :param $resource:
 
     .. php:method:: getUri()
 
@@ -113,12 +132,14 @@ Wrench\\ConnectionManager
 
         :returns: string
 
-    .. php:method:: log(string $message, string $priority = info)
+    .. php:method:: log($message, $priority = 'info')
 
         Logs a message
 
-        :param string $message:
-        :param string $priority:
+        :type $message: string
+        :param $message:
+        :type $priority: string
+        :param $priority:
 
     .. php:method:: getServer()
 
@@ -128,7 +149,8 @@ Wrench\\ConnectionManager
 
         Removes a connection
 
-        :param Connection $connection:
+        :type $connection: Connection
+        :param $connection:
 
     .. php:method:: configureProtocol()
 

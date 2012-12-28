@@ -15,3 +15,4 @@ Wrench is a WebSockets library for PHP 5.3+
    performance
    api/index
    authors
+

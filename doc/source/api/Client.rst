@@ -14,62 +14,84 @@ Wrench\\Client
 
     .. php:attr:: uri
 
+        protected
+
     .. php:attr:: origin
+
+        protected
 
     .. php:attr:: socket
 
+        protected
+
     .. php:attr:: headers
+
+        protected array
 
         Request headers
 
     .. php:attr:: protocol
 
+        protected Protocol
+
         Protocol instance
 
     .. php:attr:: options
+
+        protected array
 
         Options
 
     .. php:attr:: connected
 
+        protected boolean
+
         Whether the client is connected
 
-    .. php:method:: __construct(string $uri, string $origin, $options = Array)
+    .. php:method:: __construct($uri, $origin, $options = array())
 
         Constructor
 
-        :param string $uri:
-        :param string $origin:  The origin to include in the handshake (required in later versions of the protocol)
-        :param unknown $options:
+        :type $uri: string
+        :param $uri:
+        :type $origin: string
+        :param $origin: The origin to include in the handshake (required in later versions of the protocol)
+        :param $options:
 
-    .. php:method:: configure(array $options)
+    .. php:method:: configure($options)
 
         Configure options
 
-        :param array $options:
+        :type $options: array
+        :param $options:
         :returns: void
 
     .. php:method:: __destruct()
 
         Destructor
 
-    .. php:method:: addRequestHeader(string $name, string $value)
+    .. php:method:: addRequestHeader($name, $value)
 
         Adds a request header to be included in the initial handshake
 
         For example, to include a Cookie header
 
-        :param string $name:
-        :param string $value:
+        :type $name: string
+        :param $name:
+        :type $value: string
+        :param $value:
         :returns: void
 
-    .. php:method:: sendData(string $data, string $type = text, boolean $masked = )
+    .. php:method:: sendData($data, $type = 'text', $masked = true)
 
         Sends data to the socket
 
-        :param string $data:
-        :param string $type: Payload type
-        :param boolean $masked:
+        :type $data: string
+        :param $data:
+        :type $type: string
+        :param $type: Payload type
+        :type $masked: boolean
+        :param $masked:
         :returns: int bytes written
 
     .. php:method:: connect()

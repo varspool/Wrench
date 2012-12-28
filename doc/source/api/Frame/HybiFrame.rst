@@ -8,27 +8,41 @@ Wrench\\Frame\\HybiFrame
 
     .. php:attr:: masked
 
+        protected boolean
+
         Whether the payload is masked
 
     .. php:attr:: mask
+
+        protected string
 
         Masking key
 
     .. php:attr:: offset_payload
 
+        protected int
+
         Byte offsets
 
     .. php:attr:: offset_mask
 
+        protected
+
     .. php:attr:: length
+
+        protected int
 
         The frame data length
 
     .. php:attr:: type
 
+        protected int
+
         The type of this payload
 
     .. php:attr:: buffer
+
+        protected string
 
         The buffer
 
@@ -37,34 +51,38 @@ Wrench\\Frame\\HybiFrame
 
     .. php:attr:: payload
 
+        protected string
+
         The enclosed frame payload
 
         May not be a complete payload, because this frame might indicate a
         continuation frame. See isFinal() versus isComplete()
 
-    .. php:method:: encode($payload, $type = , $masked = )
+    .. php:method:: encode($payload, $type = Protocol::TYPE_TEXT, $masked = false)
 
-        :param unknown $payload:
-        :param unknown $type:
-        :param unknown $masked:
+        :param $payload:
+        :param $type:
+        :param $masked:
 
-    .. php:method:: mask(string $payload)
+    .. php:method:: mask($payload)
 
         Masks/Unmasks the frame
 
-        :param string $payload:
+        :type $payload: string
+        :param $payload:
         :returns: string
 
-    .. php:method:: unmask(string $payload)
+    .. php:method:: unmask($payload)
 
         Masks a payload
 
-        :param string $payload:
+        :type $payload: string
+        :param $payload:
         :returns: string
 
     .. php:method:: receiveData($data)
 
-        :param unknown $data:
+        :param $data:
 
     .. php:method:: getMask()
 

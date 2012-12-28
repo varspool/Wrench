@@ -12,9 +12,13 @@ Wrench\\Connection
 
     .. php:attr:: manager
 
+        protected Wrench\ConnectionManager
+
         The connection manager
 
     .. php:attr:: socket
+
+        protected Socket
 
         Socket object
 
@@ -22,39 +26,58 @@ Wrench\\Connection
 
     .. php:attr:: handshaked
 
+        protected boolean
+
         Whether the connection has successfully handshaken
 
     .. php:attr:: application
+
+        protected Application
 
         The application this connection belongs to
 
     .. php:attr:: ip
 
+        protected string
+
         The IP address of the client
 
     .. php:attr:: port
+
+        protected int
 
         The port of the client
 
     .. php:attr:: id
 
+        protected string|null
+
         Connection ID
 
     .. php:attr:: payload
+
+        protected
 
         The current payload
 
     .. php:attr:: options
 
+        protected array
+
     .. php:attr:: protocol
 
-    .. php:method:: __construct(ConnectionManager $manager, ServerClientSocket $socket, array $options = Array)
+        protected Protocol
+
+    .. php:method:: __construct(ConnectionManager $manager, ServerClientSocket $socket, $options = array())
 
         Constructor
 
-        :param ConnectionManager $manager:
-        :param ServerClientSocket $socket:
-        :param array $options:
+        :type $manager: ConnectionManager
+        :param $manager:
+        :type $socket: ServerClientSocket
+        :param $socket:
+        :type $options: array
+        :param $options:
 
     .. php:method:: getConnectionManager()
 
@@ -64,7 +87,7 @@ Wrench\\Connection
 
     .. php:method:: configure($options)
 
-        :param unknown $options:
+        :param $options:
 
     .. php:method:: configureClientInformation()
 
@@ -77,21 +100,31 @@ Wrench\\Connection
         kept secret for this to work: otherwise it's trivial to search the space
         of possible IP addresses/ports (well, if not trivial, at least very fast).
 
-    .. php:method:: onData(string $data)
+    .. php:method:: onData($data)
 
         Data receiver
 
         Called by the connection manager when the connection has received data
 
-        :param string $data:
+        :type $data: string
+        :param $data:
 
-    .. php:method:: handshake(string $data)
+    .. php:method:: handshake($data)
 
         Performs a websocket handshake
 
-        :param string $data:
+        :type $data: string
+        :param $data:
 
-    .. php:method:: handle(string $data)
+    .. php:method:: export($data)
+
+        Returns a string export of the given binary data
+
+        :type $data: string
+        :param $data:
+        :returns: string
+
+    .. php:method:: handle($data)
 
         Handle data received from the client
 
@@ -99,39 +132,44 @@ Wrench\\Connection
         more protocols. It may not even contain a single complete frame. This
         method manages slotting the data into separate payload objects.
 
-        :param string $data:
+        :type $data: string
+        :param $data:
 
     .. php:method:: handlePayload(Payload $payload)
 
         Handle a complete payload received from the client
 
-        :param Payload $payload:
+        :type $payload: Payload
+        :param $payload:
 
-    .. php:method:: send($data, string $type = )
+    .. php:method:: send($data, $type = Protocol::TYPE_TEXT)
 
         Sends the payload to the connection
 
-        :param unknown $data:
-        :param string $type:
+        :param $data:
+        :type $type: string
+        :param $type:
         :returns: boolean
 
     .. php:method:: process()
 
         Processes data on the socket
 
-    .. php:method:: close($code = )
+    .. php:method:: close($code = Protocol::CLOSE_NORMAL)
 
         Closes the connection according to the WebSocket protocol
 
-        :param unknown $code:
+        :param $code:
         :returns: boolean
 
-    .. php:method:: log(string $message, string $priority = info)
+    .. php:method:: log($message, $priority = 'info')
 
         Logs a message
 
-        :param string $message:
-        :param string $priority:
+        :type $message: string
+        :param $message:
+        :type $priority: string
+        :param $priority:
 
     .. php:method:: getIp()
 

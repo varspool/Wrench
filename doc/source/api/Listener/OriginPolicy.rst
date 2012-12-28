@@ -8,29 +8,38 @@ Wrench\\Listener\\OriginPolicy
 
     .. php:attr:: allowed
 
+        protected
+
     .. php:method:: __construct($allowed)
 
-        :param unknown $allowed:
+        :param $allowed:
 
-    .. php:method:: onHandshakeRequest(Connection $connection, string $path, string $origin, string $key, array $extensions)
+    .. php:method:: onHandshakeRequest(Connection $connection, $path, $origin, $key, $extensions)
 
         Handshake request listener
 
         Closes the connection on handshake from an origin that isn't allowed
 
-        :param Connection $connection:
-        :param string $path:
-        :param string $origin:
-        :param string $key:
-        :param array $extensions:
+        :type $connection: Connection
+        :param $connection:
+        :type $path: string
+        :param $path:
+        :type $origin: string
+        :param $origin:
+        :type $key: string
+        :param $key:
+        :type $extensions: array
+        :param $extensions:
 
-    .. php:method:: isAllowed(string $origin)
+    .. php:method:: isAllowed($origin)
 
         Whether the specified origin is allowed under this policy
 
-        :param string $origin:
+        :type $origin: string
+        :param $origin:
         :returns: boolean
 
     .. php:method:: listen(Server $server)
 
-        :param Server $server:
+        :type $server: Server
+        :param $server:

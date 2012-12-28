@@ -10,13 +10,19 @@ Wrench\\Frame\\Frame
 
     .. php:attr:: length
 
+        protected int
+
         The frame data length
 
     .. php:attr:: type
 
+        protected int
+
         The type of this payload
 
     .. php:attr:: buffer
+
+        protected string
 
         The buffer
 
@@ -24,6 +30,8 @@ Wrench\\Frame\\Frame
         data. See
 
     .. php:attr:: payload
+
+        protected string
 
         The enclosed frame payload
 
@@ -36,13 +44,16 @@ Wrench\\Frame\\Frame
 
         :returns: int
 
-    .. php:method:: encode(string $data, int $type = , boolean $masked = )
+    .. php:method:: encode($data, $type = Protocol::TYPE_TEXT, $masked = false)
 
         Resets the frame and encodes the given data into it
 
-        :param string $data:
-        :param int $type:
-        :param boolean $masked:
+        :type $data: string
+        :param $data:
+        :type $type: int
+        :param $type:
+        :type $masked: boolean
+        :param $masked:
         :returns: Frame
 
     .. php:method:: isFinal()
@@ -78,7 +89,7 @@ Wrench\\Frame\\Frame
 
         Receieves data into the frame
 
-        :param unknown $data:
+        :param $data:
 
     .. php:method:: getRemainingData()
 

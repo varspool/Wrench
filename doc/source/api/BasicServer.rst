@@ -12,17 +12,27 @@ Wrench\\BasicServer
 
     .. php:attr:: rateLimiter
 
+        protected
+
     .. php:attr:: originPolicy
 
+        protected
+
     .. php:attr:: uri
+
+        protected string
 
         The URI of the server
 
     .. php:attr:: options
 
+        protected array
+
         Options
 
     .. php:attr:: logger
+
+        protected Closure
 
         A logging callback
 
@@ -32,30 +42,40 @@ Wrench\\BasicServer
 
     .. php:attr:: listeners
 
+        protected array<string
+
         Event listeners
 
         Add listeners using the addListener() method.
 
     .. php:attr:: connectionManager
 
+        protected ConnectionManager
+
         Connection manager
 
     .. php:attr:: applications
+
+        protected array<string
 
         Applications
 
     .. php:attr:: protocol
 
-    .. php:method:: __construct(string $uri, array $options = Array)
+        protected Protocol
+
+    .. php:method:: __construct($uri, $options = array())
 
         Constructor
 
-        :param string $uri:
-        :param array $options:
+        :type $uri: string
+        :param $uri:
+        :type $options: array
+        :param $options:
 
     .. php:method:: configure($options)
 
-        :param unknown $options:
+        :param $options:
 
     .. php:method:: configureRateLimiter()
 
@@ -63,11 +83,12 @@ Wrench\\BasicServer
 
         Configures the origin policy
 
-    .. php:method:: addAllowedOrigin(array $origin)
+    .. php:method:: addAllowedOrigin($origin)
 
         Adds an allowed origin
 
-        :param array $origin:
+        :type $origin: array
+        :param $origin:
 
     .. php:method:: configureLogger()
 
@@ -91,11 +112,12 @@ Wrench\\BasicServer
 
         :returns: string
 
-    .. php:method:: setLogger(Closure $logger)
+    .. php:method:: setLogger($logger)
 
         Sets a logger
 
-        :param Closure $logger:
+        :type $logger: Closure
+        :param $logger:
         :returns: void
 
     .. php:method:: run()
@@ -104,7 +126,7 @@ Wrench\\BasicServer
 
         :returns: void This method does not return!
 
-    .. php:method:: log(string $message, $priority = info)
+    .. php:method:: log($message, $priority = 'info')
 
         Logs a message to the server log
 
@@ -112,19 +134,22 @@ Wrench\\BasicServer
         logging closure. This is useful, for instance, if you've daemonized and
         closed STDOUT.
 
-        :param string $message: Message to display.
-        :param unknown $priority:
+        :type $message: string
+        :param $message: Message to display.
+        :param $priority:
         :returns: void
 
-    .. php:method:: notify(string $event, array $arguments = Array)
+    .. php:method:: notify($event, $arguments = array())
 
         Notifies listeners of an event
 
-        :param string $event:
-        :param array $arguments: Event arguments
+        :type $event: string
+        :param $event:
+        :type $arguments: array
+        :param $arguments: Event arguments
         :returns: void
 
-    .. php:method:: addListener(string $event, Closure $callback)
+    .. php:method:: addListener($event, $callback)
 
         Adds a listener
 
@@ -132,23 +157,28 @@ Wrench\\BasicServer
         closure. Some arguments may be provided to your callback, such as the
         connection the caused the event.
 
-        :param string $event:
-        :param Closure $callback:
+        :type $event: string
+        :param $event:
+        :type $callback: Closure
+        :param $callback:
         :returns: void
 
-    .. php:method:: getApplication(string $key)
+    .. php:method:: getApplication($key)
 
         Returns a server application.
 
-        :param string $key: Name of application.
+        :type $key: string
+        :param $key: Name of application.
         :returns: Application The application object.
 
-    .. php:method:: registerApplication(string $key, object $application)
+    .. php:method:: registerApplication($key, $application)
 
         Adds a new application object to the application storage.
 
-        :param string $key: Name of application.
-        :param object $application: The application object
+        :type $key: string
+        :param $key: Name of application.
+        :type $application: object
+        :param $application: The application object
         :returns: void
 
     .. php:method:: configureProtocol()

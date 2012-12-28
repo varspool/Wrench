@@ -12,6 +12,8 @@ Wrench\\Payload\\Payload
 
     .. php:attr:: frames
 
+        protected array<Frame>
+
         A payload may consist of one or more frames
 
     .. php:method:: getCurrentFrame()
@@ -38,13 +40,16 @@ Wrench\\Payload\\Payload
 
         :returns: boolean
 
-    .. php:method:: encode(string $data, int $type = , boolean $masked = )
+    .. php:method:: encode($data, $type = Protocol::TYPE_TEXT, $masked = false)
 
         Encodes a payload
 
-        :param string $data:
-        :param int $type:
-        :param boolean $masked:
+        :type $data: string
+        :param $data:
+        :type $type: int
+        :param $type:
+        :type $masked: boolean
+        :param $masked:
         :returns: Payload
 
     .. php:method:: getRemainingData()
@@ -65,14 +70,16 @@ Wrench\\Payload\\Payload
 
     .. php:method:: sendToSocket(Socket $socket)
 
-        :param Socket $socket:
+        :type $socket: Socket
+        :param $socket:
         :returns: boolean
 
-    .. php:method:: receiveData(string $data)
+    .. php:method:: receiveData($data)
 
         Receive raw data into the payload
 
-        :param string $data:
+        :type $data: string
+        :param $data:
         :returns: void
 
     .. php:method:: getPayload()

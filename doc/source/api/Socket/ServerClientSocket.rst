@@ -18,11 +18,17 @@ Wrench\\Socket\\ServerClientSocket
 
     .. php:attr:: socket
 
+        protected resource
+
     .. php:attr:: context
+
+        protected
 
         Stream context
 
     .. php:attr:: connected
+
+        protected boolean
 
         Whether the socket is connected to a server
 
@@ -31,27 +37,37 @@ Wrench\\Socket\\ServerClientSocket
 
     .. php:attr:: firstRead
 
+        protected boolean
+
         Whether the current read is the first one to the socket
 
     .. php:attr:: name
+
+        protected string
 
         The socket name according to stream_socket_get_name
 
     .. php:attr:: options
 
+        protected array
+
     .. php:attr:: protocol
 
-    .. php:method:: __construct(resource $accepted_socket, array $options = Array)
+        protected Protocol
+
+    .. php:method:: __construct($accepted_socket, $options = array())
 
         Constructor
 
         A server client socket is accepted from a listening socket, so there's no
         need to call ->connect() or whatnot.
 
-        :param resource $accepted_socket:
-        :param array $options:
+        :type $accepted_socket: resource
+        :param $accepted_socket:
+        :type $options: array
+        :param $options:
 
-    .. php:method:: configure(array $options)
+    .. php:method:: configure($options)
 
         Configure options
 
@@ -59,14 +75,15 @@ Wrench\\Socket\\ServerClientSocket
         - timeout_connect      => int, seconds, default 2
         - timeout_socket       => int, seconds, default 5
 
-        :param array $options:
+        :type $options: array
+        :param $options:
         :returns: void
 
     .. php:method:: getName()
 
         Gets the name of the socket
 
-    .. php:method:: getNamePart(string $name, $part)
+    .. php:method:: getNamePart($name, $part)
 
         Gets part of the name of the socket
 
@@ -75,8 +92,9 @@ Wrench\\Socket\\ServerClientSocket
         here is either the last : delimited section (the port)
         or all the other sections (the whole initial part, the address).
 
-        :param string $name: (from $this->getName() usually)
-        :param unknown $part:
+        :type $name: string
+        :param $name: (from $this->getName() usually)
+        :param $part:
         :returns: string
 
     .. php:method:: getIp()
@@ -113,16 +131,18 @@ Wrench\\Socket\\ServerClientSocket
 
     .. php:method:: getResourceId()
 
-    .. php:method:: send(unknown_type $data)
+    .. php:method:: send($data)
 
-        :param unknown_type $data:
+        :type $data: unknown_type
+        :param $data:
         :returns: boolean|int The number of bytes sent or false on error
 
-    .. php:method:: receive(int $length = 1400)
+    .. php:method:: receive($length = self::DEFAULT_RECEIVE_LENGTH)
 
         Recieve data from the socket
 
-        :param int $length:
+        :type $length: int
+        :param $length:
         :returns: string
 
     .. php:method:: configureProtocol()

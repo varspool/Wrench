@@ -8,4 +8,5 @@ Wrench\\Listener\\Listener
 
     .. php:method:: listen(Server $server)
 
-        :param Server $server:
+        :type $server: Server
+        :param $server:

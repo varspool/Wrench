@@ -6,12 +6,17 @@ Wrench\\Listener\\HandshakeRequestListener
 
 .. php:class:: HandshakeRequestListener
 
-    .. php:method:: onHandshakeRequest(Connection $connection, string $path, string $origin, string $key, array $extensions)
+    .. php:method:: onHandshakeRequest(Connection $connection, $path, $origin, $key, $extensions)
 
         Handshake request listener
 
-        :param Connection $connection:
-        :param string $path:
-        :param string $origin:
-        :param string $key:
-        :param array $extensions:
+        :type $connection: Connection
+        :param $connection:
+        :type $path: string
+        :param $path:
+        :type $origin: string
+        :param $origin:
+        :type $key: string
+        :param $key:
+        :type $extensions: array
+        :param $extensions:

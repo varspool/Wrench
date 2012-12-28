@@ -71,17 +71,25 @@ Wrench\\Protocol\\HybiProtocol
 
     .. php:attr:: schemes
 
+        protected array<string>
+
         Valid schemes
 
     .. php:attr:: closeReasons
+
+        array<int
 
         Close status codes
 
     .. php:attr:: frameTypes
 
+        array<string
+
         Frame types
 
     .. php:attr:: httpResponses
+
+        array<int
 
         HTTP errors
 
@@ -97,7 +105,7 @@ Wrench\\Protocol\\HybiProtocol
         version string, as to whether they would like to accept requests from
         user agents that specify that version.
 
-        :param unknown $version:
+        :param $version:
         :returns: boolean
 
     .. php:method:: generateKey()
@@ -109,7 +117,7 @@ Wrench\\Protocol\\HybiProtocol
 
         :returns: string
 
-    .. php:method:: getRequestHandshake(string $uri, string $key, string $origin, $headers = Array)
+    .. php:method:: getRequestHandshake($uri, $key, $origin, $headers = array())
 
         Gets request handshake string
 
@@ -123,84 +131,102 @@ Wrench\\Protocol\\HybiProtocol
         cookies [RFC6265].  The format and parsing of headers is as defined in
         [RFC2616].
 
-        :param string $uri:    WebSocket URI, e.g. ws://example.org:8000/chat
-        :param string $key:    16 byte binary string key
-        :param string $origin: Origin of the request
-        :param unknown $headers:
+        :type $uri: string
+        :param $uri: WebSocket URI, e.g. ws://example.org:8000/chat
+        :type $key: string
+        :param $key: 16 byte binary string key
+        :type $origin: string
+        :param $origin: Origin of the request
+        :param $headers:
         :returns: string
 
-    .. php:method:: getResponseHandshake(string $key, array $headers = Array)
+    .. php:method:: getResponseHandshake($key, $headers = array())
 
         Gets a handshake response body
 
-        :param string $key:
-        :param array $headers:
+        :type $key: string
+        :param $key:
+        :type $headers: array
+        :param $headers:
 
-    .. php:method:: getResponseError(int|Exception $e, array $headers = Array)
+    .. php:method:: getResponseError($e, $headers = array())
 
         Gets a response to an error in the handshake
 
-        :param int|Exception $e: Exception or HTTP error
-        :param array $headers:
+        :type $e: int|Exception
+        :param $e: Exception or HTTP error
+        :type $headers: array
+        :param $headers:
 
-    .. php:method:: getHttpResponse(int $status, array $headers = Array)
+    .. php:method:: getHttpResponse($status, $headers = array())
 
         Gets an HTTP response
 
-        :param int $status:
-        :param array $headers:
+        :type $status: int
+        :param $status:
+        :type $headers: array
+        :param $headers:
 
-    .. php:method:: validateResponseHandshake(unknown_type $response, unknown_type $key)
+    .. php:method:: validateResponseHandshake($response, $key)
 
-        :param unknown_type $response:
-        :param unknown_type $key:
+        :type $response: unknown_type
+        :param $response:
+        :type $key: unknown_type
+        :param $key:
         :returns: boolean
 
-    .. php:method:: getEncodedHash(string $key)
+    .. php:method:: getEncodedHash($key)
 
         Gets an encoded hash for a key
 
-        :param string $key:
+        :type $key: string
+        :param $key:
         :returns: string
 
-    .. php:method:: validateRequestHandshake(string $request)
+    .. php:method:: validateRequestHandshake($request)
 
         Validates a request handshake
 
-        :param string $request:
+        :type $request: string
+        :param $request:
 
-    .. php:method:: getCloseFrame(Exception|int $e)
+    .. php:method:: getCloseFrame($e)
 
         Gets a suitable WebSocket close frame
 
-        :param Exception|int $e:
+        :type $e: Exception|int
+        :param $e:
 
-    .. php:method:: validateUri(string $uri)
+    .. php:method:: validateUri($uri)
 
         Validates a WebSocket URI
 
-        :param string $uri:
+        :type $uri: string
+        :param $uri:
         :returns: array(string $scheme, string $host, int $port, string $path)
 
-    .. php:method:: validateSocketUri(string $uri)
+    .. php:method:: validateSocketUri($uri)
 
         Validates a socket URI
 
-        :param string $uri:
+        :type $uri: string
+        :param $uri:
         :returns: array(string $scheme, string $host, string $port)
 
-    .. php:method:: validateOriginUri(string $origin)
+    .. php:method:: validateOriginUri($origin)
 
         Validates an origin URI
 
-        :param string $origin:
+        :type $origin: string
+        :param $origin:
         :returns: string
 
-    .. php:method:: validateRequestLine(string $line)
+    .. php:method:: validateRequestLine($line)
 
         Validates a request line
 
-        :param string $line:
+        :type $line: string
+        :param $line:
 
     .. php:method:: getAcceptValue($encoded_key)
 
@@ -209,44 +235,51 @@ Wrench\\Protocol\\HybiProtocol
         Note that the protocol calls for the base64 encoded value to be hashed,
         not the original 16 byte random key.
 
-        :param unknown $encoded_key:
+        :param $encoded_key:
 
-    .. php:method:: getHeaders(string $response, $request_line)
+    .. php:method:: getHeaders($response, $request_line = null)
 
         Gets the headers from a full response
 
-        :param string $response:
-        :param unknown $request_line:
+        :type $response: string
+        :param $response:
+        :param $request_line:
         :returns: array()
 
-    .. php:method:: getRequestHeaders(string $response)
+    .. php:method:: getRequestHeaders($response)
 
         Gets request headers
 
-        :param string $response:
+        :type $response: string
+        :param $response:
         :returns: array<string, array<string>> The request line, and an array of headers
 
-    .. php:method:: validateScheme(string $scheme)
+    .. php:method:: validateScheme($scheme)
 
         Validates a scheme
 
-        :param string $scheme:
+        :type $scheme: string
+        :param $scheme:
         :returns: string Underlying scheme
 
-    .. php:method:: getDefaultRequestHeaders(string $host, string $key, string $origin)
+    .. php:method:: getDefaultRequestHeaders($host, $key, $origin)
 
         Gets the default request headers
 
-        :param string $host:
-        :param string $key:
-        :param string $origin:
+        :type $host: string
+        :param $host:
+        :type $key: string
+        :param $key:
+        :type $origin: string
+        :param $origin:
         :returns: multitype:unknown string NULL
 
-    .. php:method:: getSuccessResponseHeaders(string $key)
+    .. php:method:: getSuccessResponseHeaders($key)
 
         Gets the default response headers
 
-        :param string $key:
+        :type $key: string
+        :param $key:
 
     .. php:method:: getPort($scheme)
 
@@ -256,5 +289,5 @@ Wrench\\Protocol\\HybiProtocol
         connections and port 443 for WebSocket connections tunneled over Transport
         Layer Security
 
-        :param unknown $scheme:
+        :param $scheme:
         :returns: int
