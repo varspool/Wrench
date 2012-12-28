@@ -16,6 +16,25 @@ abstract class ProtocolTest extends Test
     }
 
     /**
+     * @dataProvider getValidHandshakeRequests
+     */
+    public function testValidatHandshakeRequestValid($request)
+    {
+        try {
+            list($path, $origin, $key, $extensions, $protocol) = $this->getInstance()->validateRequestHandshake($request);
+
+            $this->assertEquals('/chat', $path);
+            $this->assertEquals('http://example.com', $origin);
+            $this->assertEquals('dGhlIHNhbXBsZSBub25jZQ==', $key);
+            $this->assertTrue(is_array($extensions), 'Extensions returned as array');
+            $this->assertEquals(array('x-test', 'x-test2'), $extensions, 'Extensions match');
+            $this->assertEquals('chat, superchat', $protocol);
+        } catch (Exception $e) {
+            $this->fail($e);
+        }
+    }
+
+    /**
      * @dataProvider getValidHandshakeResponses
      */
     public function testValidateHandshakeResponseValid($response, $key)
@@ -109,6 +128,38 @@ abstract class ProtocolTest extends Test
             array(''),
             array('blah')
         );
+    }
+
+    public function getValidHandshakeRequests()
+    {
+        $cases = array();
+
+
+        $cases[] = array("GET /chat HTTP/1.1\r
+Host: server.example.com\r
+Upgrade: websocket\r
+Connection: Upgrade\r
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r
+Origin: http://example.com\r
+Sec-WebSocket-Extensions: x-test\r
+Sec-WebSocket-Extensions: x-test2\r
+Sec-WebSocket-Protocol: chat, superchat\r
+Sec-WebSocket-Version: 13\r
+\r\n");
+
+        $cases[] = array("GET /chat HTTP/1.1\r
+Host: server.example.com\r
+Upgrade: Websocket\r
+Connection: Upgrade\r
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r
+Origin: http://example.com\r
+Sec-WebSocket-Extensions: x-test\r
+Sec-WebSocket-Extensions: x-test2\r
+Sec-WebSocket-Protocol: chat, superchat\r
+Sec-WebSocket-Version: 13\r
+\r\n");
+
+        return $cases;
     }
 
     public function getValidHandshakeResponses()
