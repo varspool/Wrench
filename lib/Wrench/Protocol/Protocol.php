@@ -485,6 +485,9 @@ abstract class Protocol
             throw new BadRequestException('Invalid key');
         }
 
+        // Optional
+        $protocol = isset($headers[self::HEADER_PROTOCOL]) ? $headers[self::HEADER_PROTOCOL] : null;
+
         $extensions = array();
         if (isset($headers[self::HEADER_EXTENSIONS]) && $headers[self::HEADER_EXTENSIONS]) {
             $extensions = $headers[self::HEADER_EXTENSIONS];
@@ -493,7 +496,7 @@ abstract class Protocol
             }
         }
 
-        return array($path, $origin, $key, $extensions);
+        return array($path, $origin, $key, $extensions, $protocol);
     }
 
     /**
