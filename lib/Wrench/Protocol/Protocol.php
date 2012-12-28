@@ -667,10 +667,17 @@ abstract class Protocol
         foreach (explode("\r\n", $headers) as $header) {
             $parts = explode(': ', $header, 2);
             if (count($parts) == 2) {
-                 list($name, $value) = $parts;
-                 $return[$name] = $value;
+                list($name, $value) = $parts;
+                if (!isset($return[$name])) {
+                    $return[$name] = $value;
+                } else {
+                    if (is_array($return[$name])) {
+                        $return[$name][] = $value;
+                    } else {
+                        $return[$name] = array($return[$name], $value);
+                    }
+                }
             }
-
         }
 
         return $return;
