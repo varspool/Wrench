@@ -450,7 +450,7 @@ abstract class Protocol
         $origin = $headers[self::HEADER_ORIGIN];
 
         if (!isset($headers[self::HEADER_UPGRADE])
-                || $headers[self::HEADER_UPGRADE] != self::UPGRADE_VALUE
+                || strtolower($headers[self::HEADER_UPGRADE]) != self::UPGRADE_VALUE
         ) {
             throw new BadRequestException('Invalid upgrade header');
         }
