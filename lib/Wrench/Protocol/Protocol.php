@@ -456,7 +456,7 @@ abstract class Protocol
         }
 
         if (!isset($headers[self::HEADER_CONNECTION])
-                || strpos($headers[self::HEADER_CONNECTION], self::CONNECTION_VALUE) === false
+                || stripos($headers[self::HEADER_CONNECTION], self::CONNECTION_VALUE) === false
         ) {
             throw new BadRequestException('Invalid connection header');
         }
