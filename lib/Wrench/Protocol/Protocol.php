@@ -456,7 +456,7 @@ abstract class Protocol
         }
 
         if (!isset($headers[self::HEADER_CONNECTION])
-                || strpos($headers[self::HEADER_CONNECTION], self::CONNECTION_VALUE) === false
+                || stripos($headers[self::HEADER_CONNECTION], self::CONNECTION_VALUE) === false
         ) {
             throw new BadRequestException('Invalid connection header');
         }
@@ -693,7 +693,7 @@ abstract class Protocol
      */
     protected function getRequestHeaders($response)
     {
-        $eol = strpos($response, "\r\n");
+        $eol = stripos($response, "\r\n");
 
         if ($eol === false) {
             throw new InvalidArgumentException('Invalid request line');
