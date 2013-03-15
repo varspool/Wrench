@@ -693,7 +693,7 @@ abstract class Protocol
      */
     protected function getRequestHeaders($response)
     {
-        $eol = strpos($response, "\r\n");
+        $eol = stripos($response, "\r\n");
 
         if ($eol === false) {
             throw new InvalidArgumentException('Invalid request line');
