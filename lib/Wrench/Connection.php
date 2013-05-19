@@ -170,8 +170,8 @@ class Connection extends Configurable
         $algo = $this->options['connection_id_algo'];
 
         if (extension_loaded('gmp')) {
-            $hash = hash($algo, $message, true);
-            $hash = gmp_strval(gmp_init($hash, 16), 62);
+            $hash = hash($algo, $message);
+            $hash = gmp_strval(gmp_init('0x' . $hash, 16), 62);
         } else {
             // @codeCoverageIgnoreStart
             $hash = hash($algo, $message);
