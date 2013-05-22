@@ -491,8 +491,9 @@ class Connection extends Configurable
      *
      * @return array
      */
-    public function getHeaders() {
-    	return $this->headers;
+    public function getHeaders()
+    {
+        return $this->headers;
     }
 
     /**
@@ -500,8 +501,9 @@ class Connection extends Configurable
      *
      * @return array
      */
-    public function getQueryParams() {
-    	return $this->queryParams;
+    public function getQueryParams()
+    {
+        return $this->queryParams;
     }
 
     /**

@@ -448,14 +448,13 @@ abstract class Protocol
         $path = isset($url['path']) ? $url['path'] : null;
         $urlParams = array();
         if (isset($url['query'])) {
-        	parse_str($url['query'], $urlParams);
+            parse_str($url['query'], $urlParams);
         }
 
         if (empty($headers[self::HEADER_ORIGIN])) {
             throw new BadRequestException('No origin header');
-        }
-        else {
-        	unset($extraHeaders[self::HEADER_ORIGIN]);
+        } else {
+            unset($extraHeaders[self::HEADER_ORIGIN]);
         }
 
         $origin = $headers[self::HEADER_ORIGIN];
@@ -464,27 +463,24 @@ abstract class Protocol
                 || strtolower($headers[self::HEADER_UPGRADE]) != self::UPGRADE_VALUE
         ) {
             throw new BadRequestException('Invalid upgrade header');
-        }
-        else {
-        	unset($extraHeaders[self::HEADER_UPGRADE]);
+        } else {
+            unset($extraHeaders[self::HEADER_UPGRADE]);
         }
 
         if (!isset($headers[self::HEADER_CONNECTION])
                 || strpos($headers[self::HEADER_CONNECTION], self::CONNECTION_VALUE) === false
         ) {
             throw new BadRequestException('Invalid connection header');
-        }
-        else {
-        	unset($extraHeaders[self::HEADER_CONNECTION]);
+        } else {
+            unset($extraHeaders[self::HEADER_CONNECTION]);
         }
 
         if (!isset($headers[self::HEADER_HOST])) {
             // @todo Validate host == listening socket? Or would that break
             //        TCP proxies?
             throw new BadRequestException('No host header');
-        }
-        else {
-        	unset($extraHeaders[self::HEADER_HOST]);
+        } else {
+            unset($extraHeaders[self::HEADER_HOST]);
         }
 
         if (!isset($headers[self::HEADER_VERSION])) {
@@ -493,9 +489,8 @@ abstract class Protocol
 
         if (!$this->acceptsVersion($headers[self::HEADER_VERSION])) {
             throw new BadRequestException('Unsupported version: ' . $version);
-        }
-        else {
-        	unset($extraHeaders[self::HEADER_VERSION]);
+        } else {
+            unset($extraHeaders[self::HEADER_VERSION]);
         }
 
         if (!isset($headers[self::HEADER_KEY])) {
@@ -506,16 +501,15 @@ abstract class Protocol
 
         if (!$key) {
             throw new BadRequestException('Invalid key');
-        }
-        else {
-        	unset($extraHeaders[self::HEADER_KEY]);
+        } else {
+            unset($extraHeaders[self::HEADER_KEY]);
         }
 
         // Optional
         $protocol = null;
         if (isset($headers[self::HEADER_PROTOCOL])) {
-        	$protocol = $headers[self::HEADER_PROTOCOL];
-        	unset($extraHeaders[self::HEADER_PROTOCOL]);
+            $protocol = $headers[self::HEADER_PROTOCOL];
+            unset($extraHeaders[self::HEADER_PROTOCOL]);
         }
 
         $extensions = array();
