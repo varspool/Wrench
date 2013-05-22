@@ -72,6 +72,22 @@ class Connection extends Configurable
     protected $port;
 
     /**
+     * The array of headers included with the original request (like Cookie for example)
+     * The headers specific to the web sockets handshaking have been stripped out
+     *
+     * @var array
+     */
+    protected $headers = null;
+
+    /**
+     * The array of query parameters included in the original request
+     * The array is in the format 'key' => 'value'
+     *
+     * @var array
+     */
+    protected $queryParams = null;
+
+    /**
      * Connection ID
      *
      * @var string|null
@@ -207,8 +223,11 @@ class Connection extends Configurable
     public function handshake($data)
     {
         try {
-            list($path, $origin, $key, $extensions)
+            list($path, $origin, $key, $extensions, $protocol, $headers, $params)
                 = $this->protocol->validateRequestHandshake($data);
+
+            $this->headers = $headers;
+            $this->queryParams = $params;
 
             $this->application = $this->manager->getApplicationForPath($path);
             if (!$this->application) {
@@ -465,6 +484,24 @@ class Connection extends Configurable
     public function getPort()
     {
         return $this->port;
+    }
+
+    /**
+     * Gets the non-web-sockets headers included with the original request
+     *
+     * @return array
+     */
+    public function getHeaders() {
+    	return $this->headers;
+    }
+
+    /**
+     * Gets the query parameters included with the original request
+     *
+     * @return array
+     */
+    public function getQueryParams() {
+    	return $this->queryParams;
     }
 
     /**
