@@ -47,6 +47,20 @@ Wrench\\Connection
         protected int
 
         The port of the client
+        
+    .. php:attr:: headers
+
+        protected array
+
+        The array of headers included with the original request (like Cookie for example).
+        The headers specific to the web sockets handshaking have been stripped out.
+        
+    .. php:attr:: queryParams
+
+        protected array
+
+        The array of query parameters included in the original request.
+        The array is in the format 'key' => 'value'.
 
     .. php:attr:: id
 
@@ -182,6 +196,18 @@ Wrench\\Connection
         Gets the port of the connection
 
         :returns: int
+        
+    .. php:method:: getHeaders()
+
+        Gets the non-web-sockets headers included with the original request
+
+        :returns: array
+        
+    .. php:method:: getQueryParams()
+
+        Gets the query parameters included with the original request
+
+        :returns: array
 
     .. php:method:: getId()
 
