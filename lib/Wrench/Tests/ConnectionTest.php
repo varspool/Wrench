@@ -76,9 +76,18 @@ class ConnectionTest extends Test
             $path,
             $request
         );
+
         $connection->handshake($request);
+
+        $headers = $connection->getHeaders();
+        $this->assertEquals(array('X-Some-Header' => 'Some Value'), $headers, 'Extra headers returned');
+
+        $params = $connection->getQueryParams();
+        $this->assertEquals(array('someparam' => 'someval'), $params, 'Query string parameters returned');
+
         $connection->onData('somedata');
         $this->assertTrue($connection->send('someotherdata'));
+
         return $connection;
     }
 
@@ -354,11 +363,12 @@ class ConnectionTest extends Test
         return array(
             array(
                 '/chat',
-"GET /chat HTTP/1.1\r
+"GET /chat?someparam=someval HTTP/1.1\r
 Host: server.example.com\r
 Upgrade: websocket\r
 Connection: Upgrade\r
 Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r
+X-Some-Header: Some Value\r
 Origin: http://example.com\r
 Sec-WebSocket-Version: 13\r\n\r\n"
             )
