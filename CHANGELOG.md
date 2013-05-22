@@ -1,6 +1,9 @@
 <!-- vim: set tw=79 sw=4 ts=4 et ft=markdown : -->
 # Changelog
 
+* Allowed access to the headers and query params included in the original
+  web sockets upgrade HTTP request
+
 ## 2.0.0
 
 * Name change: php-websocket was renamed to Wrench, along with a top-level
