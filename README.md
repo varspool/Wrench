@@ -1,15 +1,14 @@
 <!-- vim: set tw=79 sw=4 ts=4 et ft=markdown : -->
 # Wrench
 ## Simple WebSocket Client/Server for PHP
-### Formerly known as php-websocket
 
-* Version: **2.0.0**
+* Version: **2.0.1**
 * Build Status: [![Build Status](https://secure.travis-ci.org/varspool/Wrench.png?branch=master)](http://travis-ci.org/varspool/Wrench)
 * Documentation: [wrench.readthedocs.org](http://wrench.readthedocs.org/en/latest/index.html)
 
 A simple websocket server and client package for PHP 5.3/5.4, using
 streams. Protocol support is based around [RFC 6455](http://tools.ietf.org/html/rfc6455),
-targeting the latest stable versions of Chrome and Firefox. 
+targeting the latest stable versions of Chrome and Firefox.
 (Suggest other clients [here](https://github.com/varspool/Wrench/wiki))
 
 ### Backward compatibility
@@ -24,17 +23,16 @@ fairly compatible with that of php-websocket 1.0.0.
 
 #### Protected API
 
-The protected API has changed, a lot. Many method have been broken up into
+The protected API has changed, a lot. Many methods have been broken up into
 simple protected methods. This makes the Server class much easier to extend. In
 fact, almost all of the classes involved in your typical daemon can now be
-replaced or extended, including the socket handling and protocol handling.
+replaced or extended, including the socket and protocol handling.
 
 #### What happened to the `client` dir?
 
 The client-side libraries are no longer supported: some libraries are included
 but are packaged only as examples. You're free to use whatever client-side
-libraries you'd like with the server. If you're still using them, see the 1.0
-branch.
+libraries you'd like with the server.
 
 ## Installation
 
@@ -78,3 +76,8 @@ license.
 - [Jitt.li](http://jitt.li), a Twitter API sample project.
 - For Symfony2, [VarspoolWebsocketBundle](https://github.com/varspool/WebsocketBundle)
   extends this library for use with the Service Container.
+
+## See Also
+
+- [Ratchet](https://github.com/cboden/Ratchet) an excellent Websocket layer for
+  React.
