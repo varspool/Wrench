@@ -263,7 +263,7 @@ class HybiFrame extends Frame
                 $start = self::BYTE_INITIAL_LENGTH + 1;
                 $end = self::BYTE_INITIAL_LENGTH + $this->getLengthSize();
 
-                if ($end > $this->getBufferLength()) {
+                if ($end >= $this->getBufferLength()) {
                     throw new FrameException('Cannot get extended length: need more data');
                 }
 
