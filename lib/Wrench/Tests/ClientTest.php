@@ -160,6 +160,16 @@ class ClientTest extends Test
             $this->assertInstanceOf('Wrench\\Payload\\Payload', $responses[0]);
             $this->assertInstanceOf('Wrench\\Payload\\Payload', $responses[1]);
 
+            $bytes = $instance->sendData('baz', Protocol::TYPE_TEXT);
+            $this->assertTrue($bytes >= 3, 'sent text frame');
+            sleep(1);
+
+            # test fix for issue #43
+            $responses = $instance->receive();
+            $this->assertTrue(is_array($responses));
+            $this->assertCount(1, $responses);
+            $this->assertInstanceOf('Wrench\\Payload\\Payload', $responses[2]);
+
             $instance->disconnect();
 
             $this->assertFalse($instance->isConnected());

@@ -209,7 +209,7 @@ class Client extends Configurable
 
         $old = $this->received;
         $this->payloadHandler->handle($data);
-        return array_diff($this->received, $old);
+        return array_diff_assoc($this->received, $old);
     }
 
     /**
