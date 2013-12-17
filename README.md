@@ -73,7 +73,6 @@ license.
 
 - See server.php in the examples directory and
   Wrench\Application\EchoApplication
-- [Jitt.li](http://jitt.li), a Twitter API sample project.
 - For Symfony2, [VarspoolWebsocketBundle](https://github.com/varspool/WebsocketBundle)
   extends this library for use with the Service Container.
 
