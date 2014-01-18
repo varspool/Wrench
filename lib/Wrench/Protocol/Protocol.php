@@ -5,6 +5,7 @@ namespace Wrench\Protocol;
 use Wrench\Payload\Payload;
 
 use Wrench\Exception\BadRequestException;
+use Wrench\Exception\HandshakeException;
 
 use \Exception;
 use \InvalidArgumentException;
