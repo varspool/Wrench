@@ -255,9 +255,14 @@ class Client extends Configurable
      */
     public function disconnect()
     {
-        if ($this->socket) {
-            $this->socket->disconnect();
-        }
-        $this->connected = false;
+    	// get right code for client's disconnecting
+    	$code = Protocol::CLOSE_NORMAL;
+    	$body = pack('n', 0x8880) . Protocol::$closeReasons[$code];
+    	if ($this->socket) {
+    		// send frame for correct disconnecting before close socket
+    		$this->socket->send($body);
+    		$this->socket->disconnect();
+    	}
+    	$this->connected = false;
     }
 }
