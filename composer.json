@@ -23,7 +23,8 @@
         }
     ],
     "require": {
-        "php": ">=5.3"
+        "php": ">=5.3",
+        "ext-sockets": "*"
     },
     "autoload": {
         "psr-0": {
