@@ -246,7 +246,18 @@ class Client extends Configurable
      */
     public function isConnected()
     {
-        return $this->connected;
+        if ($this->connected === false) {
+            return false;
+        }
+
+        // Check if the socket is still connected
+        if ($this->socket->isConnected() === false) {
+            $this->disconnect();
+
+            return false;
+        }
+
+        return true;
     }
 
     /**

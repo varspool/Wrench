@@ -48,7 +48,7 @@ class ClientSocket extends UriSocket
         $errno = null;
         $errstr = null;
 
-        $this->socket = stream_socket_client(
+        $this->socket = @stream_socket_client(
             $this->getUri(),
             $errno,
             $errstr,

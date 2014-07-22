@@ -281,19 +281,28 @@ abstract class Socket extends Configurable implements Resource
         $metadata['unread_bytes'] = 0;
 
         do {
+            // feof means socket has been closed
             if (feof($this->socket)) {
+                $this->disconnect();
+
                 return $buffer;
             }
 
             $result = fread($this->socket, $length);
 
+            // fread FALSE means socket has been closed
             if ($result === false) {
+                $this->disconnect();
+
                 return $buffer;
             }
 
             $buffer .= $result;
 
+            // feof means socket has been closed
             if (feof($this->socket)) {
+                $this->disconnect();
+
                 return $buffer;
             }
 
@@ -311,6 +320,7 @@ abstract class Socket extends Configurable implements Resource
 
             // Continue if more data to be read
             $metadata = stream_get_meta_data($this->socket);
+
             if ($metadata && isset($metadata['unread_bytes']) && $metadata['unread_bytes']) {
                 $continue = true;
                 $length = $metadata['unread_bytes'];
