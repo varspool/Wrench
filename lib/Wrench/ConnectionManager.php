@@ -249,6 +249,9 @@ class ConnectionManager extends Configurable implements Countable
         } catch (WrenchException $e) {
             $this->log('Error on client socket: ' . $e, 'warning');
             $connection->close($e);
+        } catch (\InvalidArgumentException $e) {
+            $this->log('Wrong input arguments: ' . $e, 'warning');
+            $connection->close($e);
         }
     }
 
