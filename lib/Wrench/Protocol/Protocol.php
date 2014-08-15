@@ -301,7 +301,7 @@ abstract class Protocol
         list($scheme, $host, $port, $path, $query) = self::validateUri($uri);
         
         if ($query) {
-        	$path =  $path.'?'.$query;
+            $path .= '?' . $query;
         }
 
         $handshake = array(
@@ -493,7 +493,7 @@ abstract class Protocol
         }
 
         if (!$this->acceptsVersion($headers[self::HEADER_VERSION])) {
-            throw new BadRequestException('Unsupported version: ' . $version);
+            throw new BadRequestException('Unsupported version: ' . $headers[self::HEADER_VERSION]);
         } else {
             unset($extraHeaders[self::HEADER_VERSION]);
         }
@@ -671,7 +671,8 @@ abstract class Protocol
      * not the original 16 byte random key.
      *
      * @see http://tools.ietf.org/html/rfc6455#section-4.2.2
-     * @param string $key
+     * @param string $encoded_key
+     * @return string
      */
     protected function getAcceptValue($encoded_key)
     {
@@ -767,8 +768,7 @@ abstract class Protocol
      * @param string $host
      * @param string $key
      * @param string $origin
-     * @param int $version
-     * @return multitype:unknown string NULL
+     * @return string[]
      */
     protected function getDefaultRequestHeaders($host, $key, $origin)
     {
@@ -786,6 +786,7 @@ abstract class Protocol
      * Gets the default response headers
      *
      * @param string $key
+     * @return string[]
      */
     protected function getSuccessResponseHeaders($key)
     {
