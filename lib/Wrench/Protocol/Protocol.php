@@ -297,8 +297,12 @@ abstract class Protocol
         if (!$uri || !$key || !$origin) {
             throw new InvalidArgumentException('You must supply a URI, key and origin');
         }
-
-        list($scheme, $host, $port, $path) = self::validateUri($uri);
+        
+        list($scheme, $host, $port, $path, $query) = self::validateUri($uri);
+        
+        if ($query) {
+        	$path =  $path.'?'.$query;
+        }
 
         $handshake = array(
             sprintf(self::REQUEST_LINE_FORMAT, $path)
@@ -580,8 +584,10 @@ abstract class Protocol
         if (!$path) {
             throw new InvalidArgumentException('Invalid path');
         }
+        
+        $query = parse_url($uri, PHP_URL_QUERY);
 
-        return array($scheme, $host, $port, $path);
+        return array($scheme, $host, $port, $path, $query);
     }
 
     /**
