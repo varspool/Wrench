@@ -2,5 +2,9 @@
 imports:
     - php
 
+filter:
+    excluded_paths:
+        - lib/Wrench/Tests
+
 tools:
     external_code_coverage: true
