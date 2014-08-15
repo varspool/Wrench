@@ -1,17 +1,17 @@
 language: php
 
-script: ./.travis
-
 php:
-  - 5.3
+  - 5.5
   - 5.4
+  - 5.3
 
-branches:
-  only:
-    - master
-    - devel
-    - 2.0
+install:
+  - composer install
 
-notifications:
-  email:
-    - dominic@varspool.com
+script: phpunit --coverage-clover=coverage.clover
+
+after_script:
+  - wget https://scrutinizer-ci.com/ocular.phar
+  - php ocular.phar code-coverage:upload --format=php-clover coverage.clover
+  - cat build/server.err.log
+  - cat build/server.log
