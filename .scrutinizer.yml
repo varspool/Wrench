@@ -1,0 +1,6 @@
+# vim: set sw=4 ts=4 et :
+imports:
+    - php
+
+tools:
+    external_code_coverage: true
