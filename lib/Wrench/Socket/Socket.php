@@ -18,7 +18,7 @@ use \InvalidArgumentException;
  *
  * Unlike in previous versions of this library, a Socket instance now
  * represents a single underlying socket resource. It's designed to be used
- * by aggregation, rather than inheritence.
+ * by aggregation, rather than inheritance.
  */
 abstract class Socket extends Configurable implements Resource
 {
@@ -99,6 +99,8 @@ abstract class Socket extends Configurable implements Resource
 
     /**
      * Gets the name of the socket
+     *
+     * @return string
      */
     protected function getName()
     {
@@ -140,13 +142,12 @@ abstract class Socket extends Configurable implements Resource
         } else {
             throw new InvalidArgumentException('Invalid name part');
         }
-
-        return null;
     }
 
     /**
      * Gets the IP address of the socket
      *
+     * @throws \Wrench\Exception\SocketException If the IP address cannot be obtained
      * @return string
      */
     public function getIp()
@@ -163,6 +164,7 @@ abstract class Socket extends Configurable implements Resource
     /**
      * Gets the port of the socket
      *
+     * @throws \Wrench\Exception\SocketException If the port cannot be obtained
      * @return int
      */
     public function getPort()

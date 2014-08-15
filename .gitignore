@@ -2,3 +2,5 @@
 phpunit
 build
 doc/build
+vendor
+composer.phar
