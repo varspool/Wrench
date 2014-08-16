@@ -2,6 +2,7 @@
 
 namespace Wrench;
 
+use InvalidArgumentException;
 use Wrench\Protocol\Protocol;
 use Wrench\Resource;
 use Wrench\Util\Configurable;
@@ -148,8 +149,6 @@ class ConnectionManager extends Configurable implements Countable
 
     /**
      * Select and process an array of resources
-     *
-     * @param array $resources
      */
     public function selectAndProcess()
     {
