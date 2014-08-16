@@ -1,5 +1,8 @@
 <?php
+
 namespace Wrench\Application;
+
+use Wrench\Connection;
 
 /**
  * Shiny WSS Status Application
@@ -14,17 +17,22 @@ class StatusApplication extends Application
     private $_serverInfo        = array();
     private $_serverClientCount = 0;
 
-
+    /**
+     * @param Connection $client
+     */
     public function onConnect($client)
     {
-        $id = $client->getClientId();
+        $id = $client->getId();
         $this->_clients[$id] = $client;
         $this->_sendServerinfo($client);
     }
 
+    /**
+     * @param Connection $client
+     */
     public function onDisconnect($client)
     {
-        $id = $client->getClientId();
+        $id = $client->getId();
         unset($this->_clients[$id]);
     }
 
