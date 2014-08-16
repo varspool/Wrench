@@ -4,3 +4,4 @@ build
 doc/build
 vendor
 composer.phar
+examples/generated.pem

@@ -82,7 +82,6 @@ abstract class Socket extends Configurable implements Resource
      * Configure options
      *
      * Options include
-     *   - timeout_connect      => int, seconds, default 2
      *   - timeout_socket       => int, seconds, default 5
      *
      * @param array $options

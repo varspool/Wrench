@@ -23,7 +23,7 @@ class ConnectionManager extends Configurable implements Countable
     /**
      * Master socket
      *
-     * @var Socket
+     * @var ServerSocket
      */
     protected $socket;
 
