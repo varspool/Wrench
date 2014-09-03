@@ -58,7 +58,7 @@ class ServerSocket extends UriSocket
             $this->getUri(),
             $errno,
             $errstr,
-            STREAM_SERVER_BIND|STREAM_SERVER_LISTEN.
+            STREAM_SERVER_BIND|STREAM_SERVER_LISTEN,
             $this->getStreamContext()
         );
 
