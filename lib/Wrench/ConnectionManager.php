@@ -241,6 +241,8 @@ class ConnectionManager extends Configurable implements Countable
         }
 
         try {
+            $this->server->notify(Server::EVENT_CLIENT_DATA, array($socket, $connection));
+
             $connection->process();
         } catch (CloseException $e) {
             $this->log('Client connection closed: ' . $e, 'notice');

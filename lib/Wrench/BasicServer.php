@@ -29,10 +29,15 @@ class BasicServer extends Server
     protected function configure(array $options)
     {
         $options = array_merge(array(
-            'check_origin'        => true,
-            'allowed_origins'     => array(),
-            'origin_policy_class' => 'Wrench\Listener\OriginPolicy',
-            'rate_limiter_class'  => 'Wrench\Listener\RateLimiter'
+            'check_origin'         => true,
+            'allowed_origins'      => array(),
+            'origin_policy_class'  => 'Wrench\Listener\OriginPolicy',
+            'rate_limiter_class'   => 'Wrench\Listener\RateLimiter',
+            'rate_limiter_options' => array(
+                'connections'         => 200, // Total
+                'connections_per_ip'  => 5,   // At once
+                'requests_per_minute' => 200  // Per connection
+            )
         ), $options);
 
         parent::configure($options);
@@ -41,7 +46,7 @@ class BasicServer extends Server
     protected function configureRateLimiter()
     {
         $class = $this->options['rate_limiter_class'];
-        $this->rateLimiter = new $class();
+        $this->rateLimiter = new $class($this->options['rate_limiter_options']);
         $this->rateLimiter->listen($this);
     }
 
