@@ -14,6 +14,7 @@ use Wrench\Protocol\Rfc6455Protocol;
 
 use \InvalidArgumentException;
 use \RuntimeException;
+use Wrench\Frame\HybiFrame;
 
 /**
  * Client class
@@ -255,7 +256,12 @@ class Client extends Configurable
      */
     public function disconnect()
     {
+        $frame = new HybiFrame();
+        $payload = $this->protocol->getPayload();
+        $frame->encode($payload, Protocol::TYPE_CLOSE, $masked = true );
+
         if ($this->socket) {
+            $this->socket->send($frame->getFrameBuffer());
             $this->socket->disconnect();
         }
         $this->connected = false;
