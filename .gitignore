@@ -3,5 +3,6 @@ phpunit
 build
 doc/build
 vendor
+bin
 composer.phar
 examples/generated.pem
