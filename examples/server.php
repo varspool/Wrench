@@ -10,10 +10,7 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-require(__DIR__ . '/../lib/SplClassLoader.php');
-
-$classLoader = new SplClassLoader('Wrench', __DIR__ . '/../lib');
-$classLoader->register();
+require __DIR__ . '/../vendor/autoload.php';
 
 $server = new \Wrench\Server('ws://localhost:8000/', array(
     'allowed_origins'            => array(
