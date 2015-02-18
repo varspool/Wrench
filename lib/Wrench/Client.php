@@ -253,17 +253,20 @@ class Client extends Configurable
     /**
      * @todo Bug: what if connect has been called twice. The first socket never
      *        gets closed.
+     *
+     * @param int $reason Reason for disconnecting. See Protocol::CLOSE_*
+     * @throws Exception\FrameException
+     * @throws Exception\SocketException
      */
-    public function disconnect()
+    public function disconnect($reason = Protocol::CLOSE_NORMAL)
     {
-        $frame = new HybiFrame();
-        $payload = $this->protocol->getPayload();
-        $frame->encode($payload, Protocol::TYPE_CLOSE, $masked = true );
+        $payload = $this->protocol->getClosePayload($reason);
 
         if ($this->socket) {
-            $this->socket->send($frame->getFrameBuffer());
+            $this->socket->send($payload->getPayload());
             $this->socket->disconnect();
         }
+
         $this->connected = false;
     }
 }
