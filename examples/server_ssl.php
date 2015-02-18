@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 require __DIR__ . '/../vendor/autoload.php';
 
 // Generate PEM file
-$pemFile                = tempnam('/tmp', 'wrench');
+$pemFile                = __DIR__ . '/generated.pem';
 $pemPassphrase          = null;
 $countryName            = "DE";
 $stateOrProvinceName    = "none";
