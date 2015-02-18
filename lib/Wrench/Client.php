@@ -14,6 +14,7 @@ use Wrench\Protocol\Rfc6455Protocol;
 
 use \InvalidArgumentException;
 use \RuntimeException;
+use Wrench\Frame\HybiFrame;
 
 /**
  * Client class
@@ -263,12 +264,20 @@ class Client extends Configurable
 
     /**
      * Disconnects the underlying socket, and marks the client as disconnected
+     *
+     * @param int $reason Reason for disconnecting. See Protocol::CLOSE_*
+     * @throws Exception\FrameException
+     * @throws Exception\SocketException
      */
-    public function disconnect()
+    public function disconnect($reason = Protocol::CLOSE_NORMAL)
     {
+        $payload = $this->protocol->getClosePayload($reason);
+
         if ($this->socket) {
+            $this->socket->send($payload->getPayload());
             $this->socket->disconnect();
         }
+
         $this->connected = false;
     }
 }

@@ -535,8 +535,9 @@ abstract class Protocol
      * Gets a suitable WebSocket close frame
      *
      * @param Exception|int $e
+     * @return Payload
      */
-    public function getCloseFrame($e)
+    public function getClosePayload($e)
     {
         $code = false;
 
@@ -553,7 +554,7 @@ abstract class Protocol
         $body = pack('n', $code) . self::$closeReasons[$code];
 
         $payload = $this->getPayload();
-        return $payload->encode($body, self::TYPE_CLOSE);
+        return $payload->encode($body, self::TYPE_CLOSE, true);
     }
 
     /**

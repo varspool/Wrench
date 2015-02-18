@@ -433,8 +433,8 @@ class Connection extends Configurable
                 $response = $this->protocol->getResponseError($code);
                 $this->socket->send($response);
             } else {
-                $response = $this->protocol->getCloseFrame($code);
-                $this->socket->send($response);
+                $response = $this->protocol->getClosePayload($code);
+                $this->socket->send($response->getPayload());
             }
         } catch (Exception $e) {
             $this->log('Unable to send close message', 'warning');
