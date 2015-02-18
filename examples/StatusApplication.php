@@ -96,6 +96,9 @@ class StatusApplication extends Application
         $this->_sendAll($encodedData);
     }
 
+    /**
+     * @param string $text
+     */
     public function statusMsg($text, $type = 'info')
     {
         $data = array(
@@ -108,6 +111,9 @@ class StatusApplication extends Application
         $this->_sendAll($encodedData);
     }
 
+    /**
+     * @param Connection $client
+     */
     private function _sendServerinfo($client)
     {
         if (count($this->_clients) < 1) {

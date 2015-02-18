@@ -3,7 +3,6 @@
 namespace Wrench\Protocol;
 
 use Wrench\Payload\Payload;
-
 use Wrench\Exception\BadRequestException;
 use Wrench\Exception\HandshakeException;
 
@@ -392,8 +391,8 @@ abstract class Protocol
     /**
      * @todo better header handling
      * @todo throw exception
-     * @param unknown_type $response
-     * @param unknown_type $key
+     * @param string $response
+     * @param string $key
      * @return boolean
      */
     public function validateResponseHandshake($response, $key)
@@ -807,7 +806,7 @@ abstract class Protocol
      *  connections and port 443 for WebSocket connections tunneled over
      *  Transport Layer Security
      *
-     * @param string $uri
+     * @param string|false $scheme
      * @return int
      */
     protected function getPort($scheme)

@@ -3,7 +3,6 @@
 namespace Wrench\Payload;
 
 use Wrench\Exception\PayloadException;
-use Wrench\Exception\ConnectionException;
 use Wrench\Util\Configurable;
 use \InvalidArgumentException;
 

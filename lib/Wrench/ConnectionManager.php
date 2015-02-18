@@ -3,8 +3,6 @@
 namespace Wrench;
 
 use InvalidArgumentException;
-use Wrench\Protocol\Protocol;
-use Wrench\Resource;
 use Wrench\Util\Configurable;
 use Wrench\Exception\Exception as WrenchException;
 use Wrench\Exception\CloseException;
@@ -101,7 +99,6 @@ class ConnectionManager extends Configurable implements Countable
     /**
      * Configures the main server socket
      *
-     * @param string $uri
      */
     protected function configureMasterSocket()
     {

@@ -3,18 +3,13 @@
 namespace Wrench;
 
 use Wrench\Payload\Payload;
-
 use Wrench\Payload\PayloadHandler;
-
 use Wrench\Util\Configurable;
-
 use Wrench\Socket\ClientSocket;
 use Wrench\Protocol\Protocol;
-use Wrench\Protocol\Rfc6455Protocol;
 
 use \InvalidArgumentException;
 use \RuntimeException;
-use Wrench\Frame\HybiFrame;
 
 /**
  * Client class

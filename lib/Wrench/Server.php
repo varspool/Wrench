@@ -4,9 +4,6 @@ namespace Wrench;
 
 use Wrench\Util\Configurable;
 
-use Wrench\Socket;
-use Wrench\Resource;
-
 use \Closure;
 use \InvalidArgumentException;
 
@@ -219,7 +216,6 @@ class Server extends Configurable
      * and closed STDOUT.
      *
      * @param string $message Message to display.
-     * @param string $type Type of message.
      * @return void
      */
     public function log($message, $priority = 'info')
