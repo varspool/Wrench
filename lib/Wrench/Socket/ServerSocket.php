@@ -112,12 +112,17 @@ class ServerSocket extends UriSocket
      */
     protected function getSslStreamContextOptions()
     {
-        $options = array();
+        $options = [];
 
-        if ($this->options['server_ssl_cert_file']) {
+        // BC: use server_ssl_local_cert (old value: server_ssl_cert_file)
+        if (!empty($this->options['server_ssl_cert_file'])) {
             $options['local_cert'] = $this->options['server_ssl_cert_file'];
-            if ($this->options['server_ssl_passphrase']) {
-                $options['passphrase'] = $this->options['server_ssl_passphrase'];
+        }
+
+        // Otherwise map any options through
+        foreach ($this->options as $option => $value) {
+            if (preg_match('/^server_ssl_(.*)$/', $option, $matches)) {
+                $options[$matches[1]] = $value;
             }
         }
 
