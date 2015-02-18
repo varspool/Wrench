@@ -161,10 +161,11 @@ abstract class Payload
      */
     public function receiveData($data)
     {
+        $chunk_size = null;
+
         while ($data) {
             $frame = $this->getReceivingFrame();
 
-            $size = strlen($data);
             $remaining = $frame->getRemainingData();
 
             if ($remaining === null) {

@@ -40,10 +40,7 @@ class Ssl
 		$pem = array();
 
 		openssl_x509_export($cert, $pem[0]);
-
-		if ($pem_passphrase !== null) {
-			openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
-		}
+		openssl_pkey_export($privkey, $pem[1], $pem_passphrase);
 
 		$pem = implode($pem);
 		file_put_contents($pem_file, $pem);
