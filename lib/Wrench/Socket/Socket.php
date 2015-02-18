@@ -18,7 +18,7 @@ use \InvalidArgumentException;
  *
  * Unlike in previous versions of this library, a Socket instance now
  * represents a single underlying socket resource. It's designed to be used
- * by aggregation, rather than inheritence.
+ * by aggregation, rather than inheritance.
  */
 abstract class Socket extends Configurable implements Resource
 {
@@ -82,7 +82,6 @@ abstract class Socket extends Configurable implements Resource
      * Configure options
      *
      * Options include
-     *   - timeout_connect      => int, seconds, default 2
      *   - timeout_socket       => int, seconds, default 5
      *
      * @param array $options
@@ -99,6 +98,8 @@ abstract class Socket extends Configurable implements Resource
 
     /**
      * Gets the name of the socket
+     *
+     * @return string
      */
     protected function getName()
     {
@@ -140,13 +141,12 @@ abstract class Socket extends Configurable implements Resource
         } else {
             throw new InvalidArgumentException('Invalid name part');
         }
-
-        return null;
     }
 
     /**
      * Gets the IP address of the socket
      *
+     * @throws \Wrench\Exception\SocketException If the IP address cannot be obtained
      * @return string
      */
     public function getIp()
@@ -163,6 +163,7 @@ abstract class Socket extends Configurable implements Resource
     /**
      * Gets the port of the socket
      *
+     * @throws \Wrench\Exception\SocketException If the port cannot be obtained
      * @return int
      */
     public function getPort()
@@ -281,19 +282,28 @@ abstract class Socket extends Configurable implements Resource
         $metadata['unread_bytes'] = 0;
 
         do {
+            // feof means socket has been closed
             if (feof($this->socket)) {
+                $this->disconnect();
+
                 return $buffer;
             }
 
             $result = fread($this->socket, $length);
 
+            // fread FALSE means socket has been closed
             if ($result === false) {
+                $this->disconnect();
+
                 return $buffer;
             }
 
             $buffer .= $result;
 
+            // feof means socket has been closed
             if (feof($this->socket)) {
+                $this->disconnect();
+
                 return $buffer;
             }
 
@@ -311,6 +321,7 @@ abstract class Socket extends Configurable implements Resource
 
             // Continue if more data to be read
             $metadata = stream_get_meta_data($this->socket);
+
             if ($metadata && isset($metadata['unread_bytes']) && $metadata['unread_bytes']) {
                 $continue = true;
                 $length = $metadata['unread_bytes'];

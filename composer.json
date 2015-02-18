@@ -23,11 +23,17 @@
         }
     ],
     "require": {
-        "php": ">=5.3"
+        "php": ">=5.3",
+        "ext-sockets": "*"
     },
     "autoload": {
         "psr-0": {
             "Wrench": "lib/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "2.0.x-dev"
         }
     }
 }

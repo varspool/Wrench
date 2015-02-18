@@ -2,6 +2,7 @@
 
 namespace Wrench;
 
+use InvalidArgumentException;
 use Wrench\Payload\PayloadHandler;
 
 use Wrench\Protocol\Protocol;
@@ -30,7 +31,7 @@ class Connection extends Configurable
     /**
      * The connection manager
      *
-     * @var Wrench\ConnectionManager
+     * @var ConnectionManager
      */
     protected $manager;
 
@@ -53,7 +54,7 @@ class Connection extends Configurable
     /**
      * The application this connection belongs to
      *
-     * @var Application
+     * @var Application\Application
      */
     protected $application = null;
 
@@ -102,10 +103,9 @@ class Connection extends Configurable
     /**
      * Constructor
      *
-     * @param Server $server
+     * @param ConnectionManager  $manager
      * @param ServerClientSocket $socket
-     * @param array $options
-     * @throws InvalidArgumentException
+     * @param array              $options
      */
     public function __construct(
         ConnectionManager $manager,

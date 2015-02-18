@@ -48,7 +48,8 @@ class ClientSocket extends UriSocket
         $errno = null;
         $errstr = null;
 
-        $this->socket = stream_socket_client(
+        // Supress PHP error, we're handling it
+        $this->socket = @stream_socket_client(
             $this->getUri(),
             $errno,
             $errstr,

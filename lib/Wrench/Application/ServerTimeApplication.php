@@ -2,9 +2,6 @@
 
 namespace Wrench\Application;
 
-use Wrench\Application\Application;
-use Wrench\Application\NamedApplication;
-
 /**
  * Example application demonstrating how to use Application::onUpdate
  *
@@ -36,5 +33,16 @@ class ServerTimeApplication extends Application
                 $sendto->send(date('d-m-Y H:i:s'));
             }
         }
+    }
+
+    /**
+     * Handle data received from a client
+     *
+     * @param Payload    $payload A payload object, that supports __toString()
+     * @param Connection $connection
+     */
+    public function onData($payload, $connection)
+    {
+        return;
     }
 }

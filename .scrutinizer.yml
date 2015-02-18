@@ -1,0 +1,10 @@
+# vim: set sw=4 ts=4 et :
+imports:
+    - php
+
+filter:
+    excluded_paths:
+        - lib/Wrench/Tests
+
+tools:
+    external_code_coverage: true
