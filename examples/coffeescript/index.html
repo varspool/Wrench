@@ -18,7 +18,7 @@
         window.jQuery ($) ->
             console.log('Starting application')
 
-            serverUrl = 'wss://127.0.0.1:8000/demo'
+            serverUrl = 'ws://127.0.0.1:8000/demo'
 
             if window.MozWebSocket
                 socket = new MozWebSocket serverUrl
