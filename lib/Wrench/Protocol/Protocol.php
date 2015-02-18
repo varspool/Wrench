@@ -344,6 +344,7 @@ abstract class Protocol
      *
      * @param int|Exception $e Exception or HTTP error
      * @param array $headers
+     * @return string
      */
     public function getResponseError($e, array $headers = array())
     {
@@ -367,6 +368,7 @@ abstract class Protocol
      *
      * @param int $status
      * @param array $headers
+     * @return string
      */
     protected function getHttpResponse($status, array $headers = array())
     {

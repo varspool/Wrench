@@ -148,6 +148,7 @@ abstract class Frame
      * The frame must be complete to call this method.
      *
      * @return string
+     * @throws FrameException
      */
     public function getFramePayload()
     {

@@ -239,7 +239,7 @@ abstract class Socket extends Configurable implements Resource
     }
 
     /**
-     * @param unknown_type $data
+     * @param string $data Binary data to send down the socket
      * @throws SocketException
      * @return boolean|int The number of bytes sent or false on error
      */
@@ -276,8 +276,6 @@ abstract class Socket extends Configurable implements Resource
      */
     public function receive($length = self::DEFAULT_RECEIVE_LENGTH)
     {
-        $remaining = $length;
-
         $buffer = '';
         $metadata['unread_bytes'] = 0;
 
