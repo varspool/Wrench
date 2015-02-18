@@ -529,8 +529,9 @@ abstract class Protocol
      * Gets a suitable WebSocket close frame
      *
      * @param Exception|int $e
+     * @return Payload
      */
-    public function getCloseFrame($e)
+    public function getClosePayload($e)
     {
         $code = false;
 
