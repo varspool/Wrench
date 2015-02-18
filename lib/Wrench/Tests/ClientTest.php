@@ -3,7 +3,6 @@
 namespace Wrench\Tests;
 
 use Wrench\Protocol\Protocol;
-
 use Wrench\Client;
 use Wrench\Tests\Test;
 use Wrench\Socket;

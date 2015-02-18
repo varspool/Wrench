@@ -2,8 +2,6 @@
 
 namespace Wrench\Frame;
 
-use Wrench\Payload\Payload;
-
 use Wrench\Exception\FrameException;
 
 /**
@@ -111,7 +109,6 @@ abstract class Frame
     /**
      * Receieves data into the frame
      *
-     * @param string $buffer
      */
     public function receiveData($data)
     {
@@ -121,7 +118,7 @@ abstract class Frame
     /**
      * Gets the remaining number of bytes before this frame will be complete
      *
-     * @return number
+     * @return integer|null
      */
     public function getRemainingData()
     {

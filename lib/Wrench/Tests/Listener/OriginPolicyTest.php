@@ -2,7 +2,6 @@
 
 namespace Wrench\Tests\Listener;
 
-use Wrench\Listener\RateLimiter;
 use Wrench\Tests\Listener\ListenerTest;
 
 class OriginPolicyTest extends ListenerTest
@@ -68,7 +67,7 @@ class OriginPolicyTest extends ListenerTest
     /**
      * @dataProvider getInvalidArguments
      * @param array $allowed
-     * @param string $domain
+     * @param string $bad_domain
      */
     public function testInvalidHandshake($allowed, $bad_domain)
     {

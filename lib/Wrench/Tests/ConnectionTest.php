@@ -3,9 +3,7 @@
 namespace Wrench\Tests;
 
 use Wrench\Application\EchoApplication;
-
 use Wrench\Protocol\Protocol;
-
 use Wrench\Connection;
 use Wrench\Tests\Test;
 use Wrench\Socket;

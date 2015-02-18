@@ -5,7 +5,6 @@ namespace Wrench\Tests;
 use Wrench\Server;
 use Wrench\BasicServer;
 use Wrench\Tests\ServerTest;
-use Wrench\Socket;
 
 use \InvalidArgumentException;
 use \PHPUnit_Framework_Error;

@@ -3,11 +3,8 @@
 namespace Wrench\Socket;
 
 use Wrench\Resource;
-use Wrench\Exception\ConnectionException;
 use Wrench\Exception\SocketException;
 use Wrench\Util\Configurable;
-use Wrench\Protocol\Protocol;
-use Wrench\Protocol\Rfc6455Protocol;
 use \InvalidArgumentException;
 
 /**
@@ -164,7 +161,7 @@ abstract class Socket extends Configurable implements Resource
      * Gets the port of the socket
      *
      * @throws \Wrench\Exception\SocketException If the port cannot be obtained
-     * @return int
+     * @return string
      */
     public function getPort()
     {

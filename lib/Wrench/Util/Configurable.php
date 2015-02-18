@@ -24,7 +24,6 @@ abstract class Configurable
     /**
      * Configurable constructor
      *
-     * @param string $uri     WebSocket URI, e.g. ws://example.org:8000/chat
      * @param array  $options (optional)
      *   Options:
      *     - protocol             => Wrench\Protocol object, latest protocol

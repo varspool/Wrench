@@ -14,9 +14,9 @@ class Ssl
 	 * @param string $country_name             the country code of the new PEM file. e.g.: EN
 	 * @param string $state_or_province_name   the state or province name of the new PEM file
 	 * @param string $locality_name            the name of the locality
-	 * @param string $organisation_name        the name of the organisation. e.g.: MyCompany
-	 * @param string $organisational_unit_name the organisation unit name
-	 * @param string $commonName               the common name
+	 * @param string $organization_name        the name of the organisation. e.g.: MyCompany
+	 * @param string $organizational_unit_name the organisation unit name
+	 * @param string $common_name               the common name
 	 * @param string $email_address            the email address
 	 */
 	public static function generatePemFile($pem_file, $pem_passphrase, $country_name, $state_or_province_name,

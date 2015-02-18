@@ -2,13 +2,9 @@
 
 namespace Wrench;
 
-use InvalidArgumentException;
 use Wrench\Payload\PayloadHandler;
-
 use Wrench\Protocol\Protocol;
-
 use Wrench\Payload\Payload;
-
 use Wrench\Util\Configurable;
 use Wrench\Socket\ServerClientSocket;
 use Wrench\Server;
@@ -309,7 +305,7 @@ class Connection extends Configurable
      *
      * Public because called from our PayloadHandler
      *
-     * @param string $payload
+     * @param Payload $payload
      */
     public function handlePayload(Payload $payload)
     {
@@ -361,8 +357,8 @@ class Connection extends Configurable
     /**
      * Sends the payload to the connection
      *
-     * @param string $payload
      * @param string $type
+     * @param string $data
      * @throws HandshakeException
      * @throws ConnectionException
      * @return boolean
@@ -423,8 +419,7 @@ class Connection extends Configurable
      * sending and receiving a close message, e.g. if it has not received a
      * TCP close from the server in a reasonable time period.
      *
-     * @param int|Exception $statusCode
-     * @return boolean
+     * @return boolean|null
      */
     public function close($code = Protocol::CLOSE_NORMAL)
     {
