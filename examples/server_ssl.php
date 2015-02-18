@@ -7,14 +7,14 @@ error_reporting(E_ALL);
 require __DIR__ . '/../vendor/autoload.php';
 
 // Generate PEM file
-$pemFile                = __DIR__ . '/generated.pem';
+$pemFile                = tempnam('/tmp', 'wrench');
 $pemPassphrase          = null;
 $countryName            = "DE";
 $stateOrProvinceName    = "none";
 $localityName           = "none";
 $organizationName       = "none";
 $organizationalUnitName = "none";
-$commonName             = "example.com";
+$commonName             = "127.0.0.1";
 $emailAddress           = "someone@example.com";
 
 Wrench\Util\Ssl::generatePEMFile(
