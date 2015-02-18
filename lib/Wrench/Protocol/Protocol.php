@@ -548,7 +548,7 @@ abstract class Protocol
         $body = pack('n', $code) . self::$closeReasons[$code];
 
         $payload = $this->getPayload();
-        return $payload->encode($body, self::TYPE_CLOSE);
+        return $payload->encode($body, self::TYPE_CLOSE, true);
     }
 
     /**
