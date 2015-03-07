@@ -10,7 +10,7 @@ Starting a Server
 
 The first thing you'll want to do to serve WebSockets from PHP is start a
 WebSockets server. Wrench provides a simple Server class that implements the
-most recent version of the WebSockts protocol. Subclassing the Server class is
+most recent version of the WebSockets protocol. Subclassing the Server class is
 encouraged: see WebSocket\BasicServer for an example.
 
 When you're ready for your server to start responding to requests, call
