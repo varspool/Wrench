@@ -59,7 +59,7 @@ abstract class Payload
             if ($current->isFinal()) {
                 throw new PayloadException('Payload cannot receieve data: it is already complete');
             } else {
-                $current = array_push($this->frames, $this->getFrame());
+                $this->frames[] = $current = $this->getFrame();
             }
         }
 
