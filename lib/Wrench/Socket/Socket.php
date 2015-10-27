@@ -292,6 +292,9 @@ abstract class Socket extends Configurable implements Resource
 
                 return $buffer;
             }
+            // no socket means no socket ;)
+            if( !$this->socket )
+				return $buffer;
 
             $buffer .= $result;
 
