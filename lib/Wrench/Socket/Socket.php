@@ -277,12 +277,9 @@ abstract class Socket extends Configurable implements Resource
         $metadata['unread_bytes'] = 0;
 
         do {
-            // sometimes in long running processes the system seems to kill the underlying socket
-            if( !$this->socket )
-		return $buffer;
-		
             // feof means socket has been closed
-            if (feof($this->socket)) {
+            // also, sometimes in long running processes the system seems to kill the underlying socket
+            if (!$this->socket || feof($this->socket)) {
                 $this->disconnect();
 
                 return $buffer;
