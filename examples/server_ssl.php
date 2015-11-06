@@ -41,7 +41,7 @@ Wrench\Util\Ssl::generatePEMFile(
 $server = new \Wrench\Server('wss://127.0.0.1:8000/', array(
      'connection_manager_options' => array(
          'socket_master_options' => array(
-             'server_ssl_cert_file'         => $pemFile,
+             'server_ssl_local_cert'        => $pemFile,
              'server_ssl_passphrase'        => $pemPassphrase,
              'server_ssl_allow_self_signed' => true,
              'server_ssl_verify_peer'       => false
