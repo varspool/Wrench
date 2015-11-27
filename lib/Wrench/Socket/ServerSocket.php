@@ -100,8 +100,11 @@ class ServerSocket extends UriSocket
     {
         $options = array();
 
-        if ($this->options['backlog']) {
-            $options['backlog'] = $this->options['backlog'];
+        // Map all but server_ssl_* options
+        foreach ($this->options as $option => $value) {
+            if (preg_match('/^server_ssl_(.*)$/', $option, $matches))
+                continue;
+			$options[$option] = $value;
         }
 
         return $options;
