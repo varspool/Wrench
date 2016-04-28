@@ -296,11 +296,19 @@ abstract class Protocol
         if (!$uri || !$key || !$origin) {
             throw new InvalidArgumentException('You must supply a URI, key and origin');
         }
-        
+
         list($scheme, $host, $port, $path, $query) = self::validateUri($uri);
-        
+
         if ($query) {
             $path .= '?' . $query;
+        }
+
+        if ($scheme == self::SCHEME_WEBSOCKET && $port == 80) {
+            // do nothing
+        } elseif ($scheme == self::SCHEME_WEBSOCKET_SECURE && $port == 443) {
+            // do nothing
+        } else {
+            $host = $host . ':' . $port;
         }
 
         $handshake = array(
@@ -309,7 +317,7 @@ abstract class Protocol
 
         $headers = array_merge(
             $this->getDefaultRequestHeaders(
-                $host . ':' . $port, $key, $origin
+                $host, $key, $origin
             ),
             $headers
         );
