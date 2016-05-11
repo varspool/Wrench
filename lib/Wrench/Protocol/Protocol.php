@@ -32,15 +32,15 @@ abstract class Protocol
      *
      * @var string
      */
-    const HEADER_HOST       = 'Host';
-    const HEADER_KEY        = 'Sec-WebSocket-Key';
-    const HEADER_PROTOCOL   = 'Sec-WebSocket-Protocol';
-    const HEADER_VERSION    = 'Sec-WebSocket-Version';
-    const HEADER_ACCEPT     = 'Sec-WebSocket-Accept';
-    const HEADER_EXTENSIONS = 'Sec-WebSocket-Extensions';
-    const HEADER_ORIGIN     = 'Origin';
-    const HEADER_CONNECTION = 'Connection';
-    const HEADER_UPGRADE    = 'Upgrade';
+    const HEADER_HOST       = 'host';
+    const HEADER_KEY        = 'sec-websocket-key';
+    const HEADER_PROTOCOL   = 'sec-websocket-protocol';
+    const HEADER_VERSION    = 'sec-websocket-version';
+    const HEADER_ACCEPT     = 'sec-websocket-accept';
+    const HEADER_EXTENSIONS = 'sec-websocket-extensions';
+    const HEADER_ORIGIN     = 'origin';
+    const HEADER_CONNECTION = 'connection';
+    const HEADER_UPGRADE    = 'upgrade';
     /**#@-*/
 
     /**#@+
@@ -737,7 +737,7 @@ abstract class Protocol
         $request = substr($response, 0, $eol);
         $headers = $this->getHeaders(substr($response, $eol + 2));
 
-        return array($request, $headers);
+        return array($request, array_change_key_case($headers));
     }
 
     /**
