@@ -737,7 +737,7 @@ abstract class Protocol
         $request = substr($response, 0, $eol);
         $headers = $this->getHeaders(substr($response, $eol + 2));
 
-        return array($request, array_change_key_case($headers));
+        return array($request, $headers);
     }
 
     /**
