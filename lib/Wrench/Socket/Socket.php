@@ -62,13 +62,6 @@ abstract class Socket extends Configurable implements Resource
     protected $connected = false;
 
     /**
-     * Whether the current read is the first one to the socket
-     *
-     * @var boolean
-     */
-    protected $firstRead = true;
-
-    /**
      * The socket name according to stream_socket_get_name
      *
      * @var string
@@ -305,11 +298,10 @@ abstract class Socket extends Configurable implements Resource
 
             $continue = false;
 
-            if ($this->firstRead == true && strlen($result) == 1) {
+            if (strlen($result) == 1) {
                 // Workaround Chrome behavior (still needed?)
                 $continue = true;
             }
-            $this->firstRead = false;
 
             if (strlen($result) == $length) {
                 $continue = true;
