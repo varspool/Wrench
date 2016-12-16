@@ -32,15 +32,15 @@ abstract class Protocol
      *
      * @var string
      */
-    const HEADER_HOST       = 'Host';
-    const HEADER_KEY        = 'Sec-WebSocket-Key';
-    const HEADER_PROTOCOL   = 'Sec-WebSocket-Protocol';
-    const HEADER_VERSION    = 'Sec-WebSocket-Version';
-    const HEADER_ACCEPT     = 'Sec-WebSocket-Accept';
-    const HEADER_EXTENSIONS = 'Sec-WebSocket-Extensions';
-    const HEADER_ORIGIN     = 'Origin';
-    const HEADER_CONNECTION = 'Connection';
-    const HEADER_UPGRADE    = 'Upgrade';
+    const HEADER_HOST       = 'host';
+    const HEADER_KEY        = 'sec-websocket-key';
+    const HEADER_PROTOCOL   = 'sec-websocket-protocol';
+    const HEADER_VERSION    = 'sec-websocket-version';
+    const HEADER_ACCEPT     = 'sec-websocket-accept';
+    const HEADER_EXTENSIONS = 'sec-websocket-extensions';
+    const HEADER_ORIGIN     = 'origin';
+    const HEADER_CONNECTION = 'connection';
+    const HEADER_UPGRADE    = 'upgrade';
     /**#@-*/
 
     /**#@+
@@ -296,11 +296,19 @@ abstract class Protocol
         if (!$uri || !$key || !$origin) {
             throw new InvalidArgumentException('You must supply a URI, key and origin');
         }
-        
+
         list($scheme, $host, $port, $path, $query) = self::validateUri($uri);
-        
+
         if ($query) {
             $path .= '?' . $query;
+        }
+
+        if ($scheme == self::SCHEME_WEBSOCKET && $port == 80) {
+            // do nothing
+        } elseif ($scheme == self::SCHEME_WEBSOCKET_SECURE && $port == 443) {
+            // do nothing
+        } else {
+            $host = $host . ':' . $port;
         }
 
         $handshake = array(
@@ -309,7 +317,7 @@ abstract class Protocol
 
         $headers = array_merge(
             $this->getDefaultRequestHeaders(
-                $host . ':' . $port, $key, $origin
+                $host, $key, $origin
             ),
             $headers
         );
@@ -415,7 +423,7 @@ abstract class Protocol
 
         $expected = $this->getAcceptValue($key);
 
-        preg_match('#Sec-WebSocket-Accept:\s(.*)$#mU', $response, $matches);
+        preg_match('#Sec-WebSocket-Accept:\s(.*)$#imU', $response, $matches);
         $keyAccept = trim($matches[1]);
 
         return ($keyAccept === $this->getEncodedHash($key)) ? true : false;
@@ -586,7 +594,7 @@ abstract class Protocol
         if (!$path) {
             throw new InvalidArgumentException('Invalid path');
         }
-        
+
         $query = parse_url($uri, PHP_URL_QUERY);
 
         return array($scheme, $host, $port, $path, $query);
@@ -715,7 +723,7 @@ abstract class Protocol
             }
         }
 
-        return $return;
+        return array_change_key_case($return);
     }
 
     /**

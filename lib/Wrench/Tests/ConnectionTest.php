@@ -78,7 +78,7 @@ class ConnectionTest extends Test
         $connection->handshake($request);
 
         $headers = $connection->getHeaders();
-        $this->assertEquals(array('X-Some-Header' => 'Some Value'), $headers, 'Extra headers returned');
+        $this->assertEquals(array_change_key_case(array('X-Some-Header' => 'Some Value')), $headers, 'Extra headers returned');
 
         $params = $connection->getQueryParams();
         $this->assertEquals(array('someparam' => 'someval'), $params, 'Query string parameters returned');

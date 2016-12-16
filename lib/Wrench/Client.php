@@ -7,9 +7,9 @@ use Wrench\Payload\PayloadHandler;
 use Wrench\Util\Configurable;
 use Wrench\Socket\ClientSocket;
 use Wrench\Protocol\Protocol;
+use Wrench\Exception;
 
 use \InvalidArgumentException;
-use \RuntimeException;
 
 /**
  * Client class
@@ -269,7 +269,9 @@ class Client extends Configurable
         $payload = $this->protocol->getClosePayload($reason);
 
         if ($this->socket) {
-            $this->socket->send($payload->getPayload());
+            if(!$payload->sendToSocket($this->socket)) {
+                throw new Exception("Unexpected exception when sending Close frame.");
+            }
             $this->socket->disconnect();
         }
 
