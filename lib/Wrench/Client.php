@@ -119,7 +119,8 @@ class Client extends Configurable
     protected function configureSocket()
     {
         $class = $this->options['socket_class'];
-        $this->socket = new $class($this->uri);
+        $options = $this->options['socket_options'];
+        $this->socket = new $class($this->uri, $options);
     }
 
     /**
@@ -170,6 +171,10 @@ class Client extends Configurable
      */
     public function sendData($data, $type = Protocol::TYPE_TEXT, $masked = true)
     {
+        if (!$this->isConnected()) {
+            return false;
+        }
+
         if (is_string($type) && isset(Protocol::$frameTypes[$type])) {
             $type = Protocol::$frameTypes[$type];
         }
@@ -218,7 +223,11 @@ class Client extends Configurable
             return false;
         }
 
-        $this->socket->connect();
+        try {
+            $this->socket->connect();
+        } catch (\Exception $ex) {
+            return false;
+        }
 
         $key       = $this->protocol->generateKey();
         $handshake = $this->protocol->getRequestHandshake(
@@ -249,7 +258,7 @@ class Client extends Configurable
 
         // Check if the socket is still connected
         if ($this->socket->isConnected() === false) {
-            $this->disconnect();
+            $this->connected = false;
 
             return false;
         }
@@ -266,6 +275,10 @@ class Client extends Configurable
      */
     public function disconnect($reason = Protocol::CLOSE_NORMAL)
     {
+        if ($this->connected === false) {
+            return false;
+        }
+
         $payload = $this->protocol->getClosePayload($reason);
 
         if ($this->socket) {
@@ -276,5 +289,7 @@ class Client extends Configurable
         }
 
         $this->connected = false;
+
+        return true;
     }
 }
