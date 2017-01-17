@@ -326,7 +326,8 @@ abstract class Socket extends Configurable implements Resource
                     $continue = true;
                     // it makes sense only if unread_bytes less than DEFAULT_RECEIVE_LENGTH
                     if ($length > $metadata['unread_bytes']) {
-                        $length = $metadata['unread_bytes'];
+                        // Strange behaviour, need to be commented. 'unread_bytes' dont describes real length correctly.
+                        //$length = $metadata['unread_bytes'];
                         // Socket is a blocking by default. When we do a blocking read from an empty
                         // queue it will block and the server will hang. https://bugs.php.net/bug.php?id=1739
                         stream_set_blocking($this->socket, false);
