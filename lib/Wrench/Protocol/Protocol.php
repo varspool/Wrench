@@ -700,8 +700,8 @@ abstract class Protocol
     {
         $parts = explode("\r\n\r\n", $response, 2);
 
-        if (count($parts) != 2) {
-            $parts = array($parts, '');
+        if (count($parts) < 2) {
+            $parts[] = '';
         }
 
         list($headers, $body) = $parts;
