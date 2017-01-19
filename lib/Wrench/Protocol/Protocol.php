@@ -539,12 +539,14 @@ abstract class Protocol
     }
 
     /**
-     * Gets a suitable WebSocket close frame
+     * Gets a suitable WebSocket close frame.
+     * Please set `masked` to false if you send a close frame from server side.
      *
      * @param Exception|int $e
+     * @param boolean $masked
      * @return Payload
      */
-    public function getClosePayload($e)
+    public function getClosePayload($e, $masked = true)
     {
         $code = false;
 
@@ -561,7 +563,7 @@ abstract class Protocol
         $body = pack('n', $code) . self::$closeReasons[$code];
 
         $payload = $this->getPayload();
-        return $payload->encode($body, self::TYPE_CLOSE, true);
+        return $payload->encode($body, self::TYPE_CLOSE, $masked);
     }
 
     /**
