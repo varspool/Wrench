@@ -107,7 +107,8 @@ class Client extends Configurable
     {
         $options = array_merge(array(
             'socket_class'     => 'Wrench\\Socket\\ClientSocket',
-            'on_data_callback' => null
+            'on_data_callback' => null,
+            'socket_options' => array(),
         ), $options);
 
         parent::configure($options);
