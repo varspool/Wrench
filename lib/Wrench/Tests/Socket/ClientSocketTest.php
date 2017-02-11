@@ -97,14 +97,6 @@ class ClientSocketTest extends UriSocketTest
     }
 
     /**
-     * @expectedException PHPUnit_Framework_Error
-     */
-    public function testConstructorUriUnspecified()
-    {
-        $w = new ClientSocket();
-    }
-
-    /**
      * @expectedException InvalidArgumentException
      */
     public function testConstructorUriEmpty()

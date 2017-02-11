@@ -52,14 +52,6 @@ class ClientTest extends Test
     }
 
     /**
-     * @expectedException PHPUnit_Framework_Error
-     */
-    public function testConstructorSocketUnspecified()
-    {
-        $w = new Client();
-    }
-
-    /**
      * @expectedException InvalidArgumentException
      */
     public function testConstructorUriInvalid()
@@ -81,14 +73,6 @@ class ClientTest extends Test
     public function testConstructorUriPathUnspecified()
     {
         $w = new Client('ws://localhost', 'http://www.example.com/');
-    }
-
-    /**
-     * @expectedException PHPUnit_Framework_Error
-     */
-    public function testConstructorOriginUnspecified()
-    {
-        $w = new Client('ws://localhost');
     }
 
     /**
