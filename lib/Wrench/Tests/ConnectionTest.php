@@ -288,12 +288,14 @@ class ConnectionTest extends Test
             array(
                 $manager,
                 $socket,
-                array('logger' => function() {})
+                array('logger' => function () {
+                })
             ),
             array(
                 $manager,
                 $socket,
-                array('logger' => function () {},
+                array('logger' => function () {
+                },
                       'connection_id_algo' => 'sha512')
             )
         );
@@ -361,7 +363,7 @@ class ConnectionTest extends Test
         return array(
             array(
                 '/chat',
-"GET /chat?someparam=someval HTTP/1.1\r
+        "GET /chat?someparam=someval HTTP/1.1\r
 Host: server.example.com\r
 Upgrade: websocket\r
 Connection: Upgrade\r
@@ -381,7 +383,7 @@ Sec-WebSocket-Version: 13\r\n\r\n"
         return array(
             array(
                 '/foobar',
-"GET /chat HTTP/1.1\r
+        "GET /chat HTTP/1.1\r
 Host: server.example.com\r
 Upgrade: websocket\r
 Connection: Upgrade\r

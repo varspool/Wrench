@@ -2,14 +2,7 @@
 
 namespace Wrench\Tests\Frame;
 
-use Wrench\Frame\HybiFrame;
 use Wrench\Tests\Test;
-
-class BadSubclassFrame extends HybiFrame
-{
-    protected $payload = 'asdmlasdkm';
-    protected $buffer = false;
-}
 
 class BadSubclassFrameTest extends Test
 {

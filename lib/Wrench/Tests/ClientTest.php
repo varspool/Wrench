@@ -27,14 +27,16 @@ class ClientTest extends Test
     {
         $this->assertInstanceOfClass(
             $client = new Client(
-                'ws://localhost/test', 'http://example.org/'
+                'ws://localhost/test',
+                'http://example.org/'
             ),
             'ws:// scheme, default socket'
         );
 
         $this->assertInstanceOfClass(
             $client = new Client(
-                'ws://localhost/test', 'http://example.org/',
+                'ws://localhost/test',
+                'http://example.org/',
                 array('socket' => $this->getMockSocket())
             ),
             'ws:// scheme, socket specified'

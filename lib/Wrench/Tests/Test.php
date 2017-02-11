@@ -39,7 +39,7 @@ abstract class Test extends PHPUnit_Framework_TestCase
      * @magic This method accepts a variable number of arguments
      * @return object Of type given by getClass()
      */
-    public function getInstance(/* ... */)
+    public function getInstance()
     {
         $reflection = new ReflectionClass($this->getClass());
         return $reflection->newInstanceArgs(func_get_args());

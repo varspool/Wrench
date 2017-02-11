@@ -269,7 +269,7 @@ class Client extends Configurable
         $payload = $this->protocol->getClosePayload($reason);
 
         if ($this->socket) {
-            if(!$payload->sendToSocket($this->socket)) {
+            if (!$payload->sendToSocket($this->socket)) {
                 throw new \RuntimeException("Unexpected exception when sending Close frame.");
             }
             $this->socket->disconnect();
