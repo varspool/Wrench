@@ -2,8 +2,6 @@
 
 namespace Wrench\Socket;
 
-use \Exception;
-
 abstract class UriSocketTest extends SocketBaseTest
 {
     /**
@@ -46,11 +44,11 @@ abstract class UriSocketTest extends SocketBaseTest
      */
     public function getInvalidConstructorArguments()
     {
-        return array(
-            array(false),
-            array('http://www.google.com/'),
-            array('ws:///'),
-            array(':::::'),
-        );
+        return [
+            [false],
+            ['http://www.google.com/'],
+            ['ws:///'],
+            [':::::'],
+        ];
     }
 }

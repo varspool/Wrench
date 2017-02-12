@@ -15,7 +15,7 @@ class OriginPolicyTest extends ListenerBaseTest
 
     /**
      * @dataProvider getValidArguments
-     * @param array $allowed
+     * @param array  $allowed
      * @param string $domain
      */
     public function testValidAllowed($allowed, $domain)
@@ -26,7 +26,7 @@ class OriginPolicyTest extends ListenerBaseTest
 
     /**
      * @dataProvider getValidArguments
-     * @param array $allowed
+     * @param array  $allowed
      * @param string $domain
      */
     public function testValidHandshake($allowed, $domain)
@@ -44,7 +44,7 @@ class OriginPolicyTest extends ListenerBaseTest
 
     /**
      * @dataProvider getInvalidArguments
-     * @param array $allowed
+     * @param array  $allowed
      * @param string $bad_domain
      */
     public function testInvalidAllowed($allowed, $bad_domain)
@@ -55,7 +55,7 @@ class OriginPolicyTest extends ListenerBaseTest
 
     /**
      * @dataProvider getInvalidArguments
-     * @param array $allowed
+     * @param array  $allowed
      * @param string $bad_domain
      */
     public function testInvalidHandshake($allowed, $bad_domain)

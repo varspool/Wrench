@@ -2,8 +2,8 @@
 
 namespace Wrench\Protocol;
 
+use Exception;
 use Wrench\Test\BaseTest;
-use \Exception;
 
 abstract class ProtocolBaseTest extends BaseTest
 {
@@ -27,7 +27,7 @@ abstract class ProtocolBaseTest extends BaseTest
             $this->assertEquals('http://example.com', $origin);
             $this->assertEquals('dGhlIHNhbXBsZSBub25jZQ==', $key);
             $this->assertTrue(is_array($extensions), 'Extensions returned as array');
-            $this->assertEquals(array('x-test', 'x-test2'), $extensions, 'Extensions match');
+            $this->assertEquals(['x-test', 'x-test2'], $extensions, 'Extensions match');
             $this->assertEquals('chat, superchat', $protocol);
         } catch (Exception $e) {
             $this->fail($e);
@@ -114,29 +114,29 @@ abstract class ProtocolBaseTest extends BaseTest
 
     public function getValidOriginUris()
     {
-        return array(
-            array('http://www.example.org'),
-            array('http://www.example.com/some/page'),
-            array('https://localhost/')
-        );
+        return [
+            ['http://www.example.org'],
+            ['http://www.example.com/some/page'],
+            ['https://localhost/'],
+        ];
     }
 
     public function getInvalidOriginUris()
     {
-        return array(
-            array(false),
-            array(true),
-            array(''),
-            array('blah')
-        );
+        return [
+            [false],
+            [true],
+            [''],
+            ['blah'],
+        ];
     }
 
     public function getValidHandshakeRequests()
     {
-        $cases = array();
+        $cases = [];
 
 
-        $cases[] = array("GET /chat HTTP/1.1\r
+        $cases[] = ["GET /chat HTTP/1.1\r
 Host: server.example.com\r
 Upgrade: websocket\r
 Connection: Upgrade\r
@@ -146,9 +146,9 @@ Sec-WebSocket-Extensions: x-test\r
 Sec-WebSocket-Extensions: x-test2\r
 Sec-WebSocket-Protocol: chat, superchat\r
 Sec-WebSocket-Version: 13\r
-\r\n");
+\r\n"];
 
-        $cases[] = array("GET /chat HTTP/1.1\r
+        $cases[] = ["GET /chat HTTP/1.1\r
 Host: server.example.com\r
 Upgrade: Websocket\r
 Connection: Upgrade\r
@@ -158,22 +158,22 @@ Sec-WebSocket-Extensions: x-test\r
 Sec-WebSocket-Extensions: x-test2\r
 Sec-WebSocket-Protocol: chat, superchat\r
 Sec-WebSocket-Version: 13\r
-\r\n");
+\r\n"];
 
         return $cases;
     }
 
     public function getValidHandshakeResponses()
     {
-        $cases = array();
+        $cases = [];
 
         for ($i = 10; $i > 0; $i--) {
             $key = sha1(time() . uniqid('', true));
             $response = "Sec-WebSocket-Accept: "
-               . base64_encode(sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true))
-               . "\r\n\r\n";
+                . base64_encode(sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true))
+                . "\r\n\r\n";
 
-            $cases[] = array($response, $key);
+            $cases[] = [$response, $key];
         }
 
         return $cases;

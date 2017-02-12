@@ -4,7 +4,6 @@ namespace Wrench\Frame;
 
 use Wrench\Protocol\Protocol;
 use Wrench\Test\BaseTest;
-use \Exception;
 
 /**
  * Frame test
@@ -149,19 +148,19 @@ abstract class FrameBaseTest extends BaseTest
      */
     public function getValidEncodePayloads()
     {
-        return array(
-            array(
+        return [
+            [
                 Protocol::TYPE_TEXT,
                 "123456\x007890!@#$%^&*()qwe\trtyuiopQWERTYUIOPasdfghjklASFGH\n
                 JKLzxcvbnmZXCVBNM,./<>?;[]{}-=_+\|'asdad0x11\aasdassasdasasdsd",
-                true
-            ),
-            array(
+                true,
+            ],
+            [
                 Protocol::TYPE_TEXT,
                 pack('CCCCCCC', 0x00, 0x01, 0x02, 0x03, 0x04, 0xff, 0xf0),
-                true
-            ),
-            array(Protocol::TYPE_TEXT, ' ', true)
-        );
+                true,
+            ],
+            [Protocol::TYPE_TEXT, ' ', true],
+        ];
     }
 }

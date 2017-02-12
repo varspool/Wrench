@@ -5,7 +5,6 @@ namespace Wrench\Payload;
 use Wrench\Protocol\Protocol;
 use Wrench\Socket\ClientSocket;
 use Wrench\Test\BaseTest;
-use \Exception;
 
 /**
  * Payload test
@@ -86,23 +85,24 @@ abstract class PayloadBaseTest extends BaseTest
 
     /**
      * Tests sending to a socket
+     *
      * @dataProvider getValidEncodePayloads
      */
     public function testSendToSocket($type, $payload)
     {
         $successfulSocket = $this->getMockBuilder(ClientSocket::class)
-            ->setMethods(array())
-            ->setConstructorArgs(array('wss://localhost:8000'))
+            ->setMethods([])
+            ->setConstructorArgs(['wss://localhost:8000'])
             ->getMock();
         $failedSocket = clone $successfulSocket;
 
         $successfulSocket->expects($this->any())
-                ->method('send')
-                ->will($this->returnValue(true));
+            ->method('send')
+            ->will($this->returnValue(true));
 
         $failedSocket->expects($this->any())
-                ->method('send')
-                ->will($this->returnValue(false));
+            ->method('send')
+            ->will($this->returnValue(false));
 
         $this->payload->encode($payload, $type);
 
@@ -112,6 +112,7 @@ abstract class PayloadBaseTest extends BaseTest
 
     /**
      * Tests receiving data
+     *
      * @dataProvider getValidEncodePayloads
      * @doesNotPerformAssertions
      */
@@ -128,17 +129,17 @@ abstract class PayloadBaseTest extends BaseTest
      */
     public function getValidEncodePayloads()
     {
-        return array(
-            array(
+        return [
+            [
                 Protocol::TYPE_TEXT,
                 "123456\x007890!@#$%^&*()qwe\trtyuiopQWERTYUIOPasdfghjklASFGH\n
-                JKLzxcvbnmZXCVBNM,./<>?;[]{}-=_+\|'asdad0x11\aasdassasdasasdsd"
-            ),
-            array(
+                JKLzxcvbnmZXCVBNM,./<>?;[]{}-=_+\|'asdad0x11\aasdassasdasasdsd",
+            ],
+            [
                 Protocol::TYPE_TEXT,
-                pack('CCCCCCC', 0x00, 0x01, 0x02, 0x03, 0x04, 0xff, 0xf0)
-            ),
-            array(Protocol::TYPE_TEXT, ' ')
-        );
+                pack('CCCCCCC', 0x00, 0x01, 0x02, 0x03, 0x04, 0xff, 0xf0),
+            ],
+            [Protocol::TYPE_TEXT, ' '],
+        ];
     }
 }

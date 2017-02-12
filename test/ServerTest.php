@@ -13,7 +13,7 @@ class ServerTest extends BaseTest
      * Tests the constructor
      *
      * @param string $url
-     * @param array $options
+     * @param array  $options
      * @dataProvider getValidConstructorArguments
      */
     public function testConstructor($url, array $options = [])
@@ -37,7 +37,7 @@ class ServerTest extends BaseTest
                 [],
             ],
             [
-                'ws://localhost'
+                'ws://localhost',
             ],
         ];
     }

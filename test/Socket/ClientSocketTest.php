@@ -10,7 +10,7 @@ use Wrench\Test\ServerTestHelper;
 class ClientSocketTest extends UriSocketTest
 {
     /**
-     * Overriden to use with the depends annotation
+     * Overridden to use with the depends annotation
      */
     public function testConstructor()
     {

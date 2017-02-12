@@ -23,8 +23,8 @@ class EchoApplicationTest extends WrenchTest
     public function testOnData($payload)
     {
         $connection = $this->getMockBuilder(Connection::class)
-                     ->disableOriginalConstructor()
-                     ->getMock();
+            ->disableOriginalConstructor()
+            ->getMock();
 
         $connection
             ->expects($this->once())
@@ -42,9 +42,9 @@ class EchoApplicationTest extends WrenchTest
      */
     public function getValidPayloads()
     {
-        return array(
-            array('asdkllakdaowidoaw noaoinosdna nwodinado ndsnd aklndiownd'),
-            array(' ')
-        );
+        return [
+            ['asdkllakdaowidoaw noaoinosdna nwodinado ndsnd aklndiownd'],
+            [' '],
+        ];
     }
 }

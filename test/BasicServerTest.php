@@ -8,7 +8,7 @@ namespace Wrench;
 class BasicServerTest extends ServerTest
 {
     /**
-     * @param array $allowed
+     * @param array  $allowed
      * @param string $origin
      * @dataProvider getValidOrigins
      */
@@ -35,7 +35,7 @@ class BasicServerTest extends ServerTest
     }
 
     /**
-     * @param array $allowed
+     * @param array  $allowed
      * @param string $origin
      * @dataProvider getInvalidOrigins
      */

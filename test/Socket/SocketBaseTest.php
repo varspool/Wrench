@@ -3,8 +3,6 @@
 namespace Wrench\Socket;
 
 use Wrench\Test\BaseTest;
-use \Exception;
-use Wrench\Socket\Socket;
 
 abstract class SocketBaseTest extends BaseTest
 {
@@ -38,10 +36,10 @@ abstract class SocketBaseTest extends BaseTest
      */
     public function getValidNames()
     {
-        return array(
-            array('127.0.0.1:52339', '127.0.0.1', '52339'),
-            array('255.255.255.255:1025', '255.255.255.255', '1025'),
-            array('::1:56670', '::1', '56670')
-        );
+        return [
+            ['127.0.0.1:52339', '127.0.0.1', '52339'],
+            ['255.255.255.255:1025', '255.255.255.255', '1025'],
+            ['::1:56670', '::1', '56670'],
+        ];
     }
 }

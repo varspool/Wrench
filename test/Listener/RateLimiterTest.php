@@ -21,22 +21,6 @@ class RateLimiterTest extends ListenerBaseTest
         $this->getInstance()->onSocketConnect(null, $this->getConnection());
     }
 
-    /**
-     * @doesNotPerformAssertions
-     */
-    public function testOnSocketDisconnect()
-    {
-        $this->getInstance()->onSocketDisconnect(null, $this->getConnection());
-    }
-
-    /**
-     * @doesNotPerformAssertions
-     */
-    public function testOnClientData()
-    {
-        $this->getInstance()->onClientData(null, $this->getConnection());
-    }
-
     protected function getConnection()
     {
         $connection = $this->createMock(Connection::class);
@@ -60,5 +44,21 @@ class RateLimiterTest extends ListenerBaseTest
             ->will($this->returnValue($manager));
 
         return $connection;
+    }
+
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testOnSocketDisconnect()
+    {
+        $this->getInstance()->onSocketDisconnect(null, $this->getConnection());
+    }
+
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testOnClientData()
+    {
+        $this->getInstance()->onClientData(null, $this->getConnection());
     }
 }
