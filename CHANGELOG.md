@@ -1,10 +1,22 @@
 <!-- vim: set tw=79 sw=4 ts=4 et ft=markdown : -->
 # Changelog
 
+## 2.0
+
+### 2.0.8 (UNRELEASED)
+
 * Allowed access to the headers and query params included in the original
   web sockets upgrade HTTP request
+* Bugfixes for socket options, error messages, json encoding, and more by @nexen2,
+  @Alarmfifa, @guweigang, @joy2fun, @emadruida, and others.
+* Added PHPCS rules
+* Added testing under PHP7
 
-## 2.0.0
+### 2.0.7
+
+* @DaSpors fixes for getReceivingFrame
+
+### 2.0.0
 
 * Name change: php-websocket was renamed to Wrench, along with a top-level
   namespace change.
