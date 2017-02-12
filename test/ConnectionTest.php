@@ -3,7 +3,6 @@
 namespace Wrench;
 
 use Wrench\Application\DataHandlerInterface;
-use Wrench\Application\EchoApplication;
 use Wrench\Protocol\Protocol;
 use Wrench\Socket\ServerClientSocket;
 use Wrench\Socket\Socket;
@@ -127,7 +126,7 @@ class ConnectionTest extends BaseTest
     /**
      * Gets a mock application
      *
-     * @return \PHPUnit_Framework_MockObject_MockObject|EchoApplication
+     * @return \PHPUnit_Framework_MockObject_MockObject|DataHandlerInterface
      */
     protected function getMockApplication()
     {
