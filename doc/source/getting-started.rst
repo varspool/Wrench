@@ -25,16 +25,12 @@ $server->run()::
         )
     ));
 
-    // Register your applications
+    // Logging is via PSR3
+    $logger = new Monolog\Logger('name');
+    $server->setLogger($logger);
 
-    $server->run();
-
---------------------------
-Registering an Application
---------------------------
-
-The server on its own doesn't do anything until you write an Application for
-it. The server calls methods on your applications once they are registered::
-
+    // Register your applications here
     $server->registerApplication('echo', new \Wrench\Examples\EchoApplication());
     $server->registerApplication('chat', new \My\ChatApplication());
+
+    $server->run();
