@@ -17,7 +17,7 @@ class ClientSocket extends UriSocket
     const TIMEOUT_CONNECT = 2;
 
     /**
-     * @see Wrench\Socket.Socket::configure()
+     * @see \Wrench\Socket.Socket::configure()
      *   Options include:
      *     - ssl_verify_peer       => boolean, whether to perform peer verification
      *                                 of SSL certificate used
@@ -78,7 +78,7 @@ class ClientSocket extends UriSocket
     }
 
     /**
-     * @see Wrench\Socket.UriSocket::getSocketStreamContextOptions()
+     * @see \Wrench\Socket.UriSocket::getSocketStreamContextOptions()
      */
     protected function getSocketStreamContextOptions()
     {
@@ -87,7 +87,7 @@ class ClientSocket extends UriSocket
     }
 
     /**
-     * @see Wrench\Socket.UriSocket::getSslStreamContextOptions()
+     * @see \Wrench\Socket.UriSocket::getSslStreamContextOptions()
      */
     protected function getSslStreamContextOptions()
     {

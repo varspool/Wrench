@@ -42,7 +42,7 @@ class RateLimiterTest extends ListenerTest
 
     protected function getConnection()
     {
-        $connection = $this->getMock('Wrench\Connection', array(), array(), '', false);
+        $connection = $this->createMock('\Wrench\Connection');
 
         $connection
             ->expects($this->any())
@@ -54,7 +54,7 @@ class RateLimiterTest extends ListenerTest
             ->method('getId')
             ->will($this->returnValue('abcdef01234567890'));
 
-        $manager = $this->getMock('Wrench\ConnectionManager', array(), array(), '', false);
+        $manager = $this->createMock('\Wrench\ConnectionManager');
         $manager->expects($this->any())->method('count')->will($this->returnValue(5));
 
         $connection

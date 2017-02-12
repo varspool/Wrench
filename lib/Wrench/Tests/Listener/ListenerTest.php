@@ -14,7 +14,7 @@ abstract class ListenerTest extends Test
      */
     public function testListen($instance)
     {
-        $server = $this->getMock('Wrench\Server', array(), array(), '', false);
+        $server = $this->createMock('Wrench\Server');
 
         $instance->listen($server);
     }

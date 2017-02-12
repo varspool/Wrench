@@ -3,21 +3,24 @@
 namespace Wrench\Tests;
 
 use Wrench\Application\EchoApplication;
+use Wrench\ConnectionManager;
 use Wrench\Protocol\Protocol;
 use Wrench\Connection;
+use Wrench\Server;
 use Wrench\Tests\Test;
 use Wrench\Socket;
 
 use \InvalidArgumentException;
-use \PHPUnit_Framework_Error;
 
 /**
  * Tests the Connection class
+ *
+ * @method Connection getInstance
  */
 class ConnectionTest extends Test
 {
     /**
-     * @see Wrench\Tests.Test::getClass()
+     * @see \Wrench\Tests.Test::getClass()
      */
     protected function getClass()
     {
@@ -45,6 +48,7 @@ class ConnectionTest extends Test
 
     /**
      * @dataProvider getValidCloseCodes
+     * @doesNotPerformAssertions
      */
     public function testClose($code)
     {
@@ -91,7 +95,7 @@ class ConnectionTest extends Test
 
     /**
      * @dataProvider getValidHandshakeData
-     * @expectedException Wrench\Exception\HandshakeException
+     * @expectedException \Wrench\Exception\HandshakeException
      */
     public function testHandshakeBadSocket($path, $request)
     {
@@ -174,7 +178,7 @@ class ConnectionTest extends Test
 
         $application = $this->getMockApplication();
 
-        $server = $this->getMock('Wrench\Server', array(), array(), '', false);
+        $server = $this->createMock('Wrench\Server');
         $server->registerApplication($path, $application);
 
         $manager->expects($this->any())
@@ -203,7 +207,10 @@ class ConnectionTest extends Test
                     ->method('onData')
                     ->will($this->returnValue(true));
 
-        $server = $this->getMock('Wrench\Server', array(), array(), '', false);
+        /**
+         * @var $server Server|\PHPUnit_Framework_MockObject_MockObject
+         */
+        $server = $this->createMock('Wrench\Server');
         $server->registerApplication($path, $application);
 
         $manager->expects($this->any())
@@ -224,31 +231,31 @@ class ConnectionTest extends Test
     }
 
     /**
-     * @return ConnectionManager
+     * @return \PHPUnit_Framework_MockObject_MockObject|ConnectionManager
      */
     protected function getMockConnectionManager()
     {
-        return $this->getMock('Wrench\ConnectionManager', array(), array(), '', false);
+        return $this->createMock('Wrench\ConnectionManager');
     }
 
     /**
      * Gets a mock socket
      *
-     * @return Socket
+     * @return \PHPUnit_Framework_MockObject_MockObject|Socket\Socket
      */
     protected function getMockSocket()
     {
-        return $this->getMock('Wrench\Socket\ServerClientSocket', array(), array(), '', false);
+        return $this->createMock('Wrench\Socket\ServerClientSocket');
     }
 
     /**
      * Gets a mock application
      *
-     * @return EchoApplication
+     * @return \PHPUnit_Framework_MockObject_MockObject|EchoApplication
      */
     protected function getMockApplication()
     {
-        return $this->getMock('Wrench\Application\EchoApplication');
+        return $this->createMock('Wrench\Application\EchoApplication');
     }
 
     /**

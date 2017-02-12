@@ -2,13 +2,13 @@
 
 namespace Wrench\Tests;
 
-use \PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use \ReflectionClass;
 
 /**
  * Test base class
  */
-abstract class Test extends PHPUnit_Framework_TestCase
+abstract class Test extends TestCase
 {
     /**
      * Gets the class under test
@@ -30,6 +30,20 @@ abstract class Test extends PHPUnit_Framework_TestCase
             $instance,
             $message
         );
+    }
+
+    /**
+     * Forward compatibility with PHPUnit 5
+     *
+     * @param string $class
+     * @return \PHPUnit_Framework_MockObject_MockObject|mixed
+     */
+    public function createMock($class)
+    {
+        return $this->getMockBuilder($class)
+            ->setMethods(array())
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     /**

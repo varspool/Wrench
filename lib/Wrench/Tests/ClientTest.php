@@ -2,27 +2,15 @@
 
 namespace Wrench\Tests;
 
-use Wrench\Protocol\Protocol;
+use InvalidArgumentException;
 use Wrench\Client;
-use Wrench\Tests\Test;
-use Wrench\Socket;
-
-use \InvalidArgumentException;
-use \PHPUnit_Framework_Error;
+use Wrench\Protocol\Protocol;
 
 /**
  * Tests the client class
  */
 class ClientTest extends Test
 {
-    /**
-     * @see Wrench\Tests.Test::getClass()
-     */
-    protected function getClass()
-    {
-        return 'Wrench\Client';
-    }
-
     public function testConstructor()
     {
         $this->assertInstanceOfClass(
@@ -46,11 +34,14 @@ class ClientTest extends Test
     /**
      * Gets a mock socket
      *
-     * @return Socket
+     * @return \Wrench\Socket\Socket|\PHPUnit_Framework_MockObject_MockObject
      */
     protected function getMockSocket()
     {
-        return $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
+        return $this->getMockBuilder('Wrench\Socket\ClientSocket')
+            ->setMethods(array())
+            ->setConstructorArgs(array('wss://localhost:8000'))
+            ->getMock();
     }
 
     /**
@@ -99,7 +90,7 @@ class ClientTest extends Test
             $helper = new ServerTestHelper();
             $helper->setUp();
 
-            /* @var $instance Wrench\Client */
+            /* @var $instance \Wrench\Client */
             $instance = $this->getInstance($helper->getEchoConnectionString(), 'http://www.example.com/send');
             $instance->addRequestHeader('X-Test', 'Custom Request Header');
 
@@ -158,5 +149,13 @@ class ClientTest extends Test
         }
 
         $helper->tearDown();
+    }
+
+    /**
+     * @see \Wrench\Tests.Test::getClass()
+     */
+    protected function getClass()
+    {
+        return 'Wrench\Client';
     }
 }

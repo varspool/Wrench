@@ -44,7 +44,7 @@ class OriginPolicyTest extends ListenerTest
     {
         $instance = $this->getInstance($allowed);
 
-        $connection = $this->getMock('Wrench\Connection', array(), array(), '', false);
+        $connection = $this->createMock('Wrench\Connection');
 
         $connection
             ->expects($this->never())
@@ -73,7 +73,7 @@ class OriginPolicyTest extends ListenerTest
     {
         $instance = $this->getInstance($allowed);
 
-        $connection = $this->getMock('Wrench\Connection', array(), array(), '', false);
+        $connection = $this->createMock('Wrench\Connection');
 
         $connection
             ->expects($this->once())
