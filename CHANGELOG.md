@@ -16,6 +16,8 @@
   Or inject any PSR3 compatible logger (e.g. `Monolog\Logger`)
 * The Connection class's `id` is now random, and not a consistent hash of information about the
   connection. This has implications for the way the rate limiter works. But is much nicer in the long term.
+* Using a string as a message type is deprecated; you must now always use the numeric `Protocol::TYPE_*` constants
+
 
 #### Deprecations
 

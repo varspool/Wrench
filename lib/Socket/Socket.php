@@ -171,7 +171,7 @@ abstract class Socket extends Configurable implements Resource
      *
      * @return bool
      */
-    public function isConnected()
+    public function isConnected(): bool
     {
         return $this->connected;
     }
@@ -179,7 +179,7 @@ abstract class Socket extends Configurable implements Resource
     /**
      * @see Wrench.Resource::getResource()
      */
-    public function getResource()
+    public function getResource(): resource
     {
         return $this->socket;
     }
@@ -187,7 +187,7 @@ abstract class Socket extends Configurable implements Resource
     /**
      * @see Wrench.Resource::getResourceId()
      */
-    public function getResourceId()
+    public function getResourceId(): int
     {
         return (int)$this->socket;
     }
@@ -197,7 +197,7 @@ abstract class Socket extends Configurable implements Resource
      * @throws SocketException
      * @return bool|int The number of bytes sent or false on error
      */
-    public function send($data)
+    public function send(string $data): ?int
     {
         if (!$this->isConnected()) {
             throw new SocketException('Socket is not connected');
@@ -213,9 +213,9 @@ abstract class Socket extends Configurable implements Resource
             $written = @fwrite($this->socket, substr($data, -1 * $i));
 
             if ($written === false) {
-                return false;
+                return null;
             } elseif ($written === 0) {
-                return false;
+                return null;
             }
         }
 
@@ -228,7 +228,7 @@ abstract class Socket extends Configurable implements Resource
      * @param int $length
      * @return string
      */
-    public function receive($length = self::DEFAULT_RECEIVE_LENGTH)
+    public function receive(int $length = self::DEFAULT_RECEIVE_LENGTH): string
     {
         $buffer = '';
         $metadata['unread_bytes'] = 0;

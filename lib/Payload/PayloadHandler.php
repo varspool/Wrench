@@ -28,13 +28,9 @@ class PayloadHandler extends Configurable
      * @param array    $options
      * @throws InvalidArgumentException
      */
-    public function __construct($callback, array $options = [])
+    public function __construct(callable $callback, array $options = [])
     {
         parent::__construct($options);
-
-        if (!is_callable($callback)) {
-            throw new InvalidArgumentException('You must supply a callback to PayloadHandler');
-        }
 
         $this->callback = $callback;
     }
@@ -43,8 +39,9 @@ class PayloadHandler extends Configurable
      * Handles the raw socket data given
      *
      * @param string $data
+     * @throws PayloadException
      */
-    public function handle($data)
+    public function handle(string $data)
     {
         if (!$this->payload) {
             $this->payload = $this->protocol->getPayload();
@@ -61,16 +58,16 @@ class PayloadHandler extends Configurable
             // Then re-loop. For extended lengths, this will happen once or four
             // times extra, as the extended length is read in.
             if ($remaining === null) {
-                $chunk_size = 2;
+                $chunkSize = 2;
             } elseif ($remaining > 0) {
-                $chunk_size = $remaining;
+                $chunkSize = $remaining;
             } elseif ($remaining === 0) {
-                $chunk_size = 0;
+                $chunkSize = 0;
             }
 
-            $chunk_size = min(strlen($data), $chunk_size);
-            $chunk = substr($data, 0, $chunk_size);
-            $data = substr($data, $chunk_size);
+            $chunkSize = min(strlen($data), $chunkSize);
+            $chunk = substr($data, 0, $chunkSize);
+            $data = substr($data, $chunkSize);
 
             $this->payload->receiveData($chunk);
 

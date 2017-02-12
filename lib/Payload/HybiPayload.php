@@ -2,6 +2,7 @@
 
 namespace Wrench\Payload;
 
+use Wrench\Frame\Frame;
 use Wrench\Frame\HybiFrame;
 
 /**
@@ -9,7 +10,7 @@ use Wrench\Frame\HybiFrame;
  */
 class HybiPayload extends Payload
 {
-    protected function getFrame()
+    protected function getFrame(): Frame
     {
         return new HybiFrame();
     }

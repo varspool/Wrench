@@ -19,10 +19,10 @@ abstract class Protocol
      *
      * @var string
      */
-    const SCHEME_WEBSOCKET = 'ws';
-    const SCHEME_WEBSOCKET_SECURE = 'wss';
-    const SCHEME_UNDERLYING = 'tcp';
-    const SCHEME_UNDERLYING_SECURE = 'tls';
+    public const SCHEME_WEBSOCKET = 'ws';
+    public const SCHEME_WEBSOCKET_SECURE = 'wss';
+    public const SCHEME_UNDERLYING = 'tcp';
+    public const SCHEME_UNDERLYING_SECURE = 'tls';
     /**#@-*/
 
     /**#@+
@@ -30,15 +30,15 @@ abstract class Protocol
      *
      * @var string
      */
-    const HEADER_HOST = 'host';
-    const HEADER_KEY = 'sec-websocket-key';
-    const HEADER_PROTOCOL = 'sec-websocket-protocol';
-    const HEADER_VERSION = 'sec-websocket-version';
-    const HEADER_ACCEPT = 'sec-websocket-accept';
-    const HEADER_EXTENSIONS = 'sec-websocket-extensions';
-    const HEADER_ORIGIN = 'origin';
-    const HEADER_CONNECTION = 'connection';
-    const HEADER_UPGRADE = 'upgrade';
+    public const HEADER_HOST = 'host';
+    public const HEADER_KEY = 'sec-websocket-key';
+    public const HEADER_PROTOCOL = 'sec-websocket-protocol';
+    public const HEADER_VERSION = 'sec-websocket-version';
+    public const HEADER_ACCEPT = 'sec-websocket-accept';
+    public const HEADER_EXTENSIONS = 'sec-websocket-extensions';
+    public const HEADER_ORIGIN = 'origin';
+    public const HEADER_CONNECTION = 'connection';
+    public const HEADER_UPGRADE = 'upgrade';
     /**#@-*/
 
     /**#@+
@@ -46,14 +46,14 @@ abstract class Protocol
      *
      * @var int
      */
-    const HTTP_SWITCHING_PROTOCOLS = 101;
-    const HTTP_BAD_REQUEST = 400;
-    const HTTP_UNAUTHORIZED = 401;
-    const HTTP_FORBIDDEN = 403;
-    const HTTP_NOT_FOUND = 404;
-    const HTTP_RATE_LIMITED = 420;
-    const HTTP_SERVER_ERROR = 500;
-    const HTTP_NOT_IMPLEMENTED = 501;
+    public const HTTP_SWITCHING_PROTOCOLS = 101;
+    public const HTTP_BAD_REQUEST = 400;
+    public const HTTP_UNAUTHORIZED = 401;
+    public const HTTP_FORBIDDEN = 403;
+    public const HTTP_NOT_FOUND = 404;
+    public const HTTP_RATE_LIMITED = 420;
+    public const HTTP_SERVER_ERROR = 500;
+    public const HTTP_NOT_IMPLEMENTED = 501;
     /**#@-*/
 
     /**#@+
@@ -62,19 +62,19 @@ abstract class Protocol
      * @see http://tools.ietf.org/html/rfc6455#section-7.4
      * @var int
      */
-    const CLOSE_NORMAL = 1000;
-    const CLOSE_GOING_AWAY = 1001;
-    const CLOSE_PROTOCOL_ERROR = 1002;
-    const CLOSE_DATA_INVALID = 1003;
-    const CLOSE_RESERVED = 1004;
-    const CLOSE_RESERVED_NONE = 1005;
-    const CLOSE_RESERVED_ABNORM = 1006;
-    const CLOSE_DATA_INCONSISTENT = 1007;
-    const CLOSE_POLICY_VIOLATION = 1008;
-    const CLOSE_MESSAGE_TOO_BIG = 1009;
-    const CLOSE_EXTENSION_NEEDED = 1010;
-    const CLOSE_UNEXPECTED = 1011;
-    const CLOSE_RESERVED_TLS = 1015;
+    public const CLOSE_NORMAL = 1000;
+    public const CLOSE_GOING_AWAY = 1001;
+    public const CLOSE_PROTOCOL_ERROR = 1002;
+    public const CLOSE_DATA_INVALID = 1003;
+    public const CLOSE_RESERVED = 1004;
+    public const CLOSE_RESERVED_NONE = 1005;
+    public const CLOSE_RESERVED_ABNORM = 1006;
+    public const CLOSE_DATA_INCONSISTENT = 1007;
+    public const CLOSE_POLICY_VIOLATION = 1008;
+    public const CLOSE_MESSAGE_TOO_BIG = 1009;
+    public const CLOSE_EXTENSION_NEEDED = 1010;
+    public const CLOSE_UNEXPECTED = 1011;
+    public const CLOSE_RESERVED_TLS = 1015;
     /**#@-*/
 
     /**#@+
@@ -90,22 +90,22 @@ abstract class Protocol
      *
      * @var int
      */
-    const TYPE_CONTINUATION = 0;
-    const TYPE_TEXT = 1;
-    const TYPE_BINARY = 2;
-    const TYPE_RESERVED_3 = 3;
-    const TYPE_RESERVED_4 = 4;
-    const TYPE_RESERVED_5 = 5;
-    const TYPE_RESERVED_6 = 6;
-    const TYPE_RESERVED_7 = 7;
-    const TYPE_CLOSE = 8;
-    const TYPE_PING = 9;
-    const TYPE_PONG = 10;
-    const TYPE_RESERVED_11 = 11;
-    const TYPE_RESERVED_12 = 12;
-    const TYPE_RESERVED_13 = 13;
-    const TYPE_RESERVED_14 = 14;
-    const TYPE_RESERVED_15 = 15;
+    public const TYPE_CONTINUATION = 0;
+    public const TYPE_TEXT = 1;
+    public const TYPE_BINARY = 2;
+    public const TYPE_RESERVED_3 = 3;
+    public const TYPE_RESERVED_4 = 4;
+    public const TYPE_RESERVED_5 = 5;
+    public const TYPE_RESERVED_6 = 6;
+    public const TYPE_RESERVED_7 = 7;
+    public const TYPE_CLOSE = 8;
+    public const TYPE_PING = 9;
+    public const TYPE_PONG = 10;
+    public const TYPE_RESERVED_11 = 11;
+    public const TYPE_RESERVED_12 = 12;
+    public const TYPE_RESERVED_13 = 13;
+    public const TYPE_RESERVED_14 = 14;
+    public const TYPE_RESERVED_15 = 15;
     /**#@-*/
 
     /**
@@ -161,7 +161,7 @@ abstract class Protocol
      *
      * @var array<int => string>
      */
-    public static $closeReasons = [
+    public const CLOSE_REASONS = [
         self::CLOSE_NORMAL => 'normal close',
         self::CLOSE_GOING_AWAY => 'going away',
         self::CLOSE_PROTOCOL_ERROR => 'protocol error',
@@ -182,7 +182,7 @@ abstract class Protocol
      * @todo flip values and keys?
      * @var array<string => int>
      */
-    public static $frameTypes = [
+    public const FRAME_TYPES = [
         'continuation' => self::TYPE_CONTINUATION,
         'text' => self::TYPE_TEXT,
         'binary' => self::TYPE_BINARY,
@@ -195,7 +195,7 @@ abstract class Protocol
      *
      * @var array<int => string>
      */
-    public static $httpResponses = [
+    public const HTTP_RESPONSES = [
         self::HTTP_SWITCHING_PROTOCOLS => 'Switching Protocols',
         self::HTTP_BAD_REQUEST => 'Bad Request',
         self::HTTP_UNAUTHORIZED => 'Unauthorized',
@@ -461,10 +461,10 @@ abstract class Protocol
      */
     protected function getHttpResponse($status, array $headers = [])
     {
-        if (array_key_exists($status, self::$httpResponses)) {
-            $response = self::$httpResponses[$status];
+        if (array_key_exists($status, self::HTTP_RESPONSES)) {
+            $response = self::HTTP_RESPONSES[$status];
         } else {
-            $response = self::$httpResponses[self::HTTP_NOT_IMPLEMENTED];
+            $response = self::HTTP_RESPONSES[self::HTTP_NOT_IMPLEMENTED];
         }
 
         $handshake = [
@@ -747,11 +747,11 @@ abstract class Protocol
             $code = (int)$e;
         }
 
-        if (!$code || !key_exists($code, self::$closeReasons)) {
+        if (!$code || !key_exists($code, self::CLOSE_REASONS)) {
             $code = self::CLOSE_UNEXPECTED;
         }
 
-        $body = pack('n', $code) . self::$closeReasons[$code];
+        $body = pack('n', $code) . self::CLOSE_REASONS[$code];
 
         $payload = $this->getPayload();
         return $payload->encode($body, self::TYPE_CLOSE, $masked);

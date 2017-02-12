@@ -42,7 +42,7 @@ class ClientTest extends BaseTest
     protected function getMockSocket()
     {
         return $this->getMockBuilder(ClientSocket::class)
-            ->setMethods([])
+            ->setMethods(null)
             ->setConstructorArgs(['wss://localhost:8000'])
             ->getMock();
     }
@@ -106,30 +106,17 @@ class ClientTest extends BaseTest
             $this->assertTrue($success, 'Client can connect to test server');
             $this->assertTrue($instance->isConnected());
 
-            try {
-                $instance->sendData('blah', 9999);
-            } catch (\Exception $ex) {
-                $this->assertInstanceOf('InvalidArgumentException', $ex, 'Test sending invalid type');
-            }
-
-            try {
-                $instance->sendData('blah', 'fooey');
-            } catch (\Exception $ex) {
-                $this->assertInstanceOf('InvalidArgumentException', $ex, 'Test sending invalid type string');
-            }
-
             $this->assertFalse($instance->connect(), 'Double connect');
 
             $this->assertFalse((boolean)$instance->receive(), 'No data');
 
-            $bytes = $instance->sendData('foobar', 'text');
+            $bytes = $instance->sendData('foobar', Protocol::TYPE_TEXT);
             $this->assertTrue($bytes >= 6, 'sent text frame');
-            sleep(1);
 
             $bytes = $instance->sendData('baz', Protocol::TYPE_TEXT);
             $this->assertTrue($bytes >= 3, 'sent text frame');
-            sleep(1);
 
+            usleep(500);
             $responses = $instance->receive();
             $this->assertTrue(is_array($responses));
             $this->assertCount(2, $responses);
@@ -138,7 +125,6 @@ class ClientTest extends BaseTest
 
             $bytes = $instance->sendData('baz', Protocol::TYPE_TEXT);
             $this->assertTrue($bytes >= 3, 'sent text frame');
-            sleep(1);
 
             # test fix for issue #43
             $responses = $instance->receive();
@@ -149,11 +135,8 @@ class ClientTest extends BaseTest
             $instance->disconnect();
 
             $this->assertFalse($instance->isConnected());
-        } catch (\Exception $e) {
+        } finally {
             $helper->tearDown();
-            throw $e;
         }
-
-        $helper->tearDown();
     }
 }

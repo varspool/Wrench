@@ -65,7 +65,7 @@ class HybiFrame extends Frame
      */
     public function encode($payload, $type = Protocol::TYPE_TEXT, $masked = false)
     {
-        if (!is_int($type) || !in_array($type, Protocol::$frameTypes)) {
+        if (!is_int($type) || !in_array($type, Protocol::FRAME_TYPES)) {
             throw new InvalidArgumentException('Invalid frame type');
         }
 
@@ -298,7 +298,7 @@ class HybiFrame extends Frame
 
         $type = (int)(ord($this->buffer[self::BYTE_HEADER]) & self::BITFIELD_TYPE);
 
-        if (!in_array($type, Protocol::$frameTypes)) {
+        if (!in_array($type, Protocol::FRAME_TYPES)) {
             throw new FrameException('Invalid payload type');
         }
 

@@ -38,7 +38,7 @@ abstract class Payload
      * @return Payload
      * @todo No splitting into multiple frames just yet
      */
-    public function encode($data, $type = Protocol::TYPE_TEXT, $masked = false)
+    public function encode(string $data, int $type = Protocol::TYPE_TEXT, bool $masked = false)
     {
         $this->frames = [];
 
@@ -62,7 +62,7 @@ abstract class Payload
      *
      * @return bool
      */
-    public function isWaitingForData()
+    public function isWaitingForData(): bool
     {
         return $this->getRemainingData() > 0;
     }
@@ -73,9 +73,9 @@ abstract class Payload
      * May return 0 (no more bytes required) or null (unknown number of bytes
      * required).
      *
-     * @return number|NULL
+     * @return int|null
      */
-    public function getRemainingData()
+    public function getRemainingData(): ?int
     {
         if ($this->isComplete()) {
             return 0;
@@ -169,7 +169,7 @@ abstract class Payload
 
         if ($current->isComplete()) {
             if ($current->isFinal()) {
-                throw new PayloadException('Payload cannot receieve data: it is already complete');
+                throw new PayloadException('Payload cannot receive data: it is already complete');
             } else {
                 $this->frames[] = $current = $this->getFrame();
             }

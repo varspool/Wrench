@@ -149,14 +149,10 @@ class Client extends Configurable
      * @param boolean $masked
      * @return bool Success
      */
-    public function sendData($data, $type = Protocol::TYPE_TEXT, $masked = true)
+    public function sendData(string $data, int $type = Protocol::TYPE_TEXT, $masked = true)
     {
         if (!$this->isConnected()) {
             return false;
-        }
-
-        if (is_string($type) && isset(Protocol::$frameTypes[$type])) {
-            $type = Protocol::$frameTypes[$type];
         }
 
         $payload = $this->protocol->getPayload();
@@ -197,10 +193,10 @@ class Client extends Configurable
      *
      * @return array<Payload> Payload received since the last call to receive()
      */
-    public function receive()
+    public function receive(): ?array
     {
         if (!$this->isConnected()) {
-            return false;
+            return null;
         }
 
         $data = $this->socket->receive();

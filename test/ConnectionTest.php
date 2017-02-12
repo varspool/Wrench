@@ -62,7 +62,10 @@ class ConnectionTest extends BaseTest
      */
     protected function getMockSocket()
     {
-        return $this->createMock(ServerClientSocket::class);
+        return $this->getMockBuilder(ServerClientSocket::class)
+            ->setMethods(null)
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     /**
@@ -253,7 +256,7 @@ class ConnectionTest extends BaseTest
     public function getValidCloseCodes()
     {
         $arguments = [];
-        foreach (Protocol::$closeReasons as $code => $reason) {
+        foreach (Protocol::CLOSE_REASONS as $code => $reason) {
             $arguments[] = [$code];
         }
         return $arguments;
@@ -274,7 +277,7 @@ class ConnectionTest extends BaseTest
 
         $socket->expects($this->any())
             ->method('getPort')
-            ->will($this->returnValue(mt_rand(1025, 50000)));
+            ->will($this->returnValue(random_int(1025, 50000)));
 
         $manager = $this->getMockConnectionManager();
 
