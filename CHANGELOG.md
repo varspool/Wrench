@@ -3,7 +3,7 @@
 
 ## 2.0
 
-### 2.0.8 (UNRELEASED)
+### 2.0.8
 
 * Allowed access to the headers and query params included in the original
   web sockets upgrade HTTP request
