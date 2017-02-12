@@ -17,6 +17,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/StatusApplication.php';
 
 // Generate PEM file
 $pemFile = __DIR__ . '/generated.pem';
@@ -63,6 +64,8 @@ $app = new class implements \Wrench\Application\DataHandlerInterface
         $connection->send($data);
     }
 };
+
 $server->registerApplication('echo', $app);
+$server->registerApplication('status', new \Wrench\Application\StatusApplication());
 
 $server->run();

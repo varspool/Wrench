@@ -90,23 +90,32 @@ abstract class PayloadBaseTest extends BaseTest
      */
     public function testSendToSocket($type, $payload)
     {
-        $successfulSocket = $this->getMockBuilder(ClientSocket::class)
-            ->setMethods([])
-            ->setConstructorArgs(['wss://localhost:8000'])
-            ->getMock();
-        $failedSocket = clone $successfulSocket;
+//        $successfulSocket = $this->getMockBuilder(ClientSocket::class)
+//            ->setMethods(['send'])
+//            ->setConstructorArgs(['wss://localhost:8000'])
+//            ->getMock();
 
-        $successfulSocket->expects($this->any())
+        $socket = $this->getMockBuilder(ClientSocket::class)
+            ->setMethods(['getIp', 'getPort', 'isConnected', 'send'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $failedSocket = $this->getMockBuilder(ClientSocket::class)
+            ->setMethods(['getIp', 'getPort', 'isConnected', 'send'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $socket->expects($this->any())
             ->method('send')
-            ->will($this->returnValue(true));
+            ->will($this->returnValue(500));
 
         $failedSocket->expects($this->any())
             ->method('send')
-            ->will($this->returnValue(false));
+            ->will($this->returnValue(null));
 
         $this->payload->encode($payload, $type);
 
-        $this->assertTrue($this->payload->sendToSocket($successfulSocket));
+        $this->assertTrue($this->payload->sendToSocket($socket));
         $this->assertFalse($this->payload->sendToSocket($failedSocket));
     }
 

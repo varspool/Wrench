@@ -122,9 +122,13 @@ abstract class Payload
     public function sendToSocket(Socket $socket): bool
     {
         $success = true;
+
         foreach ($this->frames as $frame) {
-            $success = $success && ($socket->send($frame->getFrameBuffer()) !== false);
+            $success = $success && (
+                    $socket->send($frame->getFrameBuffer()) !== null
+                );
         }
+
         return $success;
     }
 

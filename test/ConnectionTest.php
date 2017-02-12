@@ -47,7 +47,7 @@ class ConnectionTest extends BaseTest
 
         $socket->expects($this->any())
             ->method('getPort')
-            ->will($this->returnValue(mt_rand(1025, 50000)));
+            ->will($this->returnValue(random_int(1025, 50000)));
 
         $manager = $this->getMockConnectionManager();
 
@@ -63,7 +63,7 @@ class ConnectionTest extends BaseTest
     protected function getMockSocket()
     {
         return $this->getMockBuilder(ServerClientSocket::class)
-            ->setMethods(null)
+            ->setMethods(['getIp', 'getPort', 'isConnected', 'send'])
             ->disableOriginalConstructor()
             ->getMock();
     }
@@ -145,6 +145,10 @@ class ConnectionTest extends BaseTest
             ->method('isConnected')
             ->will($this->returnValue(true));
 
+        $socket->expects($this->any())
+            ->method('send')
+            ->will($this->returnValue(100));
+
         return $socket;
     }
 
@@ -180,7 +184,7 @@ class ConnectionTest extends BaseTest
      * Because expectation is that only $path application is available
      *
      * @dataProvider getWrongPathHandshakeData
-     * @expectedException PHPUnit_Framework_ExpectationFailedException
+     * @expectedException \PHPUnit\Framework\ExpectationFailedException
      */
     public function testWrongPathHandshake($path, $request)
     {

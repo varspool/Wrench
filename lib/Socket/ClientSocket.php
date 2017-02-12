@@ -23,7 +23,7 @@ class ClientSocket extends UriSocket
     /**
      * Connects to the given socket
      */
-    public function connect()
+    public function connect(): bool
     {
         if ($this->isConnected()) {
             return true;
@@ -65,6 +65,8 @@ class ClientSocket extends UriSocket
      *     - ssl_allow_self_signed => boolean, whether ssl_verify_peer allows
      *                                 self-signed certs
      *     - timeout_connect       => int, seconds, default 2
+     *
+     * @param array $options
      */
     protected function configure(array $options)
     {
@@ -77,13 +79,13 @@ class ClientSocket extends UriSocket
         parent::configure($options);
     }
 
-    protected function getSocketStreamContextOptions()
+    protected function getSocketStreamContextOptions(): array
     {
         $options = [];
         return $options;
     }
 
-    protected function getSslStreamContextOptions()
+    protected function getSslStreamContextOptions(): array
     {
         $options = [];
 

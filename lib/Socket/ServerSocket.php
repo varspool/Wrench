@@ -26,7 +26,7 @@ class ServerSocket extends UriSocket
      *
      * @throws ConnectionException
      */
-    public function listen()
+    public function listen(): void
     {
         $this->socket = stream_socket_server(
             $this->getUri(),
@@ -79,7 +79,7 @@ class ServerSocket extends UriSocket
      *     - ssl_passphrase        => string, passphrase for the key
      *     - timeout_accept        => int, seconds, default 5
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $options = array_merge([
             'backlog' => 50,
@@ -92,7 +92,7 @@ class ServerSocket extends UriSocket
         parent::configure($options);
     }
 
-    protected function getSocketStreamContextOptions()
+    protected function getSocketStreamContextOptions(): array
     {
         $options = [];
 
@@ -103,7 +103,7 @@ class ServerSocket extends UriSocket
         return $options;
     }
 
-    protected function getSslStreamContextOptions()
+    protected function getSslStreamContextOptions(): array
     {
         $options = [];
 

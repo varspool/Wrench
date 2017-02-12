@@ -7,6 +7,6 @@ use Wrench\Payload\Payload;
 
 interface ConnectionHandlerInterface
 {
-    public function onConnect($connection);
-    public function onDisconnect($connection);
+    public function onConnect(Connection $connection): void;
+    public function onDisconnect(Connection $connection): void;
 }

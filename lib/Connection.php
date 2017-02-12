@@ -373,7 +373,7 @@ class Connection extends Configurable implements LoggerAwareInterface
                 throw new HandshakeException('Socket is not connected');
             }
 
-            if ($this->socket->send($response) === false) {
+            if ($this->socket->send($response) === null) {
                 throw new HandshakeException('Could not send handshake response');
             }
 

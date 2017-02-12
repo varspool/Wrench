@@ -71,7 +71,7 @@ abstract class Socket extends Configurable implements Resource
      * @throws \Wrench\Exception\SocketException If the IP address cannot be obtained
      * @return string
      */
-    public function getIp()
+    public function getIp(): string
     {
         $name = $this->getName();
 
@@ -87,7 +87,7 @@ abstract class Socket extends Configurable implements Resource
      *
      * @return string
      */
-    protected function getName()
+    protected function getName(): string
     {
         if (!isset($this->name) || !$this->name) {
             $this->name = @stream_socket_get_name($this->socket, true);
@@ -107,7 +107,7 @@ abstract class Socket extends Configurable implements Resource
      * @return string
      * @throws SocketException
      */
-    public static function getNamePart($name, $part)
+    public static function getNamePart(string $name, int $part): string
     {
         if (!$name) {
             throw new InvalidArgumentException('Invalid name');
@@ -132,14 +132,14 @@ abstract class Socket extends Configurable implements Resource
      * Gets the port of the socket
      *
      * @throws \Wrench\Exception\SocketException If the port cannot be obtained
-     * @return string
+     * @return int
      */
-    public function getPort()
+    public function getPort(): int
     {
         $name = $this->getName();
 
         if ($name) {
-            return self::getNamePart($name, self::NAME_PART_PORT);
+            return (int)self::getNamePart($name, self::NAME_PART_PORT);
         } else {
             throw new SocketException('Cannot get socket IP address');
         }
@@ -148,9 +148,9 @@ abstract class Socket extends Configurable implements Resource
     /**
      * Get the last error that occurred on the socket
      *
-     * @return int|string
+     * @return string
      */
-    public function getLastError()
+    public function getLastError(): string
     {
         if ($this->isConnected() && $this->socket) {
             $err = @socket_last_error($this->socket);
@@ -177,16 +177,13 @@ abstract class Socket extends Configurable implements Resource
     }
 
     /**
-     * @see Wrench.Resource::getResource()
+     * @return resource
      */
-    public function getResource(): resource
+    public function getResource()
     {
         return $this->socket;
     }
 
-    /**
-     * @see Wrench.Resource::getResourceId()
-     */
     public function getResourceId(): int
     {
         return (int)$this->socket;
@@ -195,7 +192,7 @@ abstract class Socket extends Configurable implements Resource
     /**
      * @param string $data Binary data to send down the socket
      * @throws SocketException
-     * @return bool|int The number of bytes sent or false on error
+     * @return null|int The number of bytes sent or null on error
      */
     public function send(string $data): ?int
     {

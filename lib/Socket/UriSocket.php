@@ -37,20 +37,21 @@ abstract class UriSocket extends Socket
     /**
      * Gets the host name
      */
-    public function getHost()
+    public function getHost(): string
     {
         return $this->host;
     }
 
-    public function getPort()
+    public function getPort(): int
     {
         return $this->port;
     }
 
     /**
      * @todo DNS lookup? Override getIp()?
+     * @return string
      */
-    protected function getName()
+    protected function getName(): string
     {
         return sprintf('%s:%s', $this->host, $this->port);
     }
@@ -60,7 +61,7 @@ abstract class UriSocket extends Socket
      *
      * @return string
      */
-    protected function getUri()
+    protected function getUri(): string
     {
         return sprintf(
             '%s://%s:%d',
@@ -72,6 +73,8 @@ abstract class UriSocket extends Socket
 
     /**
      * Gets a stream context
+     *
+     * @return resource
      */
     protected function getStreamContext($listen = false)
     {
@@ -99,7 +102,7 @@ abstract class UriSocket extends Socket
      *
      * @return array
      */
-    abstract protected function getSocketStreamContextOptions();
+    abstract protected function getSocketStreamContextOptions() : array;
 
     /**
      * Returns an array of ssl stream context options
@@ -107,5 +110,5 @@ abstract class UriSocket extends Socket
      *
      * @return array
      */
-    abstract protected function getSslStreamContextOptions();
+    abstract protected function getSslStreamContextOptions() : array;
 }

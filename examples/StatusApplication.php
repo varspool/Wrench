@@ -10,7 +10,7 @@ use Wrench\Connection;
  *
  * @author Simon Samtleben <web@lemmingzshadow.net>
  */
-class StatusApplication
+class StatusApplication implements ConnectionHandlerInterface
 {
     private $_clients           = array();
     private $_serverClients     = array();
@@ -20,7 +20,7 @@ class StatusApplication
     /**
      * @param Connection $client
      */
-    public function onConnect($client)
+    public function onConnect(Connection $client): void
     {
         $id = $client->getId();
         $this->_clients[$id] = $client;
@@ -30,15 +30,10 @@ class StatusApplication
     /**
      * @param Connection $client
      */
-    public function onDisconnect($client)
+    public function onDisconnect(Connection $client): void
     {
         $id = $client->getId();
         unset($this->_clients[$id]);
-    }
-
-    public function onData($data, $client)
-    {
-        // currently not in use...
     }
 
     public function setServerInfo($serverInfo)
@@ -50,7 +45,6 @@ class StatusApplication
 
         return false;
     }
-
 
     public function clientConnected($ip, $port)
     {
@@ -113,6 +107,7 @@ class StatusApplication
 
     /**
      * @param Connection $client
+     * @return bool
      */
     private function _sendServerinfo($client)
     {
