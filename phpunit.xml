@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<phpunit bootstrap="vendor/autoload.php">
+<phpunit bootstrap="test/bootstrap.php">
 	<testsuites>
 		<testsuite name="Default Testsuite">
-			<directory>lib/Wrench/Tests</directory>
+			<directory>test</directory>
 		</testsuite>
 	</testsuites>
 </phpunit>

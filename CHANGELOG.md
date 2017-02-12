@@ -1,6 +1,13 @@
 <!-- vim: set tw=79 sw=4 ts=4 et ft=markdown : -->
 # Changelog
 
+## 3.0
+
+### 3.0.0 (UNRELEASED)
+
+* Dropped support for PHP versions prior to 7.1
+* Moved to PSR4 layout, with a separate test directory (this means test code cannot be autoloaded in production, much nicer)
+
 ## 2.0
 
 ### 2.0.8
