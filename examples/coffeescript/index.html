@@ -70,31 +70,31 @@
                 false
     </script>
 
-    <meta charset=utf-8/>
+    <meta charset="utf-8"/>
 
     <title>Shiny WSS Demo Application</title>
 </head>
 <body>
-    <div id="container">
-        <h1>Shiny WSS Demo Application</h1>
-        <span id="status" class="offline">offline</span>
+<div id="container">
+    <h1>Shiny WSS Demo Application</h1>
+    <span id="status" class="offline">offline</span>
 
-        <h2>Send Text Frame</h2>
+    <h2>Send Text Frame</h2>
 
-        <input id="action" placeholder="action" type="text"/>
-        <input id="data" placeholder="data" type="text"/>
-        <button id="send">Send Text</button>
+    <input id="action" placeholder="action" type="text"/>
+    <input id="data" placeholder="data" type="text"/>
+    <button id="send">Send Text</button>
 
-        <h2>Send Binary Frame</h2>
+    <h2>Send Binary Frame</h2>
 
-        <form name="binaryFrame" action="#">
-            <input type="file" name="file" id="file">
-            <button id="sendfile">Send Binary</button>
-        </form>
+    <form name="binaryFrame" action="#">
+        <input type="file" name="file" id="file">
+        <button id="sendfile">Send Binary</button>
+    </form>
 
-        <h2>Server-Response</h2>
+    <h2>Server-Response</h2>
 
-        <div id="log"></div>
-    </div>
+    <div id="log"></div>
+</div>
 </body>
 </html>

@@ -50,4 +50,5 @@ $server = new \Wrench\Server('ws://localhost:8000/', [
 ]);
 $server->setLogger($logger);
 $server->registerApplication('echo', new \Wrench\Application\EchoApplication());
+$server->registerApplication('time', new \Wrench\Application\ServerTimeApplication());
 $server->run();
