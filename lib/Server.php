@@ -10,6 +10,8 @@ use Wrench\Application\ConnectionHandlerInterface;
 use Wrench\Application\DataHandlerInterface;
 use Wrench\Application\UpdateHandlerInterface;
 use Wrench\Util\Configurable;
+use Wrench\Util\LoopInterface;
+use Wrench\Util\NullLoop;
 
 /**
  * WebSocket server
@@ -66,6 +68,11 @@ class Server extends Configurable implements LoggerAwareInterface
     protected $connectionManager;
 
     /**
+     * @var LoopInterface
+     */
+    protected $loop;
+
+    /**
      * Applications
      *
      * @var array<string => Application>
@@ -83,6 +90,7 @@ class Server extends Configurable implements LoggerAwareInterface
     {
         $this->uri = $uri;
         $this->logger = new NullLogger();
+        $this->loop = new NullLoop();
 
         parent::__construct($options);
     }
@@ -105,6 +113,11 @@ class Server extends Configurable implements LoggerAwareInterface
         return $this->uri;
     }
 
+    public function setLoop(LoopInterface $loop): void
+    {
+        $this->loop = $loop;
+    }
+
     /**
      * Main server loop
      *
@@ -114,7 +127,7 @@ class Server extends Configurable implements LoggerAwareInterface
     {
         $this->connectionManager->listen();
 
-        while (true) {
+        while ($this->loop->shouldContinue()) {
             /*
              * If there's nothing changed on any of the sockets, the server
              * will sleep and other processes will have a change to run. Control

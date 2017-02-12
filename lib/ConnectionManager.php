@@ -12,6 +12,7 @@ use Wrench\Application\ConnectionHandlerInterface;
 use Wrench\Application\DataHandlerInterface;
 use Wrench\Application\UpdateHandlerInterface;
 use Wrench\Exception\CloseException;
+use Wrench\Exception\ConnectionException;
 use Wrench\Exception\Exception as WrenchException;
 use Wrench\Socket\ServerClientSocket;
 use Wrench\Socket\ServerSocket;
@@ -88,7 +89,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      * Listens on the main socket
      *
      * @return void
-     * @throws Exception\ConnectionException
+     * @throws ConnectionException
      */
     public function listen(): void
     {
@@ -224,7 +225,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
                 'exception' => $e,
             ]);
             $connection->close($e);
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             $this->logger->warning('Wrong input arguments: {exception}', [
                 'exception' => $e,
             ]);
@@ -238,10 +239,10 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      * @param resource $socket
      * @return Connection
      */
-    protected function getConnectionForClientSocket($socket)
+    protected function getConnectionForClientSocket($socket): ?Connection
     {
         if (!isset($this->connections[$this->resourceId($socket)])) {
-            return false;
+            return null;
         }
         return $this->connections[$this->resourceId($socket)];
     }
@@ -257,9 +258,9 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
     }
 
     /**
-     * @return \Wrench\Server
+     * @return Server
      */
-    public function getServer()
+    public function getServer(): Server
     {
         return $this->server;
     }
@@ -269,7 +270,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      *
      * @param Connection $connection
      */
-    public function removeConnection(Connection $connection)
+    public function removeConnection(Connection $connection): void
     {
         $socket = $connection->getSocket();
 
@@ -293,8 +294,8 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
     }
 
     /**
-     * @see Socket::configure()
-     *   Options include:
+     * @param array $options
+     *     Options include:
      *     - timeout_select          => int, seconds, default 0
      *     - timeout_select_microsec => int, microseconds (NB: not milli), default: 200000
      */
