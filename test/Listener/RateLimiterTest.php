@@ -4,11 +4,6 @@ namespace Wrench\Listener;
 
 class RateLimiterTest extends ListenerBaseTest
 {
-    public function getClass()
-    {
-        return 'Wrench\Listener\RateLimiter';
-    }
-
     public function testConstructor()
     {
         $instance = $this->getInstance();

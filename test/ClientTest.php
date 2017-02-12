@@ -151,9 +151,4 @@ class ClientTest extends BaseTest
 
         $helper->tearDown();
     }
-
-    protected function getClass()
-    {
-        return Client::class;
-    }
 }

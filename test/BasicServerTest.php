@@ -46,7 +46,7 @@ class BasicServerTest extends ServerTest
             'logger' => [$this, 'log'],
         ]);
 
-        $connection = $this->getMockBuilder('Wrench\Connection')
+        $connection = $this->getMockBuilder(Connection::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -62,7 +62,7 @@ class BasicServerTest extends ServerTest
     }
 
     /**
-     * @see Wrench\Test.ServerTest::getValidConstructorArguments()
+     * @see \Wrench\ServerTest::getValidConstructorArguments()
      */
     public function getValidConstructorArguments()
     {
@@ -100,10 +100,5 @@ class BasicServerTest extends ServerTest
             [['somewhere.com'], 'somewhereelse.com'],
             [['somewhere.com'], 'subdomain.somewhere.com'],
         ];
-    }
-
-    protected function getClass()
-    {
-        return BasicServer::class;
     }
 }

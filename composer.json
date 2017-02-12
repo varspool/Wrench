@@ -27,8 +27,8 @@
         "ext-sockets": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "~5.8",
-        "squizlabs/php_codesniffer": "*"
+        "phpunit/phpunit": "~5.7",
+        "squizlabs/php_codesniffer": "~2.8"
     },
     "autoload": {
         "psr-4": {

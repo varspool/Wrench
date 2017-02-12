@@ -11,8 +11,9 @@ abstract class ListenerBaseTest extends BaseTest
 {
     /**
      * @depends testConstructor
+     * @param Listener $instance
      */
-    public function testListen($instance)
+    public function testListen(Listener $instance)
     {
         $server = $this->createMock('Wrench\Server');
 

@@ -4,14 +4,9 @@ namespace Wrench\Listener;
 
 class OriginPolicyTest extends ListenerBaseTest
 {
-    public function getClass()
-    {
-        return 'Wrench\Listener\OriginPolicy';
-    }
-
     public function testConstructor()
     {
-        $instance = $this->getInstance(array());
+        $instance = $this->getInstance([]);
         $this->assertInstanceOfClass($instance, 'No constructor arguments');
         return $instance;
     }
@@ -42,7 +37,7 @@ class OriginPolicyTest extends ListenerBaseTest
             ->expects($this->never())
             ->method('close');
 
-        $instance->onHandshakeRequest($connection, '/', $domain, 'abc', array());
+        $instance->onHandshakeRequest($connection, '/', $domain, 'abc', []);
     }
 
     /**
@@ -71,7 +66,7 @@ class OriginPolicyTest extends ListenerBaseTest
             ->expects($this->once())
             ->method('close');
 
-        $instance->onHandshakeRequest($connection, '/', $bad_domain, 'abc', array());
+        $instance->onHandshakeRequest($connection, '/', $bad_domain, 'abc', []);
     }
 
     /**
@@ -79,11 +74,11 @@ class OriginPolicyTest extends ListenerBaseTest
      */
     public function getValidArguments()
     {
-        return array(
-            array(array('localhost'), 'http://localhost'),
-            array(array('foobar.com'), 'https://foobar.com'),
-            array(array('https://foobar.com'), 'https://foobar.com')
-        );
+        return [
+            [['localhost'], 'http://localhost'],
+            [['foobar.com'], 'https://foobar.com'],
+            [['https://foobar.com'], 'https://foobar.com'],
+        ];
     }
 
     /**
@@ -91,11 +86,11 @@ class OriginPolicyTest extends ListenerBaseTest
      */
     public function getInvalidArguments()
     {
-        return array(
-            array(array('localhost'), 'localdomain'),
-            array(array('foobar.com'), 'foobar.org'),
-            array(array('https://foobar.com'), 'http://foobar.com'),
-            array(array('http://foobar.com'), 'foobar.com')
-        );
+        return [
+            [['localhost'], 'localdomain'],
+            [['foobar.com'], 'foobar.org'],
+            [['https://foobar.com'], 'http://foobar.com'],
+            [['http://foobar.com'], 'foobar.com'],
+        ];
     }
 }

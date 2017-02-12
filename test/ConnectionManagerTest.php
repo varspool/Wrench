@@ -85,12 +85,4 @@ class ConnectionManagerTest extends BaseTest
             [$this->getMockServer(), []],
         ];
     }
-
-    /**
-     * @see Wrench\Test.Test::getClass()
-     */
-    protected function getClass()
-    {
-        return 'Wrench\ConnectionManager';
-    }
 }

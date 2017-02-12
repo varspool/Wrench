@@ -30,20 +30,17 @@ abstract class BaseTest extends TestCase
      *
      * @return string
      */
-    abstract protected function getClass();
-
-    /**
-     * Forward compatibility with PHPUnit 5
-     *
-     * @param string $class
-     * @return \PHPUnit_Framework_MockObject_MockObject|mixed
-     */
-    public function createMock($class)
+    protected function getClass()
     {
-        return $this->getMockBuilder($class)
-            ->setMethods([])
-            ->disableOriginalConstructor()
-            ->getMock();
+        $class = static::class;
+
+        if (preg_match('/(.*)Test$/', $class, $matches)) {
+            return $matches[1];
+        }
+
+        throw new \LogicException(
+            'Cannot automatically determine class under test; configure manually by overriding getClass()'
+        );
     }
 
     /**
