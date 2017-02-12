@@ -90,7 +90,10 @@ abstract class PayloadTest extends Test
      */
     public function testSendToSocket($type, $payload)
     {
-        $successfulSocket = $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
+        $successfulSocket = $this->getMockBuilder('\Wrench\Socket\ClientSocket')
+            ->setMethods(array())
+            ->setConstructorArgs(array('wss://localhost:8000'))
+            ->getMock();
         $failedSocket = clone $successfulSocket;
 
         $successfulSocket->expects($this->any())

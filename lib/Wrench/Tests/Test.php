@@ -2,13 +2,13 @@
 
 namespace Wrench\Tests;
 
-use \PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use \ReflectionClass;
 
 /**
  * Test base class
  */
-abstract class Test extends PHPUnit_Framework_TestCase
+abstract class Test extends TestCase
 {
     /**
      * Gets the class under test

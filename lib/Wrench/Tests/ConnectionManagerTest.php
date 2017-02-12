@@ -78,7 +78,7 @@ class ConnectionManagerTest extends Test
      */
     protected function getMockServer()
     {
-        $server = $this->getMock('Wrench\Server', array(), array(), '', false);
+        $server = $this->createMock('\Wrench\Server');
 
         $server->registerApplication('/echo', $this->getMockApplication());
 
