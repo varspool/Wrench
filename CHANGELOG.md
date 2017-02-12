@@ -14,6 +14,8 @@
 * We no longer support the $config['logger'] option on many objects, including the `Server`. Instead,
   you should use the PSR3 support that has been added: call `$server->setLogger($logger)` with a LoggerInterface.
   Or inject any PSR3 compatible logger (e.g. `Monolog\Logger`)
+* The Connection class's `id` is now random, and not a consistent hash of information about the
+  connection.
 
 #### Deprecations
 

@@ -22,6 +22,9 @@ class SslBaseTest extends BaseTest
         }
     }
 
+    /**
+     * @small
+     */
     public function testGeneratePemWithPassphrase()
     {
         Ssl::generatePemFile(
@@ -44,6 +47,9 @@ class SslBaseTest extends BaseTest
         $this->assertRegExp('/BEGIN ENCRYPTED PRIVATE KEY/', $contents, 'PEM file contains encrypted private key');
     }
 
+    /**
+     * @small
+     */
     public function testGeneratePemWithoutPassphrase()
     {
         Ssl::generatePemFile(

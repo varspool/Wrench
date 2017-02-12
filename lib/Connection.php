@@ -133,7 +133,7 @@ class Connection extends Configurable implements LoggerAwareInterface
     {
         $this->ip = $this->socket->getIp();
         $this->port = $this->socket->getPort();
-        $this->configureClientId();
+        $this->generateClientId();
     }
 
     /**
@@ -144,28 +144,9 @@ class Connection extends Configurable implements LoggerAwareInterface
      * be kept secret for this to work: otherwise it's trivial to search the space
      * of possible IP addresses/ports (well, if not trivial, at least very fast).
      */
-    protected function configureClientId()
+    protected function generateClientId()
     {
-        $message = sprintf(
-            '%s:uri=%s&ip=%s&port=%s',
-            $this->options['connection_id_secret'],
-            rawurlencode($this->manager->getUri()),
-            rawurlencode($this->ip),
-            rawurlencode($this->port)
-        );
-
-        $algo = $this->options['connection_id_algo'];
-
-        if (extension_loaded('gmp')) {
-            $hash = hash($algo, $message);
-            $hash = gmp_strval(gmp_init('0x' . $hash, 16), 62);
-        } else {
-            // @codeCoverageIgnoreStart
-            $hash = hash($algo, $message);
-            // @codeCoverageIgnoreEnd
-        }
-
-        $this->id = $hash;
+        $this->id = bin2hex(random_bytes(32));
     }
 
     protected function configurePayloadHandler()
