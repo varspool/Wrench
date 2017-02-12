@@ -148,7 +148,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      * manager.
      *
      * @param resource $resource A socket resource
-     * @return Connection
+     * @return Connection|LoggerAwareInterface
      */
     protected function createConnection($resource)
     {
@@ -164,6 +164,10 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
 
         $socket = new $socket_class($resource, $socket_options);
         $connection = new $connection_class($this, $socket, $connection_options);
+
+        if ($connection instanceof LoggerAwareInterface) {
+            $connection->setLogger($this->logger);
+        }
 
         $id = $this->resourceId($resource);
         $this->resources[$id] = $resource;
@@ -181,8 +185,9 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      * This is needed on the connection manager as well as on resources
      *
      * @param resource $resource
+     * @return int
      */
-    protected function resourceId($resource)
+    protected function resourceId($resource): int
     {
         return (int)$resource;
     }
@@ -206,13 +211,19 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
 
             $connection->process();
         } catch (CloseException $e) {
-            $this->logger->notice('Client connection closed: ' . $e);
+            $this->logger->notice('Client connection closed: {exception}', [
+                'exception' => $e
+            ]);
             $connection->close($e);
         } catch (WrenchException $e) {
-            $this->logger->warning('Error on client socket: ' . $e);
+            $this->logger->warning('Error on client socket: {exception}', [
+                'exception' => $e
+            ]);
             $connection->close($e);
         } catch (\InvalidArgumentException $e) {
-            $this->logger->warning('Wrong input arguments: ' . $e);
+            $this->logger->warning('Wrong input arguments: {exception}', [
+                'exception' => $e
+            ]);
             $connection->close($e);
         }
     }

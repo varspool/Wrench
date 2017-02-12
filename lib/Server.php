@@ -243,5 +243,6 @@ class Server extends Configurable implements LoggerAwareInterface
         $class = $this->options['connection_manager_class'];
         $options = $this->options['connection_manager_options'];
         $this->connectionManager = new $class($this, $options);
+        $this->connectionManager->setLogger($this->logger);
     }
 }

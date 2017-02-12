@@ -416,7 +416,9 @@ class Connection extends Configurable implements LoggerAwareInterface
                 $this->application->onConnect($this);
             }
         } catch (WrenchException $e) {
-            $this->logger->error('Handshake failed: ' . $e);
+            $this->logger->error('Handshake failed: {exception}', [
+                'exception' => $e
+            ]);
             $this->close($e);
             throw $e;
         }

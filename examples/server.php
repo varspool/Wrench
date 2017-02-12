@@ -12,10 +12,18 @@ error_reporting(E_ALL);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$server = new \Wrench\Server('ws://localhost:8000/', array(
-    'allowed_origins'            => array(
-        'mysite.localhost'
-    ),
+$logger = new class extends \Psr\Log\AbstractLogger
+{
+    public function log($level, $message, array $context = [])
+    {
+        echo sprintf('[%s] %s - %s', $level, $message, json_encode($context));
+    }
+}
+
+$server = new \Wrench\Server('ws://localhost:8000/', [
+    'allowed_origins' => [
+        'mysite.localhost',
+    ],
 // Optional defaults:
 //     'check_origin'               => true,
 //     'connection_manager_class'   => 'Wrench\ConnectionManager',
@@ -39,7 +47,7 @@ $server = new \Wrench\Server('ws://localhost:8000/', array(
 //             'connection_id_algo'     => 'sha512'
 //         )
 //     )
-));
-
+]);
+$server->setLogger($logger);
 $server->registerApplication('echo', new \Wrench\Application\EchoApplication());
 $server->run();
