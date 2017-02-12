@@ -321,18 +321,18 @@ class Connection extends Configurable
                 return;
 
             case Protocol::TYPE_BINARY:
-                if(method_exists($app, 'onBinaryData')) {
+                if (method_exists($app, 'onBinaryData')) {
                     $app->onBinaryData($payload, $this);
                 } else {
                     $this->close(1003);
                 }
-            break;
+                break;
 
             case Protocol::TYPE_PING:
                 $this->log('Ping received', 'notice');
                 $this->send($payload->getPayload(), Protocol::TYPE_PONG);
                 $this->log('Pong!', 'debug');
-            break;
+                break;
 
             /**
              * A Pong frame MAY be sent unsolicited.  This serves as a
@@ -341,13 +341,13 @@ class Connection extends Configurable
              */
             case Protocol::TYPE_PONG:
                 $this->log('Received unsolicited pong', 'info');
-            break;
+                break;
 
             case Protocol::TYPE_CLOSE:
                 $this->log('Close frame received', 'notice');
                 $this->close();
                 $this->log('Disconnected', 'info');
-            break;
+                break;
 
             default:
                 throw new ConnectionException('Unhandled payload type');

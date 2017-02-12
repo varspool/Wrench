@@ -164,17 +164,17 @@ Sec-WebSocket-Version: 13\r
 
     public function getValidHandshakeResponses()
     {
-       $cases = array();
+        $cases = array();
 
-       for ($i = 10; $i > 0; $i--) {
-           $key = sha1(time() . uniqid('', true));
-           $response = "Sec-WebSocket-Accept: "
+        for ($i = 10; $i > 0; $i--) {
+            $key = sha1(time() . uniqid('', true));
+            $response = "Sec-WebSocket-Accept: "
                . base64_encode(sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true))
                . "\r\n\r\n";
 
-           $cases[] = array($response, $key);
-       }
+            $cases[] = array($response, $key);
+        }
 
-       return $cases;
+        return $cases;
     }
 }

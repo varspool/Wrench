@@ -58,7 +58,8 @@ class ClientSocketTest extends UriSocketTest
 
         $this->assertInstanceOfClass(
             $socket = new ClientSocket(
-                'ws://localhost:8000/foo', array(
+                'ws://localhost:8000/foo',
+                array(
                     'timeout_connect' => 10
                 )
             ),
@@ -67,7 +68,8 @@ class ClientSocketTest extends UriSocketTest
 
         $this->assertInstanceOfClass(
             $socket = new ClientSocket(
-                'ws://localhost:8000/foo', array(
+                'ws://localhost:8000/foo',
+                array(
                     'timeout_socket' => 10
                 )
             ),
@@ -76,7 +78,8 @@ class ClientSocketTest extends UriSocketTest
 
         $this->assertInstanceOfClass(
             $socket = new ClientSocket(
-                'ws://localhost:8000/foo', array(
+                'ws://localhost:8000/foo',
+                array(
                     'protocol' => new Rfc6455Protocol()
                 )
             ),
@@ -90,7 +93,8 @@ class ClientSocketTest extends UriSocketTest
     public function testProtocolTypeError()
     {
         $socket = new ClientSocket(
-            'ws://localhost:8000/foo', array(
+            'ws://localhost:8000/foo',
+            array(
                 'protocol' => new stdClass()
             )
         );
@@ -148,7 +152,6 @@ Sec-WebSocket-Version: 13\r\n\r\n");
 
             $response = $instance->receive();
             $this->assertStringStartsWith('HTTP', $response, 'Response looks like HTTP handshake response');
-
         } catch (\Exception $e) {
             $helper->tearDown();
             throw $e;
