@@ -1,6 +1,7 @@
 <?php
 
 namespace Wrench\Test;
+
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -37,7 +38,6 @@ class ServerTestHelper implements LoggerAwareInterface
 
     /**
      * Tears down the server process
-     *
      * This method *must* be called
      */
     public function tearDown()

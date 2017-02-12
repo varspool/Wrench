@@ -10,7 +10,7 @@ use Wrench\Connection;
  *
  * @author Simon Samtleben <web@lemmingzshadow.net>
  */
-class StatusApplication extends Application
+class StatusApplication
 {
     private $_clients           = array();
     private $_serverClients     = array();

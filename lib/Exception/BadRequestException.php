@@ -3,7 +3,6 @@
 namespace Wrench\Exception;
 
 use Wrench\Protocol\Protocol;
-use Wrench\Exception\HandshakeException;
 
 class BadRequestException extends HandshakeException
 {

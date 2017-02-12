@@ -2,17 +2,14 @@
 
 namespace Wrench\Payload;
 
+use Wrench\Exception\FrameException;
 use Wrench\Exception\PayloadException;
 use Wrench\Frame\Frame;
-
-use Wrench\Exception\FrameException;
-
 use Wrench\Protocol\Protocol;
 use Wrench\Socket\Socket;
 
 /**
  * Payload class
- *
  * Represents a WebSocket protocol payload, which may be made up of multiple
  * frames.
  */
@@ -23,7 +20,7 @@ abstract class Payload
      *
      * @var Frame[]
      */
-    protected $frames = array();
+    protected $frames = [];
 
     /**
      * String representation of the payload contents
@@ -33,68 +30,17 @@ abstract class Payload
     protected $buffer;
 
     /**
-     * Gets the current frame for the payload
-     *
-     * @return mixed
-     */
-    protected function getCurrentFrame()
-    {
-        if (empty($this->frames)) {
-            array_push($this->frames, $this->getFrame());
-        }
-        return end($this->frames);
-    }
-
-    /**
-     * Gets the frame into which data should be receieved
-     *
-     * @throws PayloadException
-     * @return Frame
-     */
-    protected function getReceivingFrame()
-    {
-        $current = $this->getCurrentFrame();
-
-        if ($current->isComplete()) {
-            if ($current->isFinal()) {
-                throw new PayloadException('Payload cannot receieve data: it is already complete');
-            } else {
-                $this->frames[] = $current = $this->getFrame();
-            }
-        }
-
-        return $current;
-    }
-
-    /**
-     * Get a frame object
-     *
-     * @return Frame
-     */
-    abstract protected function getFrame();
-
-    /**
-     * Whether the payload is complete
-     *
-     * @return boolean
-     */
-    public function isComplete()
-    {
-        return $this->getCurrentFrame()->isComplete() && $this->getCurrentFrame()->isFinal();
-    }
-
-    /**
      * Encodes a payload
      *
-     * @param string $data
-     * @param int $type
+     * @param string  $data
+     * @param int     $type
      * @param boolean $masked
      * @return Payload
      * @todo No splitting into multiple frames just yet
      */
     public function encode($data, $type = Protocol::TYPE_TEXT, $masked = false)
     {
-        $this->frames = array();
+        $this->frames = [];
 
         $frame = $this->getFrame();
         array_push($this->frames, $frame);
@@ -105,9 +51,25 @@ abstract class Payload
     }
 
     /**
+     * Get a frame object
+     *
+     * @return Frame
+     */
+    abstract protected function getFrame();
+
+    /**
+     * Whether this payload is waiting for more data
+     *
+     * @return boolean
+     */
+    public function isWaitingForData()
+    {
+        return $this->getRemainingData() > 0;
+    }
+
+    /**
      * Gets the number of remaining bytes before this payload will be
      * complete
-     *
      * May return 0 (no more bytes required) or null (unknown number of bytes
      * required).
      *
@@ -131,13 +93,26 @@ abstract class Payload
     }
 
     /**
-     * Whether this payload is waiting for more data
+     * Whether the payload is complete
      *
      * @return boolean
      */
-    public function isWaitingForData()
+    public function isComplete()
     {
-        return $this->getRemainingData() > 0;
+        return $this->getCurrentFrame()->isComplete() && $this->getCurrentFrame()->isFinal();
+    }
+
+    /**
+     * Gets the current frame for the payload
+     *
+     * @return mixed
+     */
+    protected function getCurrentFrame()
+    {
+        if (empty($this->frames)) {
+            array_push($this->frames, $this->getFrame());
+        }
+        return end($this->frames);
     }
 
     /**
@@ -183,17 +158,24 @@ abstract class Payload
     }
 
     /**
-     * @return string
+     * Gets the frame into which data should be receieved
+     *
+     * @throws PayloadException
+     * @return Frame
      */
-    public function getPayload()
+    protected function getReceivingFrame()
     {
-        $this->buffer = '';
+        $current = $this->getCurrentFrame();
 
-        foreach ($this->frames as $frame) {
-            $this->buffer .= $frame->getFramePayload();
+        if ($current->isComplete()) {
+            if ($current->isFinal()) {
+                throw new PayloadException('Payload cannot receieve data: it is already complete');
+            } else {
+                $this->frames[] = $current = $this->getFrame();
+            }
         }
 
-        return $this->buffer;
+        return $current;
     }
 
     /**
@@ -210,8 +192,21 @@ abstract class Payload
     }
 
     /**
+     * @return string
+     */
+    public function getPayload()
+    {
+        $this->buffer = '';
+
+        foreach ($this->frames as $frame) {
+            $this->buffer .= $frame->getFramePayload();
+        }
+
+        return $this->buffer;
+    }
+
+    /**
      * Gets the type of the payload
-     *
      * The type of a payload is taken from its first frame
      *
      * @throws PayloadException

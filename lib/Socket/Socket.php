@@ -2,17 +2,15 @@
 
 namespace Wrench\Socket;
 
-use Wrench\Resource;
+use InvalidArgumentException;
 use Wrench\Exception\SocketException;
+use Wrench\Resource;
 use Wrench\Util\Configurable;
-use \InvalidArgumentException;
 
 /**
  * Socket class
- *
  * Implements low level logic for connecting, serving, reading to, and
  * writing from WebSocket connections using PHP's streams.
- *
  * Unlike in previous versions of this library, a Socket instance now
  * represents a single underlying socket resource. It's designed to be used
  * by aggregation, rather than inheritance.
@@ -52,7 +50,6 @@ abstract class Socket extends Configurable implements Resource
 
     /**
      * Whether the socket is connected to a server
-     *
      * Note, the connection may not be ready to use, but the socket is
      * connected at least. See $handshaked, and other properties in
      * subclasses.
@@ -69,21 +66,20 @@ abstract class Socket extends Configurable implements Resource
     protected $name;
 
     /**
-     * Configure options
+     * Gets the IP address of the socket
      *
-     * Options include
-     *   - timeout_socket       => int, seconds, default 5
-     *
-     * @param array $options
-     * @return void
+     * @throws \Wrench\Exception\SocketException If the IP address cannot be obtained
+     * @return string
      */
-    protected function configure(array $options)
+    public function getIp()
     {
-        $options = array_merge(array(
-            'timeout_socket' => self::TIMEOUT_SOCKET,
-        ), $options);
+        $name = $this->getName();
 
-        parent::configure($options);
+        if ($name) {
+            return self::getNamePart($name, self::NAME_PART_IP);
+        } else {
+            throw new SocketException('Cannot get socket IP address');
+        }
     }
 
     /**
@@ -101,14 +97,13 @@ abstract class Socket extends Configurable implements Resource
 
     /**
      * Gets part of the name of the socket
-     *
      * PHP seems to return IPV6 address/port combos like this:
      *   ::1:1234, where ::1 is the address and 1234 the port
      * So, the part number here is either the last : delimited section (the port)
      * or all the other sections (the whole initial part, the address).
      *
      * @param string $name (from $this->getName() usually)
-     * @param int<0, 1> $part
+     * @param        int   <0, 1> $part
      * @return string
      * @throws SocketException
      */
@@ -130,23 +125,6 @@ abstract class Socket extends Configurable implements Resource
             return implode(':', array_slice($parts, 0, -1));
         } else {
             throw new InvalidArgumentException('Invalid name part');
-        }
-    }
-
-    /**
-     * Gets the IP address of the socket
-     *
-     * @throws \Wrench\Exception\SocketException If the IP address cannot be obtained
-     * @return string
-     */
-    public function getIp()
-    {
-        $name = $this->getName();
-
-        if ($name) {
-            return self::getNamePart($name, self::NAME_PART_IP);
-        } else {
-            throw new SocketException('Cannot get socket IP address');
         }
     }
 
@@ -196,20 +174,6 @@ abstract class Socket extends Configurable implements Resource
     public function isConnected()
     {
         return $this->connected;
-    }
-
-    /**
-     * Disconnect the socket
-     *
-     * @return void
-     */
-    public function disconnect()
-    {
-        if ($this->socket) {
-            stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
-        }
-        $this->socket = null;
-        $this->connected = false;
     }
 
     /**
@@ -331,5 +295,36 @@ abstract class Socket extends Configurable implements Resource
         } while ($continue);
 
         return $buffer;
+    }
+
+    /**
+     * Disconnect the socket
+     *
+     * @return void
+     */
+    public function disconnect()
+    {
+        if ($this->socket) {
+            stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
+        }
+        $this->socket = null;
+        $this->connected = false;
+    }
+
+    /**
+     * Configure options
+     * Options include
+     *   - timeout_socket       => int, seconds, default 5
+     *
+     * @param array $options
+     * @return void
+     */
+    protected function configure(array $options)
+    {
+        $options = array_merge([
+            'timeout_socket' => self::TIMEOUT_SOCKET,
+        ], $options);
+
+        parent::configure($options);
     }
 }

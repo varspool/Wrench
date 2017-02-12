@@ -4,11 +4,6 @@ namespace Wrench\Protocol;
 
 use Wrench\Payload\HybiPayload;
 
-use Wrench\Exception\ConnectionException;
-
-use Wrench\Protocol\Protocol;
-use \InvalidArgumentException;
-
 /**
  * @see http://tools.ietf.org/html/rfc6455#section-5.2
  */

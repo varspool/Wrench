@@ -1,8 +1,6 @@
 <?php
 namespace Wrench\Socket;
 
-use Wrench\Socket\UriSocket;
-
 /**
  * Options:
  *  - timeout_connect      => int, seconds, default 2
@@ -16,24 +14,10 @@ class ClientSocket extends UriSocket
      */
     const TIMEOUT_CONNECT = 2;
 
-    /**
-     * @see Wrench\Socket.Socket::configure()
-     *   Options include:
-     *     - ssl_verify_peer       => boolean, whether to perform peer verification
-     *                                 of SSL certificate used
-     *     - ssl_allow_self_signed => boolean, whether ssl_verify_peer allows
-     *                                 self-signed certs
-     *     - timeout_connect       => int, seconds, default 2
-     */
-    protected function configure(array $options)
+    public function reconnect()
     {
-        $options = array_merge(array(
-            'timeout_connect'       => self::TIMEOUT_CONNECT,
-            'ssl_verify_peer'       => false,
-            'ssl_allow_self_signed' => true
-        ), $options);
-
-        parent::configure($options);
+        $this->disconnect();
+        $this->connect();
     }
 
     /**
@@ -71,10 +55,24 @@ class ClientSocket extends UriSocket
         return ($this->connected = true);
     }
 
-    public function reconnect()
+    /**
+     * @see Wrench\Socket.Socket::configure()
+     *   Options include:
+     *     - ssl_verify_peer       => boolean, whether to perform peer verification
+     *                                 of SSL certificate used
+     *     - ssl_allow_self_signed => boolean, whether ssl_verify_peer allows
+     *                                 self-signed certs
+     *     - timeout_connect       => int, seconds, default 2
+     */
+    protected function configure(array $options)
     {
-        $this->disconnect();
-        $this->connect();
+        $options = array_merge([
+            'timeout_connect' => self::TIMEOUT_CONNECT,
+            'ssl_verify_peer' => false,
+            'ssl_allow_self_signed' => true,
+        ], $options);
+
+        parent::configure($options);
     }
 
     /**
@@ -82,7 +80,7 @@ class ClientSocket extends UriSocket
      */
     protected function getSocketStreamContextOptions()
     {
-        $options = array();
+        $options = [];
         return $options;
     }
 
@@ -91,7 +89,7 @@ class ClientSocket extends UriSocket
      */
     protected function getSslStreamContextOptions()
     {
-        $options = array();
+        $options = [];
 
         if ($this->options['ssl_verify_peer']) {
             $options['verify_peer'] = true;

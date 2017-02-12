@@ -2,17 +2,11 @@
 
 namespace Wrench\Application;
 
-use Wrench\Application\Application;
-use Wrench\Application\NamedApplication;
-
 /**
  * Example application for Wrench: echo server
  */
-class EchoApplication extends Application
+class EchoApplication implements DataHandlerInterface
 {
-    /**
-     * @see Wrench\Application.Application::onData()
-     */
     public function onData($data, $client)
     {
         $client->send($data);

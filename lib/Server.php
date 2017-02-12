@@ -2,18 +2,15 @@
 
 namespace Wrench;
 
+use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
-use Wrench\ConnectionManager;
+use Wrench\Application\Application;
 use Wrench\Util\Configurable;
-
-use \Closure;
-use \InvalidArgumentException;
 
 /**
  * WebSocket server
- *
  * The server extends socket, which provides the master socket resource. This
  * resource is listened to, and an array of clients managed.
  *
@@ -30,11 +27,11 @@ class Server extends Configurable implements LoggerAwareInterface
      *
      * @var string
      */
-    const EVENT_SOCKET_CONNECT       = 'socket_connect';
-    const EVENT_SOCKET_DISCONNECT    = 'socket_disconnect';
-    const EVENT_HANDSHAKE_REQUEST    = 'handshake_request';
+    const EVENT_SOCKET_CONNECT = 'socket_connect';
+    const EVENT_SOCKET_DISCONNECT = 'socket_disconnect';
+    const EVENT_HANDSHAKE_REQUEST = 'handshake_request';
     const EVENT_HANDSHAKE_SUCCESSFUL = 'handshake_successful';
-    const EVENT_CLIENT_DATA          = 'client_data';
+    const EVENT_CLIENT_DATA = 'client_data';
     /**#@-*/
 
     /**
@@ -49,16 +46,15 @@ class Server extends Configurable implements LoggerAwareInterface
      *
      * @var array
      */
-    protected $options = array();
+    protected $options = [];
 
     /**
      * Event listeners
-     *
      * Add listeners using the addListener() method.
      *
      * @var array<string => array<Closure>>
      */
-    protected $listeners = array();
+    protected $listeners = [];
 
     /**
      * Connection manager
@@ -72,58 +68,22 @@ class Server extends Configurable implements LoggerAwareInterface
      *
      * @var array<string => Application>
      */
-    protected $applications = array();
+    protected $applications = [];
 
     /**
      * Constructor
      *
-     * @param string $uri Websocket URI, e.g. ws://localhost:8000/, path will
-     *                     be ignored
-     * @param array $options (optional) See configure
+     * @param string $uri     Websocket URI, e.g. ws://localhost:8000/, path will
+     *                        be ignored
+     * @param array  $options (optional) See configure
      */
-    public function __construct($uri, array $options = array())
+    public function __construct($uri, array $options = [])
     {
         $this->uri = $uri;
 
         parent::__construct($options);
 
         $this->logger = new NullLogger();
-    }
-
-    /**
-     * Configure options
-     *
-     * Options include
-     *   - socket_class      => The socket class to use, defaults to ServerSocket
-     *   - socket_options    => An array of socket options
-     *   - logger            => Closure($message, $priority = 'info'), used
-     *                                 for logging
-     *
-     * @param array $options
-     * @return void
-     */
-    protected function configure(array $options)
-    {
-        $options = array_merge(array(
-            'connection_manager_class'   => ConnectionManager::class,
-            'connection_manager_options' => array()
-        ), $options);
-
-        parent::configure($options);
-
-        $this->configureConnectionManager();
-    }
-
-    /**
-     * Configures the connection manager
-     *
-     * @return void
-     */
-    protected function configureConnectionManager()
-    {
-        $class   = $this->options['connection_manager_class'];
-        $options = $this->options['connection_manager_options'];
-        $this->connectionManager = new $class($this, $options);
     }
 
     /**
@@ -178,10 +138,10 @@ class Server extends Configurable implements LoggerAwareInterface
      * Notifies listeners of an event
      *
      * @param string $event
-     * @param array $arguments Event arguments
+     * @param array  $arguments Event arguments
      * @return void
      */
-    public function notify($event, array $arguments = array())
+    public function notify($event, array $arguments = [])
     {
         if (!isset($this->listeners[$event])) {
             return;
@@ -194,12 +154,11 @@ class Server extends Configurable implements LoggerAwareInterface
 
     /**
      * Adds a listener
-     *
      * Provide an event (see the Server::EVENT_* constants) and a callback
      * closure. Some arguments may be provided to your callback, such as the
      * connection the caused the event.
      *
-     * @param string $event
+     * @param string   $event
      * @param callable $callback
      * @return void
      * @throws InvalidArgumentException
@@ -207,7 +166,7 @@ class Server extends Configurable implements LoggerAwareInterface
     public function addListener($event, callable $callback)
     {
         if (!isset($this->listeners[$event])) {
-            $this->listeners[$event] = array();
+            $this->listeners[$event] = [];
         }
 
         if (!is_callable($callback)) {
@@ -221,30 +180,65 @@ class Server extends Configurable implements LoggerAwareInterface
      * Returns a server application.
      *
      * @param string $key Name of application.
-     * @return Application The application object.
+     * @return Application|null The application object.
      */
     public function getApplication($key)
     {
         if (empty($key)) {
-            return false;
+            return null;
         }
 
         if (array_key_exists($key, $this->applications)) {
             return $this->applications[$key];
         }
 
-        return false;
+        return null;
     }
 
     /**
      * Adds a new application object to the application storage.
      *
-     * @param string $key Name of application.
+     * @param string $key         Name of application.
      * @param object $application The application object
      * @return void
      */
     public function registerApplication($key, $application)
     {
         $this->applications[$key] = $application;
+    }
+
+    /**
+     * Configure options
+     * Options include
+     *   - socket_class      => The socket class to use, defaults to ServerSocket
+     *   - socket_options    => An array of socket options
+     *   - logger            => Closure($message, $priority = 'info'), used
+     *                                 for logging
+     *
+     * @param array $options
+     * @return void
+     */
+    protected function configure(array $options)
+    {
+        $options = array_merge([
+            'connection_manager_class' => ConnectionManager::class,
+            'connection_manager_options' => [],
+        ], $options);
+
+        parent::configure($options);
+
+        $this->configureConnectionManager();
+    }
+
+    /**
+     * Configures the connection manager
+     *
+     * @return void
+     */
+    protected function configureConnectionManager()
+    {
+        $class = $this->options['connection_manager_class'];
+        $options = $this->options['connection_manager_options'];
+        $this->connectionManager = new $class($this, $options);
     }
 }

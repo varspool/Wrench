@@ -2,18 +2,16 @@
 
 namespace Wrench;
 
+use InvalidArgumentException;
+use Wrench\Exception;
 use Wrench\Payload\Payload;
 use Wrench\Payload\PayloadHandler;
-use Wrench\Util\Configurable;
-use Wrench\Socket\ClientSocket;
 use Wrench\Protocol\Protocol;
-use Wrench\Exception;
-
-use \InvalidArgumentException;
+use Wrench\Socket\ClientSocket;
+use Wrench\Util\Configurable;
 
 /**
  * Client class
- *
  * Represents a websocket client
  */
 class Client extends Configurable
@@ -43,7 +41,7 @@ class Client extends Configurable
      *
      * @var array
      */
-    protected $headers = array();
+    protected $headers = [];
 
     /**
      * Whether the client is connected
@@ -62,19 +60,19 @@ class Client extends Configurable
      *
      * @var array<Payload>
      */
-    protected $received = array();
+    protected $received = [];
 
     /**
      * Constructor
      *
      * @param string $uri
-     * @param string $origin  The origin to include in the handshake (required
+     * @param string $origin    The origin to include in the handshake (required
      *                          in later versions of the protocol)
-     * @param array  $options (optional) Array of options
-     *                         - socket   => Socket instance (otherwise created)
-     *                         - protocol => Protocol
+     * @param array  $options   (optional) Array of options
+     *                          - socket   => Socket instance (otherwise created)
+     *                          - protocol => Protocol
      */
-    public function __construct($uri, $origin, array $options = array())
+    public function __construct($uri, $origin, array $options = [])
     {
         parent::__construct($options);
 
@@ -98,23 +96,6 @@ class Client extends Configurable
     }
 
     /**
-     * Configure options
-     *
-     * @param array $options
-     * @return void
-     */
-    protected function configure(array $options)
-    {
-        $options = array_merge(array(
-            'socket_class'     => ClientSocket::class,
-            'on_data_callback' => null,
-            'socket_options' => array(),
-        ), $options);
-
-        parent::configure($options);
-    }
-
-    /**
      * Configures the client socket
      */
     protected function configureSocket()
@@ -129,12 +110,11 @@ class Client extends Configurable
      */
     protected function configurePayloadHandler()
     {
-        $this->payloadHandler = new PayloadHandler(array($this, 'onData'), $this->options);
+        $this->payloadHandler = new PayloadHandler([$this, 'onData'], $this->options);
     }
 
     /**
      * Payload receiver
-     *
      * Public because called from our PayloadHandler. Don't call us, we'll call
      * you (via the on_data_callback option).
      *
@@ -150,7 +130,6 @@ class Client extends Configurable
 
     /**
      * Adds a request header to be included in the initial handshake
-     *
      * For example, to include a Cookie header
      *
      * @param string $name
@@ -165,8 +144,8 @@ class Client extends Configurable
     /**
      * Sends data to the socket
      *
-     * @param string $data
-     * @param int $type See Protocol::TYPE_*
+     * @param string  $data
+     * @param int     $type See Protocol::TYPE_*
      * @param boolean $masked
      * @return boolean Success
      */
@@ -189,6 +168,28 @@ class Client extends Configurable
         );
 
         return $payload->sendToSocket($this->socket);
+    }
+
+    /**
+     * Returns whether the client is currently connected
+     * Also checks the state of the underlying socket
+     *
+     * @return boolean
+     */
+    public function isConnected()
+    {
+        if ($this->connected === false) {
+            return false;
+        }
+
+        // Check if the socket is still connected
+        if ($this->socket->isConnected() === false) {
+            $this->connected = false;
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -230,7 +231,7 @@ class Client extends Configurable
             return false;
         }
 
-        $key       = $this->protocol->generateKey();
+        $key = $this->protocol->generateKey();
         $handshake = $this->protocol->getRequestHandshake(
             $this->uri,
             $key,
@@ -241,30 +242,7 @@ class Client extends Configurable
         $this->socket->send($handshake);
         $response = $this->socket->receive(self::MAX_HANDSHAKE_RESPONSE);
         return ($this->connected =
-                    $this->protocol->validateResponseHandshake($response, $key));
-    }
-
-    /**
-     * Returns whether the client is currently connected
-     *
-     * Also checks the state of the underlying socket
-     *
-     * @return boolean
-     */
-    public function isConnected()
-    {
-        if ($this->connected === false) {
-            return false;
-        }
-
-        // Check if the socket is still connected
-        if ($this->socket->isConnected() === false) {
-            $this->connected = false;
-
-            return false;
-        }
-
-        return true;
+            $this->protocol->validateResponseHandshake($response, $key));
     }
 
     /**
@@ -294,5 +272,22 @@ class Client extends Configurable
         $this->connected = false;
 
         return true;
+    }
+
+    /**
+     * Configure options
+     *
+     * @param array $options
+     * @return void
+     */
+    protected function configure(array $options)
+    {
+        $options = array_merge([
+            'socket_class' => ClientSocket::class,
+            'on_data_callback' => null,
+            'socket_options' => [],
+        ], $options);
+
+        parent::configure($options);
     }
 }

@@ -8,5 +8,6 @@ namespace Wrench;
 interface Resource
 {
     public function getResourceId();
+
     public function getResource();
 }

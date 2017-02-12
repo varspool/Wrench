@@ -65,7 +65,7 @@ class RateLimiter extends Configurable implements Listener
     /**
      * Event listener
      *
-     * @param resource $socket
+     * @param resource   $socket
      * @param Connection $connection
      */
     public function onSocketConnect($socket, $connection)
@@ -92,7 +92,7 @@ class RateLimiter extends Configurable implements Listener
      * Limits the given connection
      *
      * @param Connection $connection
-     * @param string $limit Reason
+     * @param string     $limit Reason
      */
     protected function limit($connection, $limit)
     {
@@ -136,7 +136,7 @@ class RateLimiter extends Configurable implements Listener
     /**
      * Event listener
      *
-     * @param resource $socket
+     * @param resource   $socket
      * @param Connection $connection
      */
     public function onSocketDisconnect($socket, $connection)
@@ -170,7 +170,7 @@ class RateLimiter extends Configurable implements Listener
     /**
      * Event listener
      *
-     * @param resource $socket
+     * @param resource   $socket
      * @param Connection $connection
      */
     public function onClientData($socket, $connection)
@@ -202,17 +202,6 @@ class RateLimiter extends Configurable implements Listener
         if (count($this->requests[$id]) > $this->options['requests_per_minute']) {
             $this->limit($connection, 'Requests per minute');
         }
-    }
-
-    /**
-     * Logger
-     *
-     * @param string $message
-     * @param string $priority
-     */
-    public function log($message, $priority = 'info')
-    {
-        $this->server->log('RateLimiter: ' . $message, $priority);
     }
 
     /**

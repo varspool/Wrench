@@ -2,9 +2,9 @@
 
 namespace Wrench\Payload;
 
+use InvalidArgumentException;
 use Wrench\Exception\PayloadException;
 use Wrench\Util\Configurable;
-use \InvalidArgumentException;
 
 /**
  * Handles chunking and splitting of payloads into frames
@@ -25,10 +25,10 @@ class PayloadHandler extends Configurable
 
     /**
      * @param callable $callback
-     * @param array $options
+     * @param array    $options
      * @throws InvalidArgumentException
      */
-    public function __construct($callback, array $options = array())
+    public function __construct($callback, array $options = [])
     {
         parent::__construct($options);
 
@@ -88,16 +88,6 @@ class PayloadHandler extends Configurable
     }
 
     /**
-     * Get the current payload
-     *
-     * @return Payload
-     */
-    public function getCurrent()
-    {
-        return $this->getPayloadHandler->getCurrent();
-    }
-
-    /**
      * Emits a complete payload to the callback
      *
      * @param Payload $payload
@@ -105,5 +95,15 @@ class PayloadHandler extends Configurable
     protected function emit(Payload $payload)
     {
         call_user_func($this->callback, $payload);
+    }
+
+    /**
+     * Get the current payload
+     *
+     * @return Payload
+     */
+    public function getCurrent()
+    {
+        return $this->getPayloadHandler->getCurrent();
     }
 }

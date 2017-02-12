@@ -2,18 +2,18 @@
 
 namespace Wrench\Frame;
 
-use Wrench\Protocol\Protocol;
+use InvalidArgumentException;
 use Wrench\Exception\FrameException;
-use \InvalidArgumentException;
+use Wrench\Protocol\Protocol;
 
 class HybiFrame extends Frame
 {
     // First byte
     const BITFIELD_FINAL = 0x80;
-    const BITFIELD_RSV1  = 0x40;
-    const BITFIELD_RSV2  = 0x20;
-    const BITFIELD_RSV3  = 0x10;
-    const BITFIELD_TYPE  = 0x0f;
+    const BITFIELD_RSV1 = 0x40;
+    const BITFIELD_RSV2 = 0x20;
+    const BITFIELD_RSV3 = 0x10;
+    const BITFIELD_TYPE = 0x0f;
 
     // Second byte
     const BITFIELD_MASKED = 0x80;
@@ -121,6 +121,22 @@ class HybiFrame extends Frame
     }
 
     /**
+     * Generates a suitable masking key
+     *
+     * @return string
+     */
+    protected function generateMask()
+    {
+        if (extension_loaded('openssl')) {
+            return openssl_random_pseudo_bytes(4);
+        } else {
+            // SHA1 is 128 bit (= 16 bytes)
+            // So we pack it into 32 bits
+            return pack('N', sha1(spl_object_hash($this) . mt_rand(0, PHP_INT_MAX) . uniqid('', true), true));
+        }
+    }
+
+    /**
      * Masks/Unmasks the frame
      *
      * @param string $payload
@@ -137,26 +153,6 @@ class HybiFrame extends Frame
         }
 
         return $unmasked;
-    }
-
-    /**
-     * Masks a payload
-     *
-     * @param string $payload
-     * @return string
-     */
-    protected function unmask($payload)
-    {
-        return $this->mask($payload);
-    }
-
-    public function receiveData($data)
-    {
-        if ($this->getBufferLength() <= self::BYTE_INITIAL_LENGTH) {
-            $this->length = null;
-            $this->offset_payload = null;
-        }
-        parent::receiveData($data);
     }
 
     /**
@@ -177,22 +173,6 @@ class HybiFrame extends Frame
     }
 
     /**
-     * Generates a suitable masking key
-     *
-     * @return string
-     */
-    protected function generateMask()
-    {
-        if (extension_loaded('openssl')) {
-            return openssl_random_pseudo_bytes(4);
-        } else {
-            // SHA1 is 128 bit (= 16 bytes)
-            // So we pack it into 32 bits
-            return pack('N', sha1(spl_object_hash($this) . mt_rand(0, PHP_INT_MAX) . uniqid('', true), true));
-        }
-    }
-
-    /**
      * Whether the frame is masked
      *
      * @return boolean
@@ -206,30 +186,6 @@ class HybiFrame extends Frame
             $this->masked = (boolean)(ord($this->buffer[1]) & self::BITFIELD_MASKED);
         }
         return $this->masked;
-    }
-
-    /**
-     * @see Wrench\Frame.Frame::getExpectedDataLength()
-     */
-    protected function getExpectedBufferLength()
-    {
-        return $this->getLength() + $this->getPayloadOffset();
-    }
-
-    /**
-     * Gets the offset of the payload in the frame
-     *
-     * @return int
-     */
-    protected function getPayloadOffset()
-    {
-        if (!isset($this->offset_payload)) {
-            $offset = $this->getMaskOffset();
-            $offset += $this->getMaskSize();
-
-            $this->offset_payload = $offset;
-        }
-        return $this->offset_payload;
     }
 
     /**
@@ -249,57 +205,7 @@ class HybiFrame extends Frame
     }
 
     /**
-     * @see Wrench\Frame.Frame::getLength()
-     */
-    public function getLength()
-    {
-        if (!$this->length) {
-            $initial = $this->getInitialLength();
-
-            if ($initial < 126) {
-                $this->length = $initial;
-            } elseif ($initial >= 126) {
-                // Extended payload length: 2 or 8 bytes
-                $start = self::BYTE_INITIAL_LENGTH + 1;
-                $end = self::BYTE_INITIAL_LENGTH + $this->getLengthSize();
-
-                if ($end >= $this->getBufferLength()) {
-                    throw new FrameException('Cannot get extended length: need more data');
-                }
-
-                $length = 0;
-                for ($i = $start; $i <= $end; $i++) {
-                    $length <<= 8;
-                    $length  += ord($this->buffer[$i]);
-                }
-
-                $this->length = $length;
-            }
-        }
-        return $this->length;
-    }
-
-    /**
-     * Gets the inital length value, stored in the first length byte
-     *
-     * This determines how the rest of the length value is parsed out of the
-     * frame.
-     *
-     * @return int
-     */
-    protected function getInitialLength()
-    {
-        if (!isset($this->buffer[self::BYTE_INITIAL_LENGTH])) {
-            throw new FrameException('Cannot yet tell expected length');
-        }
-        $a = (int)(ord($this->buffer[self::BYTE_INITIAL_LENGTH]) & self::BITFIELD_INITIAL_LENGTH);
-
-        return (int)(ord($this->buffer[self::BYTE_INITIAL_LENGTH]) & self::BITFIELD_INITIAL_LENGTH);
-    }
-
-    /**
      * Returns the byte size of the length part of the frame
-     *
      * Not including the initial 7 bit part
      *
      * @return int
@@ -318,6 +224,23 @@ class HybiFrame extends Frame
     }
 
     /**
+     * Gets the inital length value, stored in the first length byte
+     * This determines how the rest of the length value is parsed out of the
+     * frame.
+     *
+     * @return int
+     */
+    protected function getInitialLength()
+    {
+        if (!isset($this->buffer[self::BYTE_INITIAL_LENGTH])) {
+            throw new FrameException('Cannot yet tell expected length');
+        }
+        $a = (int)(ord($this->buffer[self::BYTE_INITIAL_LENGTH]) & self::BITFIELD_INITIAL_LENGTH);
+
+        return (int)(ord($this->buffer[self::BYTE_INITIAL_LENGTH]) & self::BITFIELD_INITIAL_LENGTH);
+    }
+
+    /**
      * Returns the byte size of the mask part of the frame
      *
      * @return int
@@ -331,17 +254,28 @@ class HybiFrame extends Frame
     }
 
     /**
-     * @see Wrench\Frame.Frame::decodeFramePayloadFromBuffer()
+     * Gets the offset of the payload in the frame
+     *
+     * @return int
      */
-    protected function decodeFramePayloadFromBuffer()
+    protected function getPayloadOffset()
     {
-        $payload = substr($this->buffer, $this->getPayloadOffset());
+        if (!isset($this->offset_payload)) {
+            $offset = $this->getMaskOffset();
+            $offset += $this->getMaskSize();
 
-        if ($this->isMasked()) {
-            $payload = $this->unmask($payload);
+            $this->offset_payload = $offset;
         }
+        return $this->offset_payload;
+    }
 
-        $this->payload = $payload;
+    public function receiveData($data)
+    {
+        if ($this->getBufferLength() <= self::BYTE_INITIAL_LENGTH) {
+            $this->length = null;
+            $this->offset_payload = null;
+        }
+        parent::receiveData($data);
     }
 
     /**
@@ -372,5 +306,69 @@ class HybiFrame extends Frame
         }
 
         return $type;
+    }
+
+    /**
+     * @see Wrench\Frame.Frame::getExpectedDataLength()
+     */
+    protected function getExpectedBufferLength()
+    {
+        return $this->getLength() + $this->getPayloadOffset();
+    }
+
+    /**
+     * @see Wrench\Frame.Frame::getLength()
+     */
+    public function getLength()
+    {
+        if (!$this->length) {
+            $initial = $this->getInitialLength();
+
+            if ($initial < 126) {
+                $this->length = $initial;
+            } elseif ($initial >= 126) {
+                // Extended payload length: 2 or 8 bytes
+                $start = self::BYTE_INITIAL_LENGTH + 1;
+                $end = self::BYTE_INITIAL_LENGTH + $this->getLengthSize();
+
+                if ($end >= $this->getBufferLength()) {
+                    throw new FrameException('Cannot get extended length: need more data');
+                }
+
+                $length = 0;
+                for ($i = $start; $i <= $end; $i++) {
+                    $length <<= 8;
+                    $length += ord($this->buffer[$i]);
+                }
+
+                $this->length = $length;
+            }
+        }
+        return $this->length;
+    }
+
+    /**
+     * @see Wrench\Frame.Frame::decodeFramePayloadFromBuffer()
+     */
+    protected function decodeFramePayloadFromBuffer()
+    {
+        $payload = substr($this->buffer, $this->getPayloadOffset());
+
+        if ($this->isMasked()) {
+            $payload = $this->unmask($payload);
+        }
+
+        $this->payload = $payload;
+    }
+
+    /**
+     * Masks a payload
+     *
+     * @param string $payload
+     * @return string
+     */
+    protected function unmask($payload)
+    {
+        return $this->mask($payload);
     }
 }

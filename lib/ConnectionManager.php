@@ -51,7 +51,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      * Constructor
      *
      * @param Server $server
-     * @param array $options
+     * @param array  $options
      */
     public function __construct(Server $server, array $options = [])
     {
@@ -131,7 +131,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
             $new = $this->socket->accept();
         } catch (Exception $e) {
             $this->logger->error('Socket error: {exception}', [
-                'exception' => $e
+                'exception' => $e,
             ]);
             return;
         }
@@ -142,7 +142,6 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
 
     /**
      * Creates a connection from a socket resource
-     *
      * The create connection object is based on the options passed into the
      * constructor ('connection_class', 'connection_options'). This connection
      * instance and its associated socket resource are then stored in the
@@ -171,6 +170,21 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
         $this->connections[$id] = $connection;
 
         return $connection;
+    }
+
+    /**
+     * This server makes an explicit assumption: PHP resource types may be cast
+     * to a integer. Furthermore, we assume this is bijective. Both seem to be
+     * true in most circumstances, but may not be guaranteed.
+     * This method (and $this->getResourceId()) exist to make this assumption
+     * explicit.
+     * This is needed on the connection manager as well as on resources
+     *
+     * @param resource $resource
+     */
+    protected function resourceId($resource)
+    {
+        return (int)$resource;
     }
 
     /**
@@ -215,23 +229,6 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
             return false;
         }
         return $this->connections[$this->resourceId($socket)];
-    }
-
-    /**
-     * This server makes an explicit assumption: PHP resource types may be cast
-     * to a integer. Furthermore, we assume this is bijective. Both seem to be
-     * true in most circumstances, but may not be guaranteed.
-     *
-     * This method (and $this->getResourceId()) exist to make this assumption
-     * explicit.
-     *
-     * This is needed on the connection manager as well as on resources
-     *
-     * @param resource $resource
-     */
-    protected function resourceId($resource)
-    {
-        return (int)$resource;
     }
 
     /**
@@ -321,7 +318,6 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
 
     /**
      * Configures the main server socket
-     *
      */
     protected function configureMasterSocket()
     {

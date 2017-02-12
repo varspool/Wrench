@@ -17,14 +17,13 @@ class OriginPolicy implements Listener, HandshakeRequestListener
 
     /**
      * Handshake request listener
-     *
      * Closes the connection on handshake from an origin that isn't allowed
      *
      * @param Connection $connection
-     * @param string $path
-     * @param string $origin
-     * @param string $key
-     * @param array $extensions
+     * @param string     $path
+     * @param string     $origin
+     * @param string     $key
+     * @param array      $extensions
      */
     public function onHandshakeRequest(Connection $connection, $path, $origin, $key, $extensions)
     {

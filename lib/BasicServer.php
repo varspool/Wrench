@@ -4,7 +4,6 @@ namespace Wrench;
 
 use Wrench\Listener\OriginPolicy;
 use Wrench\Listener\RateLimiter;
-use Wrench\Server;
 
 class BasicServer extends Server
 {
@@ -15,34 +14,14 @@ class BasicServer extends Server
      * Constructor
      *
      * @param string $uri
-     * @param array $options
+     * @param array  $options
      */
-    public function __construct($uri, array $options = array())
+    public function __construct($uri, array $options = [])
     {
         parent::__construct($uri, $options);
 
         $this->configureRateLimiter();
         $this->configureOriginPolicy();
-    }
-
-    /**
-     * @see Wrench.Server::configure()
-     */
-    protected function configure(array $options)
-    {
-        $options = array_merge(array(
-            'check_origin'         => true,
-            'allowed_origins'      => array(),
-            'origin_policy_class'  => OriginPolicy::class,
-            'rate_limiter_class'   => RateLimiter::class,
-            'rate_limiter_options' => array(
-                'connections'         => 200, // Total
-                'connections_per_ip'  => 5,   // At once
-                'requests_per_minute' => 200  // Per connection
-            )
-        ), $options);
-
-        parent::configure($options);
     }
 
     protected function configureRateLimiter()
@@ -73,5 +52,25 @@ class BasicServer extends Server
     public function addAllowedOrigin($origin)
     {
         $this->originPolicy->addAllowedOrigin($origin);
+    }
+
+    /**
+     * @see Wrench.Server::configure()
+     */
+    protected function configure(array $options)
+    {
+        $options = array_merge([
+            'check_origin' => true,
+            'allowed_origins' => [],
+            'origin_policy_class' => OriginPolicy::class,
+            'rate_limiter_class' => RateLimiter::class,
+            'rate_limiter_options' => [
+                'connections' => 200, // Total
+                'connections_per_ip' => 5,   // At once
+                'requests_per_minute' => 200  // Per connection
+            ],
+        ], $options);
+
+        parent::configure($options);
     }
 }

@@ -2,24 +2,22 @@
 
 namespace Wrench;
 
+use Exception;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
+use RuntimeException;
 use Wrench\Application\Application;
-use Wrench\Payload\PayloadHandler;
-use Wrench\Protocol\Protocol;
-use Wrench\Payload\Payload;
-use Wrench\Util\Configurable;
-use Wrench\Socket\ServerClientSocket;
-use Wrench\Server;
-use Wrench\Exception\Exception as WrenchException;
+use Wrench\Exception\BadRequestException;
 use Wrench\Exception\CloseException;
 use Wrench\Exception\ConnectionException;
+use Wrench\Exception\Exception as WrenchException;
 use Wrench\Exception\HandshakeException;
-use Wrench\Exception\BadRequestException;
-
-use \Exception;
-use \RuntimeException;
+use Wrench\Payload\Payload;
+use Wrench\Payload\PayloadHandler;
+use Wrench\Protocol\Protocol;
+use Wrench\Socket\ServerClientSocket;
+use Wrench\Util\Configurable;
 
 /**
  * Represents a client connection on the server side
@@ -112,8 +110,9 @@ class Connection extends Configurable implements LoggerAwareInterface
     public function __construct(
         ConnectionManager $manager,
         ServerClientSocket $socket,
-        array $options = array()
+        array $options = []
     ) {
+
         $this->manager = $manager;
         $this->socket = $socket;
         $this->logger = new NullLogger();
@@ -122,37 +121,6 @@ class Connection extends Configurable implements LoggerAwareInterface
 
         $this->configureClientInformation();
         $this->configurePayloadHandler();
-    }
-
-    /**
-     * Gets the connection manager of this connection
-     *
-     * @return \Wrench\ConnectionManager
-     */
-    public function getConnectionManager()
-    {
-        return $this->manager;
-    }
-
-    /**
-     * @see \Wrench\Util.Configurable::configure()
-     */
-    protected function configure(array $options)
-    {
-        $options = array_merge(array(
-            'connection_id_secret' => 'asu5gj656h64Da(0crt8pud%^WAYWW$u76dwb',
-            'connection_id_algo'   => 'sha512',
-        ), $options);
-
-        parent::configure($options);
-    }
-
-    protected function configurePayloadHandler()
-    {
-        $this->payloadHandler = new PayloadHandler(
-            array($this, 'handlePayload'),
-            $this->options
-        );
     }
 
     /**
@@ -197,112 +165,22 @@ class Connection extends Configurable implements LoggerAwareInterface
         $this->id = $hash;
     }
 
-    /**
-     * Data receiver
-     *
-     * Called by the connection manager when the connection has received data
-     *
-     * @param string $data
-     */
-    public function onData($data)
+    protected function configurePayloadHandler()
     {
-        if (!$this->handshaked) {
-            return $this->handshake($data);
-        }
-        return $this->handle($data);
+        $this->payloadHandler = new PayloadHandler(
+            [$this, 'handlePayload'],
+            $this->options
+        );
     }
 
     /**
-     * Performs a websocket handshake
+     * Gets the connection manager of this connection
      *
-     * @param string $data
-     * @throws BadRequestException
-     * @throws HandshakeException
-     * @throws WrenchException
+     * @return \Wrench\ConnectionManager
      */
-    public function handshake($data)
+    public function getConnectionManager()
     {
-        try {
-            list($path, $origin, $key, $extensions, $protocol, $headers, $params)
-                = $this->protocol->validateRequestHandshake($data);
-
-            $this->headers = $headers;
-            $this->queryParams = $params;
-
-            $this->application = $this->manager->getApplicationForPath($path);
-            if (!$this->application) {
-                throw new BadRequestException('Invalid application');
-            }
-
-            $this->manager->getServer()->notify(
-                Server::EVENT_HANDSHAKE_REQUEST,
-                array($this, $path, $origin, $key, $extensions)
-            );
-
-            $response = $this->protocol->getResponseHandshake($key);
-
-            if (!$this->socket->isConnected()) {
-                throw new HandshakeException('Socket is not connected');
-            }
-
-            if ($this->socket->send($response) === false) {
-                throw new HandshakeException('Could not send handshake response');
-            }
-
-            $this->handshaked = true;
-
-            $this->logger->info(sprintf(
-                'Handshake successful: %s:%d (%s) connected to %s',
-                $this->getIp(),
-                $this->getPort(),
-                $this->getId(),
-                $path
-            ));
-
-            $this->manager->getServer()->notify(
-                Server::EVENT_HANDSHAKE_SUCCESSFUL,
-                array($this)
-            );
-
-            if (method_exists($this->application, 'onConnect')) {
-                $this->application->onConnect($this);
-            }
-        } catch (WrenchException $e) {
-            $this->logger->error('Handshake failed: ' . $e);
-            $this->close($e);
-            throw $e;
-        }
-    }
-
-    /**
-     * Returns a string export of the given binary data
-     *
-     * @param string $data
-     * @return string
-     */
-    protected function export($data)
-    {
-        $export = '';
-        foreach (str_split($data) as $chr) {
-            $export .= '\\x' . ord($chr);
-        }
-    }
-
-    /**
-     * Handle data received from the client
-     *
-     * The data passed in may belong to several different frames across one or
-     * more protocols. It may not even contain a single complete frame. This method
-     * manages slotting the data into separate payload objects.
-     *
-     * @todo An endpoint MUST be capable of handling control frames in the
-     *        middle of a fragmented message.
-     * @param string $data
-     * @return void
-     */
-    public function handle($data)
-    {
-        $this->payloadHandler->handle($data);
+        return $this->manager;
     }
 
     /**
@@ -361,51 +239,13 @@ class Connection extends Configurable implements LoggerAwareInterface
     }
 
     /**
-     * Sends the payload to the connection
+     * Gets the client application
      *
-     * @param string|Payload|mixed $data
-     * @param integer $type
-     * @throws HandshakeException
-     * @throws ConnectionException
-     * @return boolean
+     * @return Application
      */
-    public function send($data, $type = Protocol::TYPE_TEXT)
+    public function getClientApplication()
     {
-        if (!$this->handshaked) {
-            throw new HandshakeException('Connection is not handshaked');
-        }
-
-        $payload = $this->protocol->getPayload();
-        if (!is_scalar($data) && !$data instanceof Payload) {
-            $data = json_encode($data);
-        }
-
-        // Servers don't send masked payloads
-        $payload->encode($data, $type, false);
-
-        if (!$payload->sendToSocket($this->socket)) {
-            $this->logger->warning('Could not send payload to client');
-            throw new ConnectionException('Could not send data to connection: ' . $this->socket->getLastError());
-        }
-
-        return true;
-    }
-
-    /**
-     * Processes data on the socket
-     *
-     * @throws CloseException
-     */
-    public function process()
-    {
-        $data = $this->socket->receive();
-        $bytes = strlen($data);
-
-        if ($bytes === 0 || $data === false) {
-            throw new CloseException('Error reading data from socket: ' . $this->socket->getLastError());
-        }
-
-        $this->onData($data);
+        return (isset($this->application)) ? $this->application : false;
     }
 
     /**
@@ -455,6 +295,131 @@ class Connection extends Configurable implements LoggerAwareInterface
     }
 
     /**
+     * Sends the payload to the connection
+     *
+     * @param string|Payload|mixed $data
+     * @param integer              $type
+     * @throws HandshakeException
+     * @throws ConnectionException
+     * @return boolean
+     */
+    public function send($data, $type = Protocol::TYPE_TEXT)
+    {
+        if (!$this->handshaked) {
+            throw new HandshakeException('Connection is not handshaked');
+        }
+
+        $payload = $this->protocol->getPayload();
+        if (!is_scalar($data) && !$data instanceof Payload) {
+            $data = json_encode($data);
+        }
+
+        // Servers don't send masked payloads
+        $payload->encode($data, $type, false);
+
+        if (!$payload->sendToSocket($this->socket)) {
+            $this->logger->warning('Could not send payload to client');
+            throw new ConnectionException('Could not send data to connection: ' . $this->socket->getLastError());
+        }
+
+        return true;
+    }
+
+    /**
+     * Processes data on the socket
+     *
+     * @throws CloseException
+     */
+    public function process()
+    {
+        $data = $this->socket->receive();
+        $bytes = strlen($data);
+
+        if ($bytes === 0 || $data === false) {
+            throw new CloseException('Error reading data from socket: ' . $this->socket->getLastError());
+        }
+
+        $this->onData($data);
+    }
+
+    /**
+     * Data receiver
+     *
+     * Called by the connection manager when the connection has received data
+     *
+     * @param string $data
+     */
+    public function onData($data)
+    {
+        if (!$this->handshaked) {
+            return $this->handshake($data);
+        }
+        return $this->handle($data);
+    }
+
+    /**
+     * Performs a websocket handshake
+     *
+     * @param string $data
+     * @throws BadRequestException
+     * @throws HandshakeException
+     * @throws WrenchException
+     */
+    public function handshake($data)
+    {
+        try {
+            list($path, $origin, $key, $extensions, $protocol, $headers, $params)
+                = $this->protocol->validateRequestHandshake($data);
+
+            $this->headers = $headers;
+            $this->queryParams = $params;
+
+            $this->application = $this->manager->getApplicationForPath($path);
+            if (!$this->application) {
+                throw new BadRequestException('Invalid application');
+            }
+
+            $this->manager->getServer()->notify(
+                Server::EVENT_HANDSHAKE_REQUEST,
+                [$this, $path, $origin, $key, $extensions]
+            );
+
+            $response = $this->protocol->getResponseHandshake($key);
+
+            if (!$this->socket->isConnected()) {
+                throw new HandshakeException('Socket is not connected');
+            }
+
+            if ($this->socket->send($response) === false) {
+                throw new HandshakeException('Could not send handshake response');
+            }
+
+            $this->handshaked = true;
+
+            $this->logger->info(sprintf(
+                'Handshake successful: %s:%d (%s) connected to %s',
+                $this->getIp(),
+                $this->getPort(),
+                $this->getId(),
+                $path
+            ));
+
+            $this->manager->getServer()->notify(
+                Server::EVENT_HANDSHAKE_SUCCESSFUL,
+                [$this]
+            );
+
+            if (method_exists($this->application, 'onConnect')) {
+                $this->application->onConnect($this);
+            }
+        } catch (WrenchException $e) {
+            $this->logger->error('Handshake failed: ' . $e);
+            $this->close($e);
+            throw $e;
+        }
+    }
+
+    /**
      * Gets the IP address of the connection
      *
      * @return string Usually dotted quad notation
@@ -472,6 +437,33 @@ class Connection extends Configurable implements LoggerAwareInterface
     public function getPort()
     {
         return $this->port;
+    }
+
+    /**
+     * Gets the connection ID
+     *
+     * @return string
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Handle data received from the client
+     *
+     * The data passed in may belong to several different frames across one or
+     * more protocols. It may not even contain a single complete frame. This method
+     * manages slotting the data into separate payload objects.
+     *
+     * @todo An endpoint MUST be capable of handling control frames in the
+     *        middle of a fragmented message.
+     * @param string $data
+     * @return void
+     */
+    public function handle($data)
+    {
+        $this->payloadHandler->handle($data);
     }
 
     /**
@@ -495,16 +487,6 @@ class Connection extends Configurable implements LoggerAwareInterface
     }
 
     /**
-     * Gets the connection ID
-     *
-     * @return string
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
      * Gets the socket object
      *
      * @return Socket\ServerClientSocket
@@ -515,12 +497,29 @@ class Connection extends Configurable implements LoggerAwareInterface
     }
 
     /**
-     * Gets the client application
-     *
-     * @return Application
+     * @see \Wrench\Util.Configurable::configure()
      */
-    public function getClientApplication()
+    protected function configure(array $options)
     {
-        return (isset($this->application)) ? $this->application : false;
+        $options = array_merge([
+            'connection_id_secret' => 'asu5gj656h64Da(0crt8pud%^WAYWW$u76dwb',
+            'connection_id_algo' => 'sha512',
+        ], $options);
+
+        parent::configure($options);
+    }
+
+    /**
+     * Returns a string export of the given binary data
+     *
+     * @param string $data
+     * @return string
+     */
+    protected function export($data)
+    {
+        $export = '';
+        foreach (str_split($data) as $chr) {
+            $export .= '\\x' . ord($chr);
+        }
     }
 }

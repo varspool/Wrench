@@ -4,20 +4,21 @@ namespace Wrench\Application;
 
 /**
  * Example application demonstrating how to use Application::onUpdate
- *
  * Pushes the server time to all clients every update tick.
  */
-class ServerTimeApplication extends Application
+class ServerTimeApplication implements ConnectionHandlerInterface, DataHandlerInterface
 {
-    protected $clients = array();
+    protected $clients = [];
     protected $lastTimestamp = null;
 
-    /**
-     * @see Wrench\Application.Application::onConnect()
-     */
     public function onConnect($client)
     {
         $this->clients[] = $client;
+    }
+
+    public function onDisconnect($connection)
+    {
+        $a = $connection;
     }
 
     /**
