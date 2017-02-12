@@ -25,25 +25,6 @@ class ServerTest extends BaseTest
     }
 
     /**
-     * Tests logging
-     */
-    public function testLogging()
-    {
-        $test = $this;
-        $logged = false;
-
-        $server = $this->getInstance('ws://localhost:8000', [
-            'logger' => function ($message, $priority) use ($test, &$logged) {
-                $test->assertTrue(is_string($message), 'Log had a string message');
-                $test->assertTrue(is_string($priority), 'Log had a string priority');
-                $logged = true;
-            },
-        ]);
-
-        $this->assertTrue($logged, 'The log callback was hit');
-    }
-
-    /**
      * Data provider
      *
      * @return array<array<mixed>>
@@ -53,11 +34,10 @@ class ServerTest extends BaseTest
         return [
             [
                 'ws://localhost:8000',
-                ['logger' => [$this, 'log']],
+                [],
             ],
             [
-                'ws://localhost',
-                ['logger' => [$this, 'log']],
+                'ws://localhost'
             ],
         ];
     }

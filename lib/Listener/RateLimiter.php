@@ -2,8 +2,9 @@
 
 namespace Wrench\Listener;
 
-use Wrench\Util\Configurable;
+use Wrench\Connection;
 use Wrench\Server;
+use Wrench\Util\Configurable;
 
 class RateLimiter extends Configurable implements Listener
 {
@@ -19,37 +20,23 @@ class RateLimiter extends Configurable implements Listener
      *
      * @var array<int>
      */
-    protected $ips = array();
+    protected $ips = [];
 
     /**
      * Request tokens per IP address
      *
      * @var array<array<int>>
      */
-    protected $requests = array();
+    protected $requests = [];
 
     /**
      * Constructor
      *
      * @param array $options
      */
-    public function __construct(array $options = array())
+    public function __construct(array $options = [])
     {
         parent::__construct($options);
-    }
-
-    /**
-     * @param array $options
-     */
-    protected function configure(array $options)
-    {
-        $options = array_merge(array(
-            'connections'         => 200, // Total
-            'connections_per_ip'  => 5,   // At once
-            'requests_per_minute' => 200  // Per connection
-        ), $options);
-
-        parent::configure($options);
     }
 
     /**
@@ -61,17 +48,17 @@ class RateLimiter extends Configurable implements Listener
 
         $server->addListener(
             Server::EVENT_SOCKET_CONNECT,
-            array($this, 'onSocketConnect')
+            [$this, 'onSocketConnect']
         );
 
         $server->addListener(
             Server::EVENT_SOCKET_DISCONNECT,
-            array($this, 'onSocketDisconnect')
+            [$this, 'onSocketDisconnect']
         );
 
         $server->addListener(
             Server::EVENT_CLIENT_DATA,
-            array($this, 'onClientData')
+            [$this, 'onClientData']
         );
     }
 
@@ -85,28 +72,6 @@ class RateLimiter extends Configurable implements Listener
     {
         $this->checkConnections($connection);
         $this->checkConnectionsPerIp($connection);
-    }
-
-    /**
-     * Event listener
-     *
-     * @param resource $socket
-     * @param Connection $connection
-     */
-    public function onSocketDisconnect($socket, $connection)
-    {
-        $this->releaseConnection($connection);
-    }
-
-    /**
-     * Event listener
-     *
-     * @param resource $socket
-     * @param Connection $connection
-     */
-    public function onClientData($socket, $connection)
-    {
-        $this->checkRequestsPerMinute($connection);
     }
 
     /**
@@ -124,6 +89,23 @@ class RateLimiter extends Configurable implements Listener
     }
 
     /**
+     * Limits the given connection
+     *
+     * @param Connection $connection
+     * @param string $limit Reason
+     */
+    protected function limit($connection, $limit)
+    {
+        $this->logger->notice(sprintf(
+            'Limiting connection %s: %s',
+            $connection->getIp(),
+            $limit
+        ));
+
+        $connection->close(new RateLimiterException($limit));
+    }
+
+    /**
      * NOT idempotent, call once per connection
      *
      * @param Connection $connection
@@ -133,7 +115,7 @@ class RateLimiter extends Configurable implements Listener
         $ip = $connection->getIp();
 
         if (!$ip) {
-            $this->log('Cannot check connections per IP', 'warning');
+            $this->logger->warning('Cannot check connections per IP');
             return;
         }
 
@@ -152,6 +134,17 @@ class RateLimiter extends Configurable implements Listener
     }
 
     /**
+     * Event listener
+     *
+     * @param resource $socket
+     * @param Connection $connection
+     */
+    public function onSocketDisconnect($socket, $connection)
+    {
+        $this->releaseConnection($connection);
+    }
+
+    /**
      * NOT idempotent, call once per disconnection
      *
      * @param Connection $connection
@@ -161,7 +154,7 @@ class RateLimiter extends Configurable implements Listener
         $ip = $connection->getIp();
 
         if (!$ip) {
-            $this->log('Cannot release connection', 'warning');
+            $this->logger->warning('Cannot release connection');
             return;
         }
 
@@ -175,6 +168,17 @@ class RateLimiter extends Configurable implements Listener
     }
 
     /**
+     * Event listener
+     *
+     * @param resource $socket
+     * @param Connection $connection
+     */
+    public function onClientData($socket, $connection)
+    {
+        $this->checkRequestsPerMinute($connection);
+    }
+
+    /**
      * NOT idempotent, call once per data
      *
      * @param Connection $connection
@@ -184,7 +188,7 @@ class RateLimiter extends Configurable implements Listener
         $id = $connection->getId();
 
         if (!isset($this->requests[$id])) {
-            $this->requests[$id] = array();
+            $this->requests[$id] = [];
         }
 
         // Add current token
@@ -201,23 +205,6 @@ class RateLimiter extends Configurable implements Listener
     }
 
     /**
-     * Limits the given connection
-     *
-     * @param Connection $connection
-     * @param string $limit Reason
-     */
-    protected function limit($connection, $limit)
-    {
-        $this->log(sprintf(
-            'Limiting connection %s: %s',
-            $connection->getIp(),
-            $limit
-        ), 'notice');
-
-        $connection->close(new RateLimiterException($limit));
-    }
-
-    /**
      * Logger
      *
      * @param string $message
@@ -226,5 +213,19 @@ class RateLimiter extends Configurable implements Listener
     public function log($message, $priority = 'info')
     {
         $this->server->log('RateLimiter: ' . $message, $priority);
+    }
+
+    /**
+     * @param array $options
+     */
+    protected function configure(array $options)
+    {
+        $options = array_merge([
+            'connections' => 200, // Total
+            'connections_per_ip' => 5,   // At once
+            'requests_per_minute' => 200  // Per connection
+        ], $options);
+
+        parent::configure($options);
     }
 }

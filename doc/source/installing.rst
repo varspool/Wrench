@@ -4,14 +4,7 @@
 Installing Wrench
 *****************
 
-The library is PSR-0 compatible, with a vendor name of **Wrench**. An
-SplClassLoader is bundled for convenience. The simplest possible bootstrap
-looks like this::
-
-    require_once 'SplClassLoader.php';
-
-    $classLoader = new \SplClassLoader('Wrench', __DIR__ . '/../path/to/wrench/lib');
-    $classLoader->register();
+The library is PSR-4 compatible, with a vendor name of **Wrench**.
 
 --------
 composer
@@ -26,19 +19,6 @@ Here's what it looks like in your :file:`composer.json`
     {
         ...
         "require": {
-            "wrench/wrench": "dev-master"
+            "wrench/wrench": "~3.0"
         }
     }
-
----------
-deps file
----------
-
-Using Symfony2 with a traditional style deps file? You can configure Wrench
-like this:
-
-.. code-block:: ini
-
-    [wrench]
-        git=git://github.com/varspool/Wrench.git
-        version=origin/master

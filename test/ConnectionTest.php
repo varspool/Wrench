@@ -60,7 +60,7 @@ class ConnectionTest extends BaseTest
      */
     protected function getMockSocket()
     {
-        return $this->createMock('Wrench\Socket\ServerClientSocket');
+        return $this->createMock(Socket\ServerClientSocket::class);
     }
 
     /**
@@ -68,7 +68,7 @@ class ConnectionTest extends BaseTest
      */
     protected function getMockConnectionManager()
     {
-        return $this->createMock('Wrench\ConnectionManager');
+        return $this->createMock(ConnectionManager::class);
     }
 
     /**

@@ -1,13 +1,18 @@
 <?php
 
 namespace Wrench\Test;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 
 /**
  * In conjunction with server.php, provides a listening server
  * against which tests can be run.
  */
-class ServerTestHelper
+class ServerTestHelper implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     const TEST_SERVER_PORT_MIN = 16666;
     const TEST_SERVER_PORT_MAX = 52222;
 
@@ -16,6 +21,11 @@ class ServerTestHelper
     protected $port = null;
     protected $process = null;
     protected $pipes = [];
+
+    public function __construct()
+    {
+        $this->logger = new NullLogger();
+    }
 
     /**
      * Destructor
@@ -44,9 +54,9 @@ class ServerTestHelper
             if ($status && isset($status['pid']) && $status['pid']) {
                 // More sigh, this is the pid of the parent sh process, we want
                 //  to terminate the server directly
-                $this->log('Command: /bin/ps -ao pid,ppid | /usr/bin/col | /usr/bin/tail -n +2 | /bin/grep \'  '
+                $this->logger->info('Command: /bin/ps -ao pid,ppid | /usr/bin/col | /usr/bin/tail -n +2 | /bin/grep \'  '
                     . $status['pid']
-                    . "'", 'info');
+                    . "'");
                 exec('/bin/ps -ao pid,ppid | /usr/bin/col | /usr/bin/tail -n +2 | /bin/grep \' '
                     . $status['pid']
                     . "'", $processes, $return);
@@ -55,17 +65,17 @@ class ServerTestHelper
                     foreach ($processes as $process) {
                         list($pid, $ppid) = explode(' ', str_replace('  ', ' ', $process));
                         if ($pid) {
-                            $this->log('Killing ' . $pid, 'info');
+                            $this->logger->info('Killing ' . $pid);
                             exec('/bin/kill ' . $pid . ' > /dev/null 2>&1');
                         }
                     }
                 } else {
-                    $this->log('Unable to find child processes', 'warning');
+                    $this->logger->warning('Unable to find child processes');
                 }
 
                 sleep(1);
 
-                $this->log('Killing ' . $status['pid'], 'info');
+                $this->logger->info('Killing ' . $status['pid']);
                 exec('/bin/kill ' . $status['pid'] . ' > /dev/null 2>&1');
 
                 sleep(1);

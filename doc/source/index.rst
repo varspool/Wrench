@@ -4,7 +4,7 @@
 Wrench
 ======
 
-Wrench is a WebSockets library for PHP 5.3+
+Wrench is a WebSockets library for PHP 7.1
 
 .. toctree::
    :maxdepth: 3

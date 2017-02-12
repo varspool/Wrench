@@ -2,6 +2,9 @@
 
 namespace Wrench;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 use Wrench\ConnectionManager;
 use Wrench\Util\Configurable;
 
@@ -18,8 +21,10 @@ use \InvalidArgumentException;
  * @author Simon Samtleben <web@lemmingzshadow.net>
  * @author Dominic Scheirlinck <dominic@varspool.com>
  */
-class Server extends Configurable
+class Server extends Configurable implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**#@+
      * Events
      *
@@ -45,17 +50,6 @@ class Server extends Configurable
      * @var array
      */
     protected $options = array();
-
-    /**
-     * A logging callback
-     *
-     * The default callback simply prints to stdout. You can pass your own logger
-     * in the options array. It should take a string message and string priority
-     * as parameters.
-     *
-     * @var Closure
-     */
-    protected $logger;
 
     /**
      * Event listeners
@@ -93,7 +87,7 @@ class Server extends Configurable
 
         parent::__construct($options);
 
-        $this->log('Server initialized', 'info');
+        $this->logger = new NullLogger();
     }
 
     /**
@@ -118,23 +112,6 @@ class Server extends Configurable
         parent::configure($options);
 
         $this->configureConnectionManager();
-        $this->configureLogger();
-    }
-
-    /**
-     * Configures the logger
-     *
-     * @return void
-     */
-    protected function configureLogger()
-    {
-        // Default logger
-        if (!isset($this->options['logger'])) {
-            $this->options['logger'] = function ($message, $priority = 'info') {
-                printf("%s: %s%s", $priority, $message, PHP_EOL);
-            };
-        }
-        $this->setLogger($this->options['logger']);
     }
 
     /**
@@ -168,20 +145,6 @@ class Server extends Configurable
     }
 
     /**
-     * Sets a logger
-     *
-     * @param Closure $logger
-     * @return void
-     */
-    public function setLogger($logger)
-    {
-        if (!is_callable($logger)) {
-            throw new \InvalidArgumentException('Logger must be callable');
-        }
-        $this->logger = $logger;
-    }
-
-    /**
      * Main server loop
      *
      * @return void This method does not return!
@@ -209,21 +172,6 @@ class Server extends Configurable
                 }
             }
         }
-    }
-
-    /**
-     * Logs a message to the server log
-     *
-     * The default logger simply prints the message to stdout. You can provide
-     * a logging closure. This is useful, for instance, if you've daemonized
-     * and closed STDOUT.
-     *
-     * @param string $message Message to display.
-     * @return void
-     */
-    public function log($message, $priority = 'info')
-    {
-        call_user_func($this->logger, $message, $priority);
     }
 
     /**

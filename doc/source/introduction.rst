@@ -4,8 +4,7 @@
 Introduction
 ************
 
-Wrench is a simple websocket server and client package for PHP 5.3/5.4, using
-streams.
+Wrench is a simple websocket server and client package for PHP 7.1
 
 -------------
 php-websocket

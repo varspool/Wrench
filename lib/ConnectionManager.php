@@ -2,19 +2,23 @@
 
 namespace Wrench;
 
+use Countable;
+use Exception;
 use InvalidArgumentException;
-use Wrench\Connection;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
+use Wrench\Exception\CloseException;
+use Wrench\Exception\Exception as WrenchException;
 use Wrench\Socket\ServerClientSocket;
 use Wrench\Socket\ServerSocket;
 use Wrench\Util\Configurable;
-use Wrench\Exception\Exception as WrenchException;
-use Wrench\Exception\CloseException;
-use \Exception;
-use \Countable;
 
-class ConnectionManager extends Configurable implements Countable
+class ConnectionManager extends Configurable implements Countable, LoggerAwareInterface
 {
-    const TIMEOUT_SELECT          = 0;
+    use LoggerAwareTrait;
+
+    const TIMEOUT_SELECT = 0;
     const TIMEOUT_SELECT_MICROSEC = 200000;
 
     /**
@@ -34,14 +38,14 @@ class ConnectionManager extends Configurable implements Countable
      *
      * @var array<int => Connection>
      */
-    protected $connections = array();
+    protected $connections = [];
 
     /**
      * An array of raw socket resources, corresponding to connections, roughly
      *
      * @var array<int => resource>
      */
-    protected $resources = array();
+    protected $resources = [];
 
     /**
      * Constructor
@@ -49,11 +53,13 @@ class ConnectionManager extends Configurable implements Countable
      * @param Server $server
      * @param array $options
      */
-    public function __construct(Server $server, array $options = array())
+    public function __construct(Server $server, array $options = [])
     {
         $this->server = $server;
 
         parent::__construct($options);
+
+        $this->logger = new NullLogger();
     }
 
     /**
@@ -62,30 +68,6 @@ class ConnectionManager extends Configurable implements Countable
     public function count()
     {
         return count($this->connections);
-    }
-
-    /**
-     * @see Socket::configure()
-     *   Options include:
-     *     - timeout_select          => int, seconds, default 0
-     *     - timeout_select_microsec => int, microseconds (NB: not milli), default: 200000
-     */
-    protected function configure(array $options)
-    {
-        $options = array_merge(array(
-            'socket_master_class'     => ServerSocket::class,
-            'socket_master_options'   => array(),
-            'socket_client_class'     => ServerClientSocket::class,
-            'socket_client_options'   => array(),
-            'connection_class'        => Connection::class,
-            'connection_options'      => array(),
-            'timeout_select'          => self::TIMEOUT_SELECT,
-            'timeout_select_microsec' => self::TIMEOUT_SELECT_MICROSEC
-        ), $options);
-
-        parent::configure($options);
-
-        $this->configureMasterSocket();
     }
 
     /**
@@ -100,17 +82,6 @@ class ConnectionManager extends Configurable implements Countable
     }
 
     /**
-     * Configures the main server socket
-     *
-     */
-    protected function configureMasterSocket()
-    {
-        $class   = $this->options['socket_master_class'];
-        $options = $this->options['socket_master_options'];
-        $this->socket = new $class($this->server->getUri(), $options);
-    }
-
-    /**
      * Listens on the main socket
      *
      * @return void
@@ -122,38 +93,12 @@ class ConnectionManager extends Configurable implements Countable
     }
 
     /**
-     * Gets all resources
-     *
-     * @return array<int => resource)
-     */
-    protected function getAllResources()
-    {
-        return array_merge($this->resources, array(
-            $this->socket->getResourceId() => $this->socket->getResource()
-        ));
-    }
-
-    /**
-     * Returns the Connection associated with the specified socket resource
-     *
-     * @param resource $socket
-     * @return Connection
-     */
-    protected function getConnectionForClientSocket($socket)
-    {
-        if (!isset($this->connections[$this->resourceId($socket)])) {
-            return false;
-        }
-        return $this->connections[$this->resourceId($socket)];
-    }
-
-    /**
      * Select and process an array of resources
      */
     public function selectAndProcess()
     {
-        $read             = $this->resources;
-        $unused_write     = null;
+        $read = $this->resources;
+        $unused_write = null;
         $unsued_exception = null;
 
         stream_select(
@@ -185,12 +130,14 @@ class ConnectionManager extends Configurable implements Countable
         try {
             $new = $this->socket->accept();
         } catch (Exception $e) {
-            $this->server->log('Socket error: ' . $e, 'err');
+            $this->logger->error('Socket error: {exception}', [
+                'exception' => $e
+            ]);
             return;
         }
 
         $connection = $this->createConnection($new);
-        $this->server->notify(Server::EVENT_SOCKET_CONNECT, array($new, $connection));
+        $this->server->notify(Server::EVENT_SOCKET_CONNECT, [$new, $connection]);
     }
 
     /**
@@ -236,24 +183,38 @@ class ConnectionManager extends Configurable implements Countable
         $connection = $this->getConnectionForClientSocket($socket);
 
         if (!$connection) {
-            $this->log('No connection for client socket', 'warning');
+            $this->logger->warning('No connection for client socket');
             return;
         }
 
         try {
-            $this->server->notify(Server::EVENT_CLIENT_DATA, array($socket, $connection));
+            $this->server->notify(Server::EVENT_CLIENT_DATA, [$socket, $connection]);
 
             $connection->process();
         } catch (CloseException $e) {
-            $this->log('Client connection closed: ' . $e, 'notice');
+            $this->logger->notice('Client connection closed: ' . $e);
             $connection->close($e);
         } catch (WrenchException $e) {
-            $this->log('Error on client socket: ' . $e, 'warning');
+            $this->logger->warning('Error on client socket: ' . $e);
             $connection->close($e);
         } catch (\InvalidArgumentException $e) {
-            $this->log('Wrong input arguments: ' . $e, 'warning');
+            $this->logger->warning('Wrong input arguments: ' . $e);
             $connection->close($e);
         }
+    }
+
+    /**
+     * Returns the Connection associated with the specified socket resource
+     *
+     * @param resource $socket
+     * @return Connection
+     */
+    protected function getConnectionForClientSocket($socket)
+    {
+        if (!isset($this->connections[$this->resourceId($socket)])) {
+            return false;
+        }
+        return $this->connections[$this->resourceId($socket)];
     }
 
     /**
@@ -322,7 +283,7 @@ class ConnectionManager extends Configurable implements Countable
         }
 
         if (!$index) {
-            $this->log('Could not remove connection: not found', 'warning');
+            $this->logger->warning('Could not remove connection: not found', 'warning');
         }
 
         unset($this->connections[$index]);
@@ -330,7 +291,54 @@ class ConnectionManager extends Configurable implements Countable
 
         $this->server->notify(
             Server::EVENT_SOCKET_DISCONNECT,
-            array($connection->getSocket(), $connection)
+            [$connection->getSocket(), $connection]
         );
+    }
+
+    /**
+     * @see Socket::configure()
+     *   Options include:
+     *     - timeout_select          => int, seconds, default 0
+     *     - timeout_select_microsec => int, microseconds (NB: not milli), default: 200000
+     */
+    protected function configure(array $options)
+    {
+        $options = array_merge([
+            'socket_master_class' => ServerSocket::class,
+            'socket_master_options' => [],
+            'socket_client_class' => ServerClientSocket::class,
+            'socket_client_options' => [],
+            'connection_class' => Connection::class,
+            'connection_options' => [],
+            'timeout_select' => self::TIMEOUT_SELECT,
+            'timeout_select_microsec' => self::TIMEOUT_SELECT_MICROSEC,
+        ], $options);
+
+        parent::configure($options);
+
+        $this->configureMasterSocket();
+    }
+
+    /**
+     * Configures the main server socket
+     *
+     */
+    protected function configureMasterSocket()
+    {
+        $class = $this->options['socket_master_class'];
+        $options = $this->options['socket_master_options'];
+        $this->socket = new $class($this->server->getUri(), $options);
+    }
+
+    /**
+     * Gets all resources
+     *
+     * @return array<int => resource)
+     */
+    protected function getAllResources()
+    {
+        return array_merge($this->resources, [
+            $this->socket->getResourceId() => $this->socket->getResource(),
+        ]);
     }
 }
