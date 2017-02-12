@@ -2,9 +2,11 @@
 
 namespace Wrench;
 
+use Wrench\Application\DataHandlerInterface;
 use Wrench\Application\EchoApplication;
 use Wrench\Protocol\Protocol;
-use Wrench\Socket;
+use Wrench\Socket\ServerClientSocket;
+use Wrench\Socket\Socket;
 use Wrench\Test\BaseTest;
 
 /**
@@ -56,11 +58,11 @@ class ConnectionTest extends BaseTest
     /**
      * Gets a mock socket
      *
-     * @return \PHPUnit_Framework_MockObject_MockObject|Socket\Socket
+     * @return \PHPUnit_Framework_MockObject_MockObject|Socket
      */
     protected function getMockSocket()
     {
-        return $this->createMock(Socket\ServerClientSocket::class);
+        return $this->createMock(ServerClientSocket::class);
     }
 
     /**
@@ -102,7 +104,7 @@ class ConnectionTest extends BaseTest
 
         $application = $this->getMockApplication();
 
-        $server = $this->createMock('Wrench\Server');
+        $server = $this->createMock(Server::class);
         $server->registerApplication($path, $application);
 
         $manager->expects($this->any())
@@ -126,11 +128,11 @@ class ConnectionTest extends BaseTest
      */
     protected function getMockApplication()
     {
-        return $this->createMock('Wrench\Application\EchoApplication');
+        return $this->createMock(DataHandlerInterface::class);
     }
 
     /**
-     * @return Socket
+     * @return Socket|\PHPUnit_Framework_MockObject_MockObject
      */
     protected function getConnectedSocket()
     {
@@ -223,7 +225,7 @@ class ConnectionTest extends BaseTest
         /**
          * @var $server Server|\PHPUnit_Framework_MockObject_MockObject
          */
-        $server = $this->createMock('Wrench\Server');
+        $server = $this->createMock(Server::class);
         $server->registerApplication($path, $application);
 
         $manager->expects($this->any())

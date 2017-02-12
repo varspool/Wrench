@@ -2,7 +2,7 @@
 
 namespace Wrench;
 
-use Wrench\Application\EchoApplication;
+use Wrench\Application\DataHandlerInterface;
 use Wrench\Test\BaseTest;
 
 /**
@@ -46,7 +46,7 @@ class ConnectionManagerTest extends BaseTest
      */
     protected function getMockServer()
     {
-        $server = $this->createMock('\Wrench\Server');
+        $server = $this->createMock(Server::class);
 
         $server->registerApplication('/echo', $this->getMockApplication());
 
@@ -64,7 +64,13 @@ class ConnectionManagerTest extends BaseTest
      */
     protected function getMockApplication()
     {
-        return new EchoApplication();
+        return new class implements DataHandlerInterface
+        {
+            public function onData(string $data, Connection $connection): void
+            {
+                $connection->send($data);
+            }
+        };
     }
 
     /**

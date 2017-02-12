@@ -3,7 +3,9 @@
 namespace Wrench;
 
 use InvalidArgumentException;
+use Wrench\Payload\Payload;
 use Wrench\Protocol\Protocol;
+use Wrench\Socket\ClientSocket;
 use Wrench\Test\BaseTest;
 use Wrench\Test\ServerTestHelper;
 
@@ -39,7 +41,7 @@ class ClientTest extends BaseTest
      */
     protected function getMockSocket()
     {
-        return $this->getMockBuilder('Wrench\Socket\ClientSocket')
+        return $this->getMockBuilder(ClientSocket::class)
             ->setMethods([])
             ->setConstructorArgs(['wss://localhost:8000'])
             ->getMock();
@@ -131,8 +133,8 @@ class ClientTest extends BaseTest
             $responses = $instance->receive();
             $this->assertTrue(is_array($responses));
             $this->assertCount(2, $responses);
-            $this->assertInstanceOf('Wrench\\Payload\\Payload', $responses[0]);
-            $this->assertInstanceOf('Wrench\\Payload\\Payload', $responses[1]);
+            $this->assertInstanceOf(Payload::class, $responses[0]);
+            $this->assertInstanceOf(Payload::class, $responses[1]);
 
             $bytes = $instance->sendData('baz', Protocol::TYPE_TEXT);
             $this->assertTrue($bytes >= 3, 'sent text frame');
@@ -142,7 +144,7 @@ class ClientTest extends BaseTest
             $responses = $instance->receive();
             $this->assertTrue(is_array($responses));
             $this->assertCount(1, $responses);
-            $this->assertInstanceOf('Wrench\\Payload\\Payload', $responses[2]);
+            $this->assertInstanceOf(Payload::class, $responses[2]);
 
             $instance->disconnect();
 

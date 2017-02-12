@@ -2,6 +2,7 @@
 
 namespace Wrench\Application;
 
+use Wrench\Connection;
 use Wrench\Protocol\Protocol;
 use Wrench\Test\BaseTest as WrenchTest;
 
@@ -21,7 +22,7 @@ class EchoApplicationTest extends WrenchTest
      */
     public function testOnData($payload)
     {
-        $connection = $this->getMockBuilder('Wrench\Connection')
+        $connection = $this->getMockBuilder(Connection::class)
                      ->disableOriginalConstructor()
                      ->getMock();
 

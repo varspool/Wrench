@@ -2,6 +2,8 @@
 
 namespace Wrench\Listener;
 
+use Wrench\Connection;
+
 class OriginPolicyTest extends ListenerBaseTest
 {
     public function testConstructor()
@@ -31,7 +33,7 @@ class OriginPolicyTest extends ListenerBaseTest
     {
         $instance = $this->getInstance($allowed);
 
-        $connection = $this->createMock('Wrench\Connection');
+        $connection = $this->createMock(Connection::class);
 
         $connection
             ->expects($this->never())
@@ -60,7 +62,7 @@ class OriginPolicyTest extends ListenerBaseTest
     {
         $instance = $this->getInstance($allowed);
 
-        $connection = $this->createMock('Wrench\Connection');
+        $connection = $this->createMock(Connection::class);
 
         $connection
             ->expects($this->once())

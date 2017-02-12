@@ -2,6 +2,8 @@
 
 namespace Wrench\Listener;
 
+use Wrench\Connection;
+
 class RateLimiterTest extends ListenerBaseTest
 {
     public function testConstructor()
@@ -37,7 +39,7 @@ class RateLimiterTest extends ListenerBaseTest
 
     protected function getConnection()
     {
-        $connection = $this->createMock('\Wrench\Connection');
+        $connection = $this->createMock(Connection::class);
 
         $connection
             ->expects($this->any())

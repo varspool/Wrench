@@ -10,5 +10,14 @@ if ($argc != 2 || !$argv[1] || !is_numeric($argv[1]) || (int)$argv[1] <= 1024) {
 $port = (int)$argv[1];
 
 $server = new Wrench\Server('ws://localhost:' . $port);
-$server->registerApplication('echo', new Wrench\Application\EchoApplication());
+
+$app = new class implements \Wrench\Application\DataHandlerInterface
+{
+    public function onData(string $data, \Wrench\Connection $connection): void
+    {
+        $connection->send($data);
+    }
+};
+$server->registerApplication('echo', $app);
+
 $server->run();

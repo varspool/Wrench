@@ -2,6 +2,7 @@
 
 namespace Wrench\Listener;
 
+use Wrench\Server;
 use Wrench\Test\BaseTest;
 
 /**
@@ -16,8 +17,7 @@ abstract class ListenerBaseTest extends BaseTest
      */
     public function testListen(Listener $instance)
     {
-        $server = $this->createMock('Wrench\Server');
-
+        $server = $this->createMock(Server::class);
         $instance->listen($server);
     }
 

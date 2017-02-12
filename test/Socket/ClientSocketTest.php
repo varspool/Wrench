@@ -9,11 +9,6 @@ use Wrench\Test\ServerTestHelper;
 
 class ClientSocketTest extends UriSocketTest
 {
-    public function getClass()
-    {
-        return 'Wrench\Socket\ClientSocket';
-    }
-
     /**
      * Overriden to use with the depends annotation
      */

@@ -19,15 +19,15 @@ error_reporting(E_ALL);
 require __DIR__ . '/../vendor/autoload.php';
 
 // Generate PEM file
-$pemFile                = __DIR__ . '/generated.pem';
-$pemPassphrase          = null;
-$countryName            = "DE";
-$stateOrProvinceName    = "none";
-$localityName           = "none";
-$organizationName       = "none";
+$pemFile = __DIR__ . '/generated.pem';
+$pemPassphrase = null;
+$countryName = "DE";
+$stateOrProvinceName = "none";
+$localityName = "none";
+$organizationName = "none";
 $organizationalUnitName = "none";
-$commonName             = "127.0.0.1";
-$emailAddress           = "someone@example.com";
+$commonName = "127.0.0.1";
+$emailAddress = "someone@example.com";
 
 Wrench\Util\Ssl::generatePEMFile(
     $pemFile,
@@ -42,16 +42,27 @@ Wrench\Util\Ssl::generatePEMFile(
 );
 
 // User can use tls in place of ssl
-$server = new \Wrench\Server('wss://127.0.0.1:8000/', array(
-     'connection_manager_options' => array(
-         'socket_master_options' => array(
-             'server_ssl_local_cert'        => $pemFile,
-             'server_ssl_passphrase'        => $pemPassphrase,
-             'server_ssl_allow_self_signed' => true,
-             'server_ssl_verify_peer'       => false
-         )
-     )
-));
+$server = new \Wrench\Server('wss://127.0.0.1:8000/', [
+    'connection_manager_options' => [
+        'socket_master_options' => [
+            'server_ssl_local_cert' => $pemFile,
+            'server_ssl_passphrase' => $pemPassphrase,
+            'server_ssl_allow_self_signed' => true,
+            'server_ssl_verify_peer' => false,
+        ],
+    ],
+]);
 
-$server->registerApplication('echo', new \Wrench\Application\EchoApplication());
+/**
+ * Our example application, that just echoes the received data
+ */
+$app = new class implements \Wrench\Application\DataHandlerInterface
+{
+    public function onData(string $data, \Wrench\Connection $connection): void
+    {
+        $connection->send($data);
+    }
+};
+$server->registerApplication('echo', $app);
+
 $server->run();

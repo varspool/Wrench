@@ -3,6 +3,7 @@
 namespace Wrench\Payload;
 
 use Wrench\Protocol\Protocol;
+use Wrench\Socket\ClientSocket;
 use Wrench\Test\BaseTest;
 use \Exception;
 
@@ -89,7 +90,7 @@ abstract class PayloadBaseTest extends BaseTest
      */
     public function testSendToSocket($type, $payload)
     {
-        $successfulSocket = $this->getMockBuilder('\Wrench\Socket\ClientSocket')
+        $successfulSocket = $this->getMockBuilder(ClientSocket::class)
             ->setMethods(array())
             ->setConstructorArgs(array('wss://localhost:8000'))
             ->getMock();

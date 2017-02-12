@@ -6,11 +6,6 @@ use \Exception;
 
 class ServerClientSocketTest extends SocketBaseTest
 {
-    public function getClass()
-    {
-        return 'Wrench\Socket\ServerClientSocket';
-    }
-
     /**
      * By default, the socket has not required arguments
      */
@@ -23,7 +18,7 @@ class ServerClientSocketTest extends SocketBaseTest
     }
 
     /**
-     * @expectedException Wrench\Exception\SocketException
+     * @expectedException \Wrench\Exception\SocketException
      * @depends testConstructor
      */
     public function testGetIpTooSoon($instance)
@@ -32,7 +27,7 @@ class ServerClientSocketTest extends SocketBaseTest
     }
 
     /**
-     * @expectedException Wrench\Exception\SocketException
+     * @expectedException \Wrench\Exception\SocketException
      * @depends testConstructor
      */
     public function testGetPortTooSoon($instance)
