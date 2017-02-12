@@ -317,7 +317,9 @@ abstract class Protocol
 
         $headers = array_merge(
             $this->getDefaultRequestHeaders(
-                $host, $key, $origin
+                $host,
+                $key,
+                $origin
             ),
             $headers
         );

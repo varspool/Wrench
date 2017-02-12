@@ -27,14 +27,16 @@ class ClientTest extends Test
     {
         $this->assertInstanceOfClass(
             $client = new Client(
-                'ws://localhost/test', 'http://example.org/'
+                'ws://localhost/test',
+                'http://example.org/'
             ),
             'ws:// scheme, default socket'
         );
 
         $this->assertInstanceOfClass(
             $client = new Client(
-                'ws://localhost/test', 'http://example.org/',
+                'ws://localhost/test',
+                'http://example.org/',
                 array('socket' => $this->getMockSocket())
             ),
             'ws:// scheme, socket specified'
@@ -49,14 +51,6 @@ class ClientTest extends Test
     protected function getMockSocket()
     {
         return $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
-    }
-
-    /**
-     * @expectedException PHPUnit_Framework_Error
-     */
-    public function testConstructorSocketUnspecified()
-    {
-        $w = new Client();
     }
 
     /**
@@ -81,14 +75,6 @@ class ClientTest extends Test
     public function testConstructorUriPathUnspecified()
     {
         $w = new Client('ws://localhost', 'http://www.example.com/');
-    }
-
-    /**
-     * @expectedException PHPUnit_Framework_Error
-     */
-    public function testConstructorOriginUnspecified()
-    {
-        $w = new Client('ws://localhost');
     }
 
     /**

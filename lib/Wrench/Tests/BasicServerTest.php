@@ -84,7 +84,8 @@ class BasicServerTest extends ServerTest
         return array_merge(parent::getValidConstructorArguments(), array(
             array(
                 'ws://localhost:8000',
-                array('logger' => function () {})
+                array('logger' => function () {
+                })
             )
         ));
     }

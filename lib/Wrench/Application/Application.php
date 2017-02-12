@@ -17,11 +17,11 @@ abstract class Application
      *
      * @param
      */
-	// abstract public function onDisconnect($connection);
+    // abstract public function onDisconnect($connection);
 
     /**
      * Optional: allow the application to perform any tasks which will result in a push to clients
-     */ 
+     */
     // abstract public function onUpdate();
 
     /**
@@ -30,5 +30,5 @@ abstract class Application
      * @param Payload $payload A payload object, that supports __toString()
      * @param Connection $connection
      */
-	abstract public function onData($payload, $connection);
+    abstract public function onData($payload, $connection);
 }
