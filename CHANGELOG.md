@@ -8,6 +8,7 @@
 * Dropped support for PHP versions prior to 7.1
 * Moved to PSR4 layout, with a separate test directory (this means test code cannot be autoloaded in production, much nicer)
 * Added support for PSR3 everywhere that we used to accept a logging callback (just inject via LoggerAwareInterface)
+* Added support for users of the Server class to determine when the main server loop ends. (Thanks @Alarmfifa - #77)
 
 #### BC Breaks
 
