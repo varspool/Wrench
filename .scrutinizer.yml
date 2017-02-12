@@ -4,7 +4,7 @@ imports:
 
 filter:
     excluded_paths:
-        - lib/Wrench/Tests
+        - "test/"
 
 tools:
     external_code_coverage: true
