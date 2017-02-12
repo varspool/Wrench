@@ -4,6 +4,7 @@ namespace Wrench\Test;
 
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use Wrench\ConnectionManager;
 
 /**
  * Test base class
@@ -57,16 +58,10 @@ abstract class BaseTest extends TestCase
     }
 
     /**
-     * Logging function
-     *
-     * Passed into some classes under test as a callable
-     *
-     * @param string $message
-     * @param string $priority
-     * @return void
+     * @return \PHPUnit_Framework_MockObject_MockObject|ConnectionManager
      */
-    public function log($message, $priority = 'info')
+    protected function getMockConnectionManager()
     {
-        // nothing
+        return $this->createMock(ConnectionManager::class);
     }
 }

@@ -67,13 +67,7 @@ class ConnectionTest extends BaseTest
             ->getMock();
     }
 
-    /**
-     * @return \PHPUnit_Framework_MockObject_MockObject|ConnectionManager
-     */
-    protected function getMockConnectionManager()
-    {
-        return $this->createMock(ConnectionManager::class);
-    }
+
 
     /**
      * @dataProvider getValidHandshakeData

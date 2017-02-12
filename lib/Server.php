@@ -236,6 +236,7 @@ class Server extends Configurable implements LoggerAwareInterface
     protected function configure(array $options): void
     {
         $options = array_merge([
+            'connection_manager' => null,
             'connection_manager_class' => ConnectionManager::class,
             'connection_manager_options' => [],
         ], $options);
@@ -252,9 +253,15 @@ class Server extends Configurable implements LoggerAwareInterface
      */
     protected function configureConnectionManager(): void
     {
-        $class = $this->options['connection_manager_class'];
-        $options = $this->options['connection_manager_options'];
-        $this->connectionManager = new $class($this, $options);
+        if ($this->options['connection_manager']) {
+            $this->connectionManager = $this->options['connection_manager'];
+        } else {
+            $class = $this->options['connection_manager_class'];
+            $options = $this->options['connection_manager_options'];
+
+            $this->connectionManager = new $class($this, $options);
+        }
+
         $this->connectionManager->setLogger($this->logger);
     }
 }
