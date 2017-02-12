@@ -169,7 +169,7 @@ abstract class Socket extends Configurable implements Resource
     /**
      * Whether the socket is currently connected
      *
-     * @return boolean
+     * @return bool
      */
     public function isConnected()
     {
@@ -195,7 +195,7 @@ abstract class Socket extends Configurable implements Resource
     /**
      * @param string $data Binary data to send down the socket
      * @throws SocketException
-     * @return boolean|int The number of bytes sent or false on error
+     * @return bool|int The number of bytes sent or false on error
      */
     public function send($data)
     {

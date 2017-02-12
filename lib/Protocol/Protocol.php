@@ -507,7 +507,7 @@ abstract class Protocol
      * @todo throw exception
      * @param string $response
      * @param string $key
-     * @return boolean
+     * @return bool
      */
     public function validateResponseHandshake($response, $key)
     {
@@ -725,7 +725,7 @@ abstract class Protocol
      * version string, as to whether they would like to accept requests from
      * user agents that specify that version.
      *
-     * @return boolean
+     * @return bool
      */
     abstract public function acceptsVersion($version);
 

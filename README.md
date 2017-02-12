@@ -24,15 +24,28 @@ This creates a server on 127.0.0.1:8000 with one Application that listens for
 WebSocket requests to `ws://localhost:8000/echo` and `ws://localhost:8000/chat`:
 
 ```php
+/**
+ * An example application, that just echoes the received data back to the connection that sent it
+ */
+$app = new class implements \Wrench\Application\DataHandlerInterface
+{
+    public function onData(string $data, \Wrench\Connection $connection): void
+    {
+        $connection->send($data);
+    }
+};
+
+// A websocket server, listening on port 8000
 $server = new \Wrench\BasicServer('ws://localhost:8000', array(
     'allowed_origins' => array(
         'mysite.com',
         'mysite.dev.localdomain'
     )
 ));
-$server->registerApplication('echo', new \Wrench\Examples\EchoApplication());
+
+$server->registerApplication('echo', $app);
 $server->registerApplication('chat', new \My\ChatApplication());
-$server->setLogger($monolog);
+$server->setLogger($monolog); // PSR3
 $server->run();
 ```
 ## Releases and Changelog
@@ -47,6 +60,11 @@ see the 2.0 branch. The latest 2.0 branch release is 2.0.8. You can install it w
 ```
 composer require wrench/wrench ~2.0
 ```
+
+## Developing
+
+* Run `./vendor/bin/phpcs` and fix any errors that you come across
+* Run `./vendor/bin/phpunit --exclude-group large,medium` for a fast test between changes
 
 ## See Also
 

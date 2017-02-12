@@ -147,7 +147,7 @@ class Client extends Configurable
      * @param string  $data
      * @param int     $type See Protocol::TYPE_*
      * @param boolean $masked
-     * @return boolean Success
+     * @return bool Success
      */
     public function sendData($data, $type = Protocol::TYPE_TEXT, $masked = true)
     {
@@ -174,7 +174,7 @@ class Client extends Configurable
      * Returns whether the client is currently connected
      * Also checks the state of the underlying socket
      *
-     * @return boolean
+     * @return bool
      */
     public function isConnected()
     {
@@ -217,7 +217,7 @@ class Client extends Configurable
     /**
      * Connect to the server
      *
-     * @return boolean Whether a new connection was made
+     * @return bool Whether a new connection was made
      */
     public function connect()
     {

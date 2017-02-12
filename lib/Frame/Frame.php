@@ -62,7 +62,7 @@ abstract class Frame
     /**
      * Whether the frame is the final one in a continuation
      *
-     * @return boolean
+     * @return bool
      */
     abstract public function isFinal();
 
@@ -82,7 +82,7 @@ abstract class Frame
     /**
      * Whether this frame is waiting for more data
      *
-     * @return boolean
+     * @return bool
      */
     public function isWaitingForData()
     {
@@ -144,7 +144,7 @@ abstract class Frame
     /**
      * Whether the frame is complete
      *
-     * @return boolean
+     * @return bool
      */
     public function isComplete()
     {

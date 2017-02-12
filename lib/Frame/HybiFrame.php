@@ -175,7 +175,7 @@ class HybiFrame extends Frame
     /**
      * Whether the frame is masked
      *
-     * @return boolean
+     * @return bool
      */
     public function isMasked()
     {

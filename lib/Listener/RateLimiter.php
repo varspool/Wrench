@@ -2,12 +2,18 @@
 
 namespace Wrench\Listener;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 use Wrench\Connection;
+use Wrench\Exception\RateLimiterException;
 use Wrench\Server;
 use Wrench\Util\Configurable;
 
-class RateLimiter extends Configurable implements Listener
+class RateLimiter extends Configurable implements Listener, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * The server being limited
      *
@@ -37,6 +43,8 @@ class RateLimiter extends Configurable implements Listener
     public function __construct(array $options = [])
     {
         parent::__construct($options);
+
+        $this->logger = new NullLogger();
     }
 
     /**

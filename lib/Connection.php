@@ -7,7 +7,6 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 use RuntimeException;
-use Wrench\Application\Application;
 use Wrench\Application\ConnectionHandlerInterface;
 use Wrench\Application\DataHandlerInterface;
 use Wrench\Application\UpdateHandlerInterface;
@@ -285,7 +284,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      * @param integer              $type
      * @throws HandshakeException
      * @throws ConnectionException
-     * @return boolean
+     * @return bool
      */
     public function send($data, $type = Protocol::TYPE_TEXT)
     {
@@ -398,7 +397,7 @@ class Connection extends Configurable implements LoggerAwareInterface
             }
         } catch (WrenchException $e) {
             $this->logger->error('Handshake failed: {exception}', [
-                'exception' => $e
+                'exception' => $e,
             ]);
             $this->close($e);
             throw $e;

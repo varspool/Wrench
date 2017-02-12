@@ -36,7 +36,7 @@ class OriginPolicy implements Listener, HandshakeRequestListener
      * Whether the specified origin is allowed under this policy
      *
      * @param string $origin
-     * @return boolean
+     * @return bool
      */
     public function isAllowed($origin)
     {

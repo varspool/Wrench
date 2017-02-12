@@ -60,7 +60,7 @@ abstract class Payload
     /**
      * Whether this payload is waiting for more data
      *
-     * @return boolean
+     * @return bool
      */
     public function isWaitingForData()
     {
@@ -95,7 +95,7 @@ abstract class Payload
     /**
      * Whether the payload is complete
      *
-     * @return boolean
+     * @return bool
      */
     public function isComplete()
     {
@@ -117,9 +117,9 @@ abstract class Payload
 
     /**
      * @param Socket $socket
-     * @return boolean
+     * @return bool
      */
-    public function sendToSocket(Socket $socket)
+    public function sendToSocket(Socket $socket): bool
     {
         $success = true;
         foreach ($this->frames as $frame) {
@@ -134,7 +134,7 @@ abstract class Payload
      * @param string $data
      * @return void
      */
-    public function receiveData($data)
+    public function receiveData(string $data): void
     {
         $chunk_size = null;
 
@@ -163,7 +163,7 @@ abstract class Payload
      * @throws PayloadException
      * @return Frame
      */
-    protected function getReceivingFrame()
+    protected function getReceivingFrame(): Frame
     {
         $current = $this->getCurrentFrame();
 
@@ -194,7 +194,7 @@ abstract class Payload
     /**
      * @return string
      */
-    public function getPayload()
+    public function getPayload(): string
     {
         $this->buffer = '';
 
@@ -212,7 +212,7 @@ abstract class Payload
      * @throws PayloadException
      * @return int
      */
-    public function getType()
+    public function getType(): int
     {
         if (!isset($this->frames[0])) {
             throw new PayloadException('Cannot tell payload type yet');

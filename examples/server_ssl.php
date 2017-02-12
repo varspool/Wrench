@@ -1,7 +1,11 @@
 #!/usr/bin/env php
 <?php
 
-/*
+/**
+ * Example server
+ *
+ * This script will launch a websocket echo server at wss://localhost:8000/echo
+ *
  * This SSL server uses a self-signed certificate. This means your browser will probably
  * refuse to make Websocket connections to it. Chrome does *not* show this in the inspector.
  *
@@ -50,5 +54,4 @@ $server = new \Wrench\Server('wss://127.0.0.1:8000/', array(
 ));
 
 $server->registerApplication('echo', new \Wrench\Application\EchoApplication());
-$server->registerApplication('time', new \Wrench\Application\ServerTimeApplication());
 $server->run();

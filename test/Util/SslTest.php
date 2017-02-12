@@ -23,7 +23,7 @@ class SslBaseTest extends BaseTest
     }
 
     /**
-     * @small
+     * @medium
      */
     public function testGeneratePemWithPassphrase()
     {
@@ -48,7 +48,7 @@ class SslBaseTest extends BaseTest
     }
 
     /**
-     * @small
+     * @medium
      */
     public function testGeneratePemWithoutPassphrase()
     {
