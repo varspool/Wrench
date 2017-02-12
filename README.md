@@ -36,8 +36,7 @@ libraries you'd like with the server.
 
 ## Installation
 
-The library is PSR-0 compatible, with a vendor name of **Wrench**. An
-SplClassLoader is bundled for convenience.
+The library is PSR-0 compatible, with a vendor name of **Wrench**.
 
 ## Usage
 
