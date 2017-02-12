@@ -100,7 +100,7 @@ class ClientTest extends BaseTest
             $instance = $this->getInstance($helper->getEchoConnectionString(), 'http://www.example.com/send');
             $instance->addRequestHeader('X-Test', 'Custom Request Header');
 
-            $this->assertFalse($instance->receive(), 'Receive before connect');
+            $this->assertNull($instance->receive(), 'Receive before connect');
 
             $success = $instance->connect();
             $this->assertTrue($success, 'Client can connect to test server');
@@ -116,7 +116,7 @@ class ClientTest extends BaseTest
             $bytes = $instance->sendData('baz', Protocol::TYPE_TEXT);
             $this->assertTrue($bytes >= 3, 'sent text frame');
 
-            usleep(500);
+            usleep(500000);
             $responses = $instance->receive();
             $this->assertTrue(is_array($responses));
             $this->assertCount(2, $responses);

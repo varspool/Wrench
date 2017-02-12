@@ -15,5 +15,11 @@ interface HandshakeRequestListener
      * @param string     $key
      * @param array      $extensions
      */
-    public function onHandshakeRequest(Connection $connection, $path, $origin, $key, $extensions);
+    public function onHandshakeRequest(
+        Connection $connection,
+        string $path,
+        string $origin,
+        string $key,
+        array $extensions
+    );
 }

@@ -25,8 +25,13 @@ class OriginPolicy implements Listener, HandshakeRequestListener
      * @param string     $key
      * @param array      $extensions
      */
-    public function onHandshakeRequest(Connection $connection, $path, $origin, $key, $extensions)
-    {
+    public function onHandshakeRequest(
+        Connection $connection,
+        string $path,
+        string $origin,
+        string $key,
+        array $extensions
+    ): void {
         if (!$this->isAllowed($origin)) {
             $connection->close(new InvalidOriginException('Origin not allowed'));
         }
@@ -38,7 +43,7 @@ class OriginPolicy implements Listener, HandshakeRequestListener
      * @param string $origin
      * @return bool
      */
-    public function isAllowed($origin)
+    public function isAllowed(string $origin): bool
     {
         $scheme = parse_url($origin, PHP_URL_SCHEME);
         $host = parse_url($origin, PHP_URL_HOST) ?: $origin;
@@ -65,7 +70,7 @@ class OriginPolicy implements Listener, HandshakeRequestListener
     /**
      * @param Server $server
      */
-    public function listen(Server $server)
+    public function listen(Server $server): void
     {
         $server->addListener(
             Server::EVENT_HANDSHAKE_REQUEST,

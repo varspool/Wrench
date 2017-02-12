@@ -8,6 +8,9 @@ use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
+use Wrench\Application\ConnectionHandlerInterface;
+use Wrench\Application\DataHandlerInterface;
+use Wrench\Application\UpdateHandlerInterface;
 use Wrench\Exception\CloseException;
 use Wrench\Exception\Exception as WrenchException;
 use Wrench\Socket\ServerClientSocket;
@@ -73,6 +76,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      * Gets the application associated with the given path
      *
      * @param string $path
+     * @return DataHandlerInterface|ConnectionHandlerInterface|UpdateHandlerInterface
      */
     public function getApplicationForPath($path)
     {
@@ -85,7 +89,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      *
      * @return void
      */
-    public function listen()
+    public function listen(): void
     {
         $this->socket->listen();
         $this->resources[$this->socket->getResourceId()] = $this->socket->getResource();
@@ -94,7 +98,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
     /**
      * Select and process an array of resources
      */
-    public function selectAndProcess()
+    public function selectAndProcess(): void
     {
         $read = $this->resources;
         $unused_write = null;
@@ -122,7 +126,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      *
      * @return void
      */
-    protected function processMasterSocket()
+    protected function processMasterSocket(): void
     {
         $new = null;
 
@@ -149,7 +153,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      * @param resource $resource A socket resource
      * @return Connection|LoggerAwareInterface
      */
-    protected function createConnection($resource)
+    protected function createConnection($resource): Connection
     {
         if (!$resource || !is_resource($resource)) {
             throw new InvalidArgumentException('Invalid connection resource');
@@ -196,7 +200,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      *
      * @param resource $socket
      */
-    protected function processClientSocket($socket)
+    protected function processClientSocket($socket): void
     {
         $connection = $this->getConnectionForClientSocket($socket);
 
@@ -211,17 +215,17 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
             $connection->process();
         } catch (CloseException $e) {
             $this->logger->notice('Client connection closed: {exception}', [
-                'exception' => $e
+                'exception' => $e,
             ]);
             $connection->close($e);
         } catch (WrenchException $e) {
             $this->logger->warning('Error on client socket: {exception}', [
-                'exception' => $e
+                'exception' => $e,
             ]);
             $connection->close($e);
         } catch (\InvalidArgumentException $e) {
             $this->logger->warning('Wrong input arguments: {exception}', [
-                'exception' => $e
+                'exception' => $e,
             ]);
             $connection->close($e);
         }
@@ -246,24 +250,9 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      *
      * @return string
      */
-    public function getUri()
+    public function getUri(): string
     {
         return $this->server->getUri();
-    }
-
-    /**
-     * Logs a message
-     *
-     * @param string $message
-     * @param string $priority
-     */
-    public function log($message, $priority = 'info')
-    {
-        $this->server->log(sprintf(
-            '%s: %s',
-            __CLASS__,
-            $message
-        ), $priority);
     }
 
     /**
