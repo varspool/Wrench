@@ -12,13 +12,13 @@ error_reporting(E_ALL);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$logger = new class extends \Psr\Log\AbstractLogger
+$logger = new class extends \Psr\Log\AbstractLogger implements Psr\Log\LoggerInterface
 {
     public function log($level, $message, array $context = [])
     {
         echo sprintf('[%s] %s - %s', $level, $message, json_encode($context));
     }
-}
+};
 
 $server = new \Wrench\Server('ws://localhost:8000/', [
     'allowed_origins' => [

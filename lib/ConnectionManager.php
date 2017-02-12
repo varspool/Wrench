@@ -55,11 +55,10 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      */
     public function __construct(Server $server, array $options = [])
     {
+        $this->logger = new NullLogger();
         $this->server = $server;
 
         parent::__construct($options);
-
-        $this->logger = new NullLogger();
     }
 
     /**

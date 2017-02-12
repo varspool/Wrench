@@ -32,6 +32,9 @@
         "squizlabs/php_codesniffer": "~2.8",
         "phpunit/php-invoker": "^1.1"
     },
+    "suggest": {
+        "monolog/monolog": "For logging from the server classes via PSR3"
+    },
     "autoload": {
         "psr-4": {
             "Wrench\\": "lib/"

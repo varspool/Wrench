@@ -83,10 +83,9 @@ class Server extends Configurable implements LoggerAwareInterface
     public function __construct($uri, array $options = [])
     {
         $this->uri = $uri;
+        $this->logger = new NullLogger();
 
         parent::__construct($options);
-
-        $this->logger = new NullLogger();
     }
 
     /**

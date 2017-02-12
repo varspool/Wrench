@@ -32,6 +32,7 @@ $server = new \Wrench\BasicServer('ws://localhost:8000', array(
 ));
 $server->registerApplication('echo', new \Wrench\Examples\EchoApplication());
 $server->registerApplication('chat', new \My\ChatApplication());
+$server->setLogger($monolog);
 $server->run();
 ```
 ## Releases and Changelog
