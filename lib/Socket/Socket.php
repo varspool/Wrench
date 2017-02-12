@@ -299,7 +299,7 @@ abstract class Socket extends Configurable implements Resource
      *
      * @return void
      */
-    public function disconnect()
+    public function disconnect(): void
     {
         if ($this->socket) {
             stream_socket_shutdown($this->socket, STREAM_SHUT_RDWR);
@@ -316,7 +316,7 @@ abstract class Socket extends Configurable implements Resource
      * @param array $options
      * @return void
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $options = array_merge([
             'timeout_socket' => self::TIMEOUT_SOCKET,

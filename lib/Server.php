@@ -6,7 +6,6 @@ use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
-use Wrench\Application\Application;
 use Wrench\Application\ConnectionHandlerInterface;
 use Wrench\Application\DataHandlerInterface;
 use Wrench\Application\UpdateHandlerInterface;
@@ -93,7 +92,7 @@ class Server extends Configurable implements LoggerAwareInterface
      *
      * @return ConnectionManager
      */
-    public function getConnectionManager()
+    public function getConnectionManager(): ConnectionManager
     {
         return $this->connectionManager;
     }
@@ -101,7 +100,7 @@ class Server extends Configurable implements LoggerAwareInterface
     /**
      * @return string
      */
-    public function getUri()
+    public function getUri(): string
     {
         return $this->uri;
     }
@@ -111,7 +110,7 @@ class Server extends Configurable implements LoggerAwareInterface
      *
      * @return void This method does not return!
      */
-    public function run()
+    public function run(): void
     {
         $this->connectionManager->listen();
 
@@ -143,7 +142,7 @@ class Server extends Configurable implements LoggerAwareInterface
      * @param array  $arguments Event arguments
      * @return void
      */
-    public function notify($event, array $arguments = [])
+    public function notify($event, array $arguments = []): void
     {
         if (!isset($this->listeners[$event])) {
             return;
@@ -165,7 +164,7 @@ class Server extends Configurable implements LoggerAwareInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    public function addListener($event, callable $callback)
+    public function addListener($event, callable $callback): void
     {
         if (!isset($this->listeners[$event])) {
             $this->listeners[$event] = [];
@@ -182,7 +181,7 @@ class Server extends Configurable implements LoggerAwareInterface
      * Returns a server application.
      *
      * @param string $key Name of application.
-     * @return Application|null The application object.
+     * @return null|DataHandlerInterface|ConnectionHandlerInterface|UpdateHandlerInterface The application object
      */
     public function getApplication($key)
     {
@@ -211,6 +210,7 @@ class Server extends Configurable implements LoggerAwareInterface
 
     /**
      * Configure options
+     *
      * Options include
      *   - socket_class      => The socket class to use, defaults to ServerSocket
      *   - socket_options    => An array of socket options
@@ -220,7 +220,7 @@ class Server extends Configurable implements LoggerAwareInterface
      * @param array $options
      * @return void
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $options = array_merge([
             'connection_manager_class' => ConnectionManager::class,
@@ -237,7 +237,7 @@ class Server extends Configurable implements LoggerAwareInterface
      *
      * @return void
      */
-    protected function configureConnectionManager()
+    protected function configureConnectionManager(): void
     {
         $class = $this->options['connection_manager_class'];
         $options = $this->options['connection_manager_options'];

@@ -47,7 +47,7 @@ class RateLimiter extends Configurable implements Listener, LoggerAwareInterface
         $this->logger = new NullLogger();
     }
 
-    public function listen(Server $server)
+    public function listen(Server $server): void
     {
         $this->server = $server;
 
@@ -73,7 +73,7 @@ class RateLimiter extends Configurable implements Listener, LoggerAwareInterface
      * @param resource   $socket
      * @param Connection $connection
      */
-    public function onSocketConnect($socket, $connection)
+    public function onSocketConnect($socket, Connection $connection): void
     {
         $this->checkConnections($connection);
         $this->checkConnectionsPerIp($connection);
@@ -144,7 +144,7 @@ class RateLimiter extends Configurable implements Listener, LoggerAwareInterface
      * @param resource   $socket
      * @param Connection $connection
      */
-    public function onSocketDisconnect($socket, $connection)
+    public function onSocketDisconnect($socket, Connection $connection): void
     {
         $this->releaseConnection($connection);
     }
@@ -154,7 +154,7 @@ class RateLimiter extends Configurable implements Listener, LoggerAwareInterface
      *
      * @param Connection $connection
      */
-    protected function releaseConnection($connection)
+    protected function releaseConnection(Connection $connection): void
     {
         $ip = $connection->getIp();
 
@@ -178,7 +178,7 @@ class RateLimiter extends Configurable implements Listener, LoggerAwareInterface
      * @param resource   $socket
      * @param Connection $connection
      */
-    public function onClientData($socket, $connection)
+    public function onClientData($socket, Connection $connection): void
     {
         $this->checkRequestsPerMinute($connection);
     }
@@ -188,7 +188,7 @@ class RateLimiter extends Configurable implements Listener, LoggerAwareInterface
      *
      * @param Connection $connection
      */
-    protected function checkRequestsPerMinute($connection)
+    protected function checkRequestsPerMinute(Connection $connection)
     {
         $id = $connection->getId();
 
@@ -212,7 +212,7 @@ class RateLimiter extends Configurable implements Listener, LoggerAwareInterface
     /**
      * @param array $options
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $options = array_merge([
             'connections' => 200, // Total

@@ -2,11 +2,11 @@
 
 namespace Wrench;
 
-use Exception;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use Throwable;
 use Wrench\Application\ConnectionHandlerInterface;
 use Wrench\Application\DataHandlerInterface;
 use Wrench\Application\UpdateHandlerInterface;
@@ -128,7 +128,7 @@ class Connection extends Configurable implements LoggerAwareInterface
     /**
      * @throws RuntimeException
      */
-    protected function configureClientInformation()
+    protected function configureClientInformation(): void
     {
         $this->ip = $this->socket->getIp();
         $this->port = $this->socket->getPort();
@@ -143,12 +143,12 @@ class Connection extends Configurable implements LoggerAwareInterface
      * be kept secret for this to work: otherwise it's trivial to search the space
      * of possible IP addresses/ports (well, if not trivial, at least very fast).
      */
-    protected function generateClientId()
+    protected function generateClientId(): void
     {
         $this->id = bin2hex(random_bytes(32));
     }
 
-    protected function configurePayloadHandler()
+    protected function configurePayloadHandler(): void
     {
         $this->payloadHandler = new PayloadHandler(
             [$this, 'handlePayload'],
@@ -161,7 +161,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      *
      * @return \Wrench\ConnectionManager
      */
-    public function getConnectionManager()
+    public function getConnectionManager(): ConnectionManager
     {
         return $this->manager;
     }
@@ -174,7 +174,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      * @param Payload $payload
      * @throws ConnectionException
      */
-    public function handlePayload(Payload $payload)
+    public function handlePayload(Payload $payload): void
     {
         $app = $this->getClientApplication();
 
@@ -250,10 +250,11 @@ class Connection extends Configurable implements LoggerAwareInterface
      * sending and receiving a close message, e.g. if it has not received a
      * TCP close from the server in a reasonable time period.
      *
-     * @param int $code
+     * @param int    $code
+     * @param string $reason The human readable reason the connection was closed
      * @return bool
      */
-    public function close($code = Protocol::CLOSE_NORMAL)
+    public function close(int $code = Protocol::CLOSE_NORMAL, string $reason = null): bool
     {
         try {
             if (!$this->handshaked) {
@@ -263,7 +264,7 @@ class Connection extends Configurable implements LoggerAwareInterface
                 $response = $this->protocol->getClosePayload($code, false);
                 $response->sendToSocket($this->socket);
             }
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->logger->warning('Unable to send close message');
         }
 
@@ -281,12 +282,10 @@ class Connection extends Configurable implements LoggerAwareInterface
      * Sends the payload to the connection
      *
      * @param string|Payload|mixed $data
-     * @param integer              $type
-     * @throws HandshakeException
-     * @throws ConnectionException
+     * @param int                  $type
      * @return bool
      */
-    public function send($data, $type = Protocol::TYPE_TEXT)
+    public function send(string $data, int $type = Protocol::TYPE_TEXT): bool
     {
         if (!$this->handshaked) {
             throw new HandshakeException('Connection is not handshaked');
@@ -399,7 +398,7 @@ class Connection extends Configurable implements LoggerAwareInterface
             $this->logger->error('Handshake failed: {exception}', [
                 'exception' => $e,
             ]);
-            $this->close($e);
+            $this->close(Protocol::CLOSE_PROTOCOL_ERROR, (string)$e);
             throw $e;
         }
     }
@@ -409,7 +408,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      *
      * @return string Usually dotted quad notation
      */
-    public function getIp()
+    public function getIp(): string
     {
         return $this->ip;
     }
@@ -419,7 +418,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      *
      * @return int
      */
-    public function getPort()
+    public function getPort(): int
     {
         return $this->port;
     }
@@ -429,7 +428,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      *
      * @return string
      */
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
@@ -456,7 +455,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      *
      * @return array
      */
-    public function getHeaders()
+    public function getHeaders(): array
     {
         return $this->headers;
     }
@@ -466,7 +465,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      *
      * @return array
      */
-    public function getQueryParams()
+    public function getQueryParams(): array
     {
         return $this->queryParams;
     }
@@ -476,7 +475,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      *
      * @return Socket\ServerClientSocket
      */
-    public function getSocket()
+    public function getSocket(): ServerClientSocket
     {
         return $this->socket;
     }
@@ -484,7 +483,7 @@ class Connection extends Configurable implements LoggerAwareInterface
     /**
      * @see \Wrench\Util.Configurable::configure()
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $options = array_merge([
             'connection_id_secret' => 'asu5gj656h64Da(0crt8pud%^WAYWW$u76dwb',
@@ -500,7 +499,7 @@ class Connection extends Configurable implements LoggerAwareInterface
      * @param string $data
      * @return string
      */
-    protected function export($data)
+    protected function export($data): string
     {
         $export = '';
         foreach (str_split($data) as $chr) {

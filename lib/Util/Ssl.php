@@ -28,7 +28,7 @@ class Ssl
         $organizational_unit_name,
         $common_name,
         $email_address
-    ) {
+    ): void {
         // Generate PEM file
         $dn = [
             'countryName' => $country_name,

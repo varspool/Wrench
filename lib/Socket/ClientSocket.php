@@ -68,7 +68,7 @@ class ClientSocket extends UriSocket
      *
      * @param array $options
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $options = array_merge([
             'timeout_connect' => self::TIMEOUT_CONNECT,

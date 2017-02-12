@@ -24,7 +24,7 @@ class BasicServer extends Server
         $this->configureOriginPolicy();
     }
 
-    protected function configureRateLimiter()
+    protected function configureRateLimiter(): void
     {
         $class = $this->options['rate_limiter_class'];
         $this->rateLimiter = new $class($this->options['rate_limiter_options']);
@@ -34,7 +34,7 @@ class BasicServer extends Server
     /**
      * Configures the origin policy
      */
-    protected function configureOriginPolicy()
+    protected function configureOriginPolicy(): void
     {
         $class = $this->options['origin_policy_class'];
         $this->originPolicy = new $class($this->options['allowed_origins']);
@@ -49,7 +49,7 @@ class BasicServer extends Server
      *
      * @param array $origin
      */
-    public function addAllowedOrigin($origin)
+    public function addAllowedOrigin(string $origin): void
     {
         $this->originPolicy->addAllowedOrigin($origin);
     }
@@ -57,7 +57,7 @@ class BasicServer extends Server
     /**
      * @see Wrench.Server::configure()
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $options = array_merge([
             'check_origin' => true,

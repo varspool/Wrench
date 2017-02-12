@@ -41,7 +41,7 @@ abstract class Configurable
      *
      * @param array $options
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $this->options = array_merge([
             'protocol' => new Rfc6455Protocol(),
@@ -53,7 +53,7 @@ abstract class Configurable
      *
      * @throws InvalidArgumentException
      */
-    protected function configureProtocol()
+    protected function configureProtocol(): void
     {
         $protocol = $this->options['protocol'];
 

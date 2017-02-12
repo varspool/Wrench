@@ -88,6 +88,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      * Listens on the main socket
      *
      * @return void
+     * @throws Exception\ConnectionException
      */
     public function listen(): void
     {
@@ -297,7 +298,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      *     - timeout_select          => int, seconds, default 0
      *     - timeout_select_microsec => int, microseconds (NB: not milli), default: 200000
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $options = array_merge([
             'socket_master_class' => ServerSocket::class,
@@ -318,7 +319,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
     /**
      * Configures the main server socket
      */
-    protected function configureMasterSocket()
+    protected function configureMasterSocket(): void
     {
         $class = $this->options['socket_master_class'];
         $options = $this->options['socket_master_options'];
@@ -330,7 +331,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
      *
      * @return array<int => resource)
      */
-    protected function getAllResources()
+    protected function getAllResources(): array
     {
         return array_merge($this->resources, [
             $this->socket->getResourceId() => $this->socket->getResource(),

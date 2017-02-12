@@ -4,6 +4,7 @@ namespace Wrench\Payload;
 
 use Wrench\Exception\FrameException;
 use Wrench\Exception\PayloadException;
+use Wrench\Exception\SocketException;
 use Wrench\Frame\Frame;
 use Wrench\Protocol\Protocol;
 use Wrench\Socket\Socket;
@@ -118,6 +119,8 @@ abstract class Payload
     /**
      * @param Socket $socket
      * @return bool
+     * @throws FrameException
+     * @throws SocketException
      */
     public function sendToSocket(Socket $socket): bool
     {
@@ -137,10 +140,11 @@ abstract class Payload
      *
      * @param string $data
      * @return void
+     * @throws PayloadException
      */
     public function receiveData(string $data): void
     {
-        $chunk_size = null;
+        $chunkSize = null;
 
         while ($data) {
             $frame = $this->getReceivingFrame();
@@ -148,14 +152,14 @@ abstract class Payload
             $remaining = $frame->getRemainingData();
 
             if ($remaining === null) {
-                $chunk_size = 2;
+                $chunkSize = 2;
             } elseif ($remaining > 0) {
-                $chunk_size = $remaining;
+                $chunkSize = $remaining;
             }
 
-            $chunk_size = min(strlen($data), $chunk_size);
-            $chunk = substr($data, 0, $chunk_size);
-            $data = substr($data, $chunk_size);
+            $chunkSize = min(strlen($data), $chunkSize);
+            $chunk = substr($data, 0, $chunkSize);
+            $data = substr($data, $chunkSize);
 
             $frame->receiveData($chunk);
         }
@@ -197,6 +201,7 @@ abstract class Payload
 
     /**
      * @return string
+     * @throws FrameException
      */
     public function getPayload(): string
     {

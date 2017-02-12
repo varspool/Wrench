@@ -3,7 +3,7 @@
 namespace Wrench;
 
 use InvalidArgumentException;
-use Wrench\Exception;
+use Wrench\Exception\FrameException;
 use Wrench\Payload\Payload;
 use Wrench\Payload\PayloadHandler;
 use Wrench\Protocol\Protocol;
@@ -12,6 +12,7 @@ use Wrench\Util\Configurable;
 
 /**
  * Client class
+ *
  * Represents a websocket client
  */
 class Client extends Configurable
@@ -214,8 +215,10 @@ class Client extends Configurable
      * Connect to the server
      *
      * @return bool Whether a new connection was made
+     * @throws Exception\HandshakeException
+     * @throws Exception\SocketException
      */
-    public function connect()
+    public function connect(): bool
     {
         if ($this->isConnected()) {
             return false;
@@ -244,11 +247,12 @@ class Client extends Configurable
     /**
      * Disconnects the underlying socket, and marks the client as disconnected
      *
-     * @param int $reason Reason for disconnecting. See Protocol::CLOSE_*
-     * @throws Exception\FrameException
+     * @param int $reason Reason for disconnecting. See Protocol::CLOSE_
+     * @return bool
      * @throws Exception\SocketException
+     * @throws FrameException
      */
-    public function disconnect($reason = Protocol::CLOSE_NORMAL)
+    public function disconnect($reason = Protocol::CLOSE_NORMAL): bool
     {
         if ($this->connected === false) {
             return false;
@@ -258,7 +262,7 @@ class Client extends Configurable
 
         if ($this->socket) {
             if (!$payload->sendToSocket($this->socket)) {
-                throw new Exception("Unexpected exception when sending Close frame.");
+                throw new FrameException("Unexpected exception when sending Close frame.");
             }
             // The client SHOULD wait for the server to close the connection
             $this->socket->receive();
@@ -276,7 +280,7 @@ class Client extends Configurable
      * @param array $options
      * @return void
      */
-    protected function configure(array $options)
+    protected function configure(array $options): void
     {
         $options = array_merge([
             'socket_class' => ClientSocket::class,

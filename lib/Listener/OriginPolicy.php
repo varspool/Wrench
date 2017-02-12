@@ -4,6 +4,7 @@ namespace Wrench\Listener;
 
 use Wrench\Connection;
 use Wrench\Exception\InvalidOriginException;
+use Wrench\Protocol\Protocol;
 use Wrench\Server;
 
 class OriginPolicy implements Listener, HandshakeRequestListener
@@ -33,7 +34,7 @@ class OriginPolicy implements Listener, HandshakeRequestListener
         array $extensions
     ): void {
         if (!$this->isAllowed($origin)) {
-            $connection->close(new InvalidOriginException('Origin not allowed'));
+            $connection->close(Protocol::CLOSE_NORMAL, 'Not allowed origin during handshake request');
         }
     }
 
