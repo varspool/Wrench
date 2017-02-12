@@ -7,9 +7,9 @@ use Wrench\Payload\PayloadHandler;
 use Wrench\Util\Configurable;
 use Wrench\Socket\ClientSocket;
 use Wrench\Protocol\Protocol;
+use Wrench\Exception;
 
 use \InvalidArgumentException;
-use \RuntimeException;
 
 /**
  * Client class
@@ -107,7 +107,8 @@ class Client extends Configurable
     {
         $options = array_merge(array(
             'socket_class'     => 'Wrench\\Socket\\ClientSocket',
-            'on_data_callback' => null
+            'on_data_callback' => null,
+            'socket_options' => array(),
         ), $options);
 
         parent::configure($options);
@@ -119,7 +120,8 @@ class Client extends Configurable
     protected function configureSocket()
     {
         $class = $this->options['socket_class'];
-        $this->socket = new $class($this->uri);
+        $options = $this->options['socket_options'];
+        $this->socket = new $class($this->uri, $options);
     }
 
     /**
@@ -170,6 +172,10 @@ class Client extends Configurable
      */
     public function sendData($data, $type = Protocol::TYPE_TEXT, $masked = true)
     {
+        if (!$this->isConnected()) {
+            return false;
+        }
+
         if (is_string($type) && isset(Protocol::$frameTypes[$type])) {
             $type = Protocol::$frameTypes[$type];
         }
@@ -218,7 +224,11 @@ class Client extends Configurable
             return false;
         }
 
-        $this->socket->connect();
+        try {
+            $this->socket->connect();
+        } catch (\Exception $ex) {
+            return false;
+        }
 
         $key       = $this->protocol->generateKey();
         $handshake = $this->protocol->getRequestHandshake(
@@ -249,7 +259,7 @@ class Client extends Configurable
 
         // Check if the socket is still connected
         if ($this->socket->isConnected() === false) {
-            $this->disconnect();
+            $this->connected = false;
 
             return false;
         }
@@ -266,15 +276,23 @@ class Client extends Configurable
      */
     public function disconnect($reason = Protocol::CLOSE_NORMAL)
     {
+        if ($this->connected === false) {
+            return false;
+        }
+
         $payload = $this->protocol->getClosePayload($reason);
 
         if ($this->socket) {
             if (!$payload->sendToSocket($this->socket)) {
-                throw new \RuntimeException("Unexpected exception when sending Close frame.");
+                throw new Exception("Unexpected exception when sending Close frame.");
             }
+            // The client SHOULD wait for the server to close the connection
+            $this->socket->receive();
             $this->socket->disconnect();
         }
 
         $this->connected = false;
+
+        return true;
     }
 }

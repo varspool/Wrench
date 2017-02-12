@@ -93,24 +93,6 @@ class ClientTest extends Test
         $w = new Client('ws://localhost:8000', 'NOTAVALIDURI');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testSendInvalidType()
-    {
-        $client = new Client('ws://localhost/test', 'http://example.org/');
-        $client->sendData('blah', 9999);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testSendInvalidTypeString()
-    {
-        $client = new Client('ws://localhost/test', 'http://example.org/');
-        $client->sendData('blah', 'fooey');
-    }
-
     public function testSend()
     {
         try {
@@ -126,6 +108,18 @@ class ClientTest extends Test
             $success = $instance->connect();
             $this->assertTrue($success, 'Client can connect to test server');
             $this->assertTrue($instance->isConnected());
+
+            try {
+                $instance->sendData('blah', 9999);
+            } catch (\Exception $ex) {
+                $this->assertInstanceOf('InvalidArgumentException', $ex, 'Test sending invalid type');
+            }
+
+            try {
+                $instance->sendData('blah', 'fooey');
+            } catch (\Exception $ex) {
+                $this->assertInstanceOf('InvalidArgumentException', $ex, 'Test sending invalid type string');
+            }
 
             $this->assertFalse($instance->connect(), 'Double connect');
 

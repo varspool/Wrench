@@ -541,12 +541,14 @@ abstract class Protocol
     }
 
     /**
-     * Gets a suitable WebSocket close frame
+     * Gets a suitable WebSocket close frame.
+     * Please set `masked` to false if you send a close frame from server side.
      *
      * @param Exception|int $e
+     * @param boolean $masked
      * @return Payload
      */
-    public function getClosePayload($e)
+    public function getClosePayload($e, $masked = true)
     {
         $code = false;
 
@@ -563,7 +565,7 @@ abstract class Protocol
         $body = pack('n', $code) . self::$closeReasons[$code];
 
         $payload = $this->getPayload();
-        return $payload->encode($body, self::TYPE_CLOSE, true);
+        return $payload->encode($body, self::TYPE_CLOSE, $masked);
     }
 
     /**
@@ -596,7 +598,7 @@ abstract class Protocol
         if (!$path) {
             throw new InvalidArgumentException('Invalid path');
         }
-        
+
         $query = parse_url($uri, PHP_URL_QUERY);
 
         return array($scheme, $host, $port, $path, $query);
@@ -702,8 +704,8 @@ abstract class Protocol
     {
         $parts = explode("\r\n\r\n", $response, 2);
 
-        if (count($parts) != 2) {
-            $parts = array($parts, '');
+        if (count($parts) < 2) {
+            $parts[] = '';
         }
 
         list($headers, $body) = $parts;
