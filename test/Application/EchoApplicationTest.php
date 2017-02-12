@@ -17,6 +17,7 @@ class EchoApplicationTest extends WrenchTest
 
     /**
      * @dataProvider getValidPayloads
+     * @small
      */
     public function testOnData($payload)
     {

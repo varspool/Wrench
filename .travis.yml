@@ -9,7 +9,11 @@ install:
 before_script:
   - mkdir build
 
-script: ./bin/phpunit --coverage-clover=coverage.clover
+script: |
+         ./bin/phpunit \
+           --enforce-time-limit \
+           --report-useless-tests \
+           --coverage-clover=coverage.clover
 
 after_script:
   - wget https://scrutinizer-ci.com/ocular.phar

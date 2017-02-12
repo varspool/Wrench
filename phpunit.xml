@@ -22,10 +22,5 @@
 			<directory>test</directory>
 		</testsuite>
 	</testsuites>
-	<groups>
-		<exclude>
-			<group>large</group>
-		</exclude>
-	</groups>
 </phpunit>
 
