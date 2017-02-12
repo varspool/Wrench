@@ -1,9 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<phpunit bootstrap="test/bootstrap.php">
+<phpunit
+		backupGlobals="false"
+		backupStaticAttributes="false"
+		beStrictAboutTestSize="true"
+		bootstrap="test/bootstrap.php"
+		colors="true"
+		stopOnError="false"
+		stopOnFailure="false"
+		stopOnIncomplete="false"
+		stopOnRisky="false"
+		stopOnSkipped="false"
+		verbose="true"
+>
+	<filter>
+		<whitelist>
+			<directory suffix=".php">lib/</directory>
+		</whitelist>
+	</filter>
 	<testsuites>
 		<testsuite name="Default Testsuite">
 			<directory>test</directory>
 		</testsuite>
 	</testsuites>
+	<groups>
+		<exclude>
+			<group>large</group>
+		</exclude>
+	</groups>
 </phpunit>
 

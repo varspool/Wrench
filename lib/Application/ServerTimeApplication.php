@@ -2,11 +2,14 @@
 
 namespace Wrench\Application;
 
+use Wrench\Connection;
+use Wrench\Payload\Payload;
+
 /**
  * Example application demonstrating how to use Application::onUpdate
  * Pushes the server time to all clients every update tick.
  */
-class ServerTimeApplication implements ConnectionHandlerInterface, DataHandlerInterface
+class ServerTimeApplication implements ConnectionHandlerInterface, DataHandlerInterface, UpdateHandlerInterface
 {
     protected $clients = [];
     protected $lastTimestamp = null;
@@ -21,9 +24,6 @@ class ServerTimeApplication implements ConnectionHandlerInterface, DataHandlerIn
         $a = $connection;
     }
 
-    /**
-     * @see Wrench\Application.Application::onUpdate()
-     */
     public function onUpdate()
     {
         // limit updates to once per second
@@ -39,10 +39,10 @@ class ServerTimeApplication implements ConnectionHandlerInterface, DataHandlerIn
     /**
      * Handle data received from a client
      *
-     * @param Payload    $payload A payload object, that supports __toString()
+     * @param Payload|string    $payload A payload object, that supports __toString()
      * @param Connection $connection
      */
-    public function onData($payload, $connection)
+    public function onData(string $payload, Connection $connection)
     {
         return;
     }

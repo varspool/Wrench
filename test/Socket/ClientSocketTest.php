@@ -129,6 +129,8 @@ class ClientSocketTest extends UriSocketTest
 
     /**
      * Test the connect, send, receive method
+     *
+     * @medium
      */
     public function testConnect()
     {

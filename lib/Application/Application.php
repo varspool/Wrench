@@ -10,4 +10,5 @@ namespace Wrench\Application;
  */
 abstract class Application implements DataHandlerInterface
 {
+
 }

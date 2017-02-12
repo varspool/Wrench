@@ -2,12 +2,15 @@
 
 namespace Wrench\Application;
 
+use Wrench\Connection;
+use Wrench\Payload\Payload;
+
 /**
  * Example application for Wrench: echo server
  */
 class EchoApplication implements DataHandlerInterface
 {
-    public function onData($data, $client)
+    public function onData(string $data, Connection $client)
     {
         $client->send($data);
     }

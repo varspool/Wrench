@@ -7,6 +7,9 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 use Wrench\Application\Application;
+use Wrench\Application\ConnectionHandlerInterface;
+use Wrench\Application\DataHandlerInterface;
+use Wrench\Application\UpdateHandlerInterface;
 use Wrench\Util\Configurable;
 
 /**
@@ -198,8 +201,8 @@ class Server extends Configurable implements LoggerAwareInterface
     /**
      * Adds a new application object to the application storage.
      *
-     * @param string $key         Name of application.
-     * @param object $application The application object
+     * @param string                                                                 $key         Name of application.
+     * @param DataHandlerInterface|ConnectionHandlerInterface|UpdateHandlerInterface $application The application object
      * @return void
      */
     public function registerApplication($key, $application)

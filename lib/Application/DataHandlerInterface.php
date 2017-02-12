@@ -10,8 +10,8 @@ interface DataHandlerInterface
     /**
      * Handle data received from a client
      *
-     * @param Payload    $payload A payload object, that supports __toString()
-     * @param Connection $connection
+     * @param Payload|string $payload A payload object, that supports __toString()
+     * @param Connection     $connection
      */
-    public function onData($payload, $connection);
+    public function onData(string $payload, Connection $connection);
 }

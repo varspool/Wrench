@@ -85,6 +85,9 @@ class ClientTest extends BaseTest
         $w = new Client('ws://localhost:8000', 'NOTAVALIDURI');
     }
 
+    /**
+     * @large
+     */
     public function testSend()
     {
         try {

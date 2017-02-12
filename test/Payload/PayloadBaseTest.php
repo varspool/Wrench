@@ -112,6 +112,7 @@ abstract class PayloadBaseTest extends BaseTest
     /**
      * Tests receiving data
      * @dataProvider getValidEncodePayloads
+     * @doesNotPerformAssertions
      */
     public function testReceieveData($type, $payload)
     {

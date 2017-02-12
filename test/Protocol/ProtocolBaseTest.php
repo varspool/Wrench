@@ -92,11 +92,12 @@ abstract class ProtocolBaseTest extends BaseTest
 
     /**
      * @dataProvider getValidOriginUris
+     * @doesNotPerformAssertions
      */
     public function testValidateOriginUriValid($uri)
     {
         try {
-            $this->getInstance()->validateOriginUri($uri);
+            $valid = $this->getInstance()->validateOriginUri($uri);
         } catch (\Exception $e) {
             $this->fail('Valid URI validated as invalid: ' . $e);
         }

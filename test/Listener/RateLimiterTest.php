@@ -11,16 +11,25 @@ class RateLimiterTest extends ListenerBaseTest
         return $instance;
     }
 
+    /**
+     * @doesNotPerformAssertions
+     */
     public function testOnSocketConnect()
     {
         $this->getInstance()->onSocketConnect(null, $this->getConnection());
     }
 
+    /**
+     * @doesNotPerformAssertions
+     */
     public function testOnSocketDisconnect()
     {
         $this->getInstance()->onSocketDisconnect(null, $this->getConnection());
     }
 
+    /**
+     * @doesNotPerformAssertions
+     */
     public function testOnClientData()
     {
         $this->getInstance()->onClientData(null, $this->getConnection());

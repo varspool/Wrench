@@ -12,6 +12,7 @@ abstract class ListenerBaseTest extends BaseTest
     /**
      * @depends testConstructor
      * @param Listener $instance
+     * @doesNotPerformAssertions
      */
     public function testListen(Listener $instance)
     {

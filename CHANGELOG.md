@@ -7,6 +7,24 @@
 
 * Dropped support for PHP versions prior to 7.1
 * Moved to PSR4 layout, with a separate test directory (this means test code cannot be autoloaded in production, much nicer)
+* Added support for PSR3 everywhere that we used to accept a logging callback (just inject via LoggerAwareInterface)
+
+#### BC Breaks
+
+* We no longer support the $config['logger'] option on many objects, including the `Server`. Instead,
+  you should use the PSR3 support that has been added: call `$server->setLogger($logger)` with a LoggerInterface.
+  Or inject any PSR3 compatible logger (e.g. `Monolog\Logger`)
+
+#### Deprecations
+
+* Extending the `Wrench\Application\Application` abstract class is now discouraged. It has been replaced
+  with three simple interfaces, all of which are optional to implement:
+  
+     - `Wrench\Application\DataHandlerInterface` for `onData()`
+     - `Wrench\Application\ConnectionHandlerInterface` for `onConnect()` and `onDisconnect()`
+     - `Wrench\Application\UpdateHandlerInterface` for `onUpdate()`
+   
+The Application class is still available, and so this will not be a BC break until version 4.
 
 ## 2.0
 

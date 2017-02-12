@@ -8,6 +8,9 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 use RuntimeException;
 use Wrench\Application\Application;
+use Wrench\Application\ConnectionHandlerInterface;
+use Wrench\Application\DataHandlerInterface;
+use Wrench\Application\UpdateHandlerInterface;
 use Wrench\Exception\BadRequestException;
 use Wrench\Exception\CloseException;
 use Wrench\Exception\ConnectionException;
@@ -54,7 +57,7 @@ class Connection extends Configurable implements LoggerAwareInterface
     /**
      * The application this connection belongs to
      *
-     * @var Application\Application
+     * @var DataHandlerInterface|ConnectionHandlerInterface|UpdateHandlerInterface
      */
     protected $application = null;
 
@@ -200,13 +203,13 @@ class Connection extends Configurable implements LoggerAwareInterface
         switch ($type = $payload->getType()) {
             case Protocol::TYPE_TEXT:
                 if (method_exists($app, 'onData')) {
-                    $app->onData($payload, $this);
+                    $app->onData((string)$payload, $this);
                 }
                 return;
 
             case Protocol::TYPE_BINARY:
                 if (method_exists($app, 'onBinaryData')) {
-                    $app->onBinaryData($payload, $this);
+                    $app->onBinaryData((string)$payload, $this);
                 } else {
                     $this->close(1003);
                 }
@@ -241,7 +244,7 @@ class Connection extends Configurable implements LoggerAwareInterface
     /**
      * Gets the client application
      *
-     * @return Application
+     * @return DataHandlerInterface|ConnectionHandlerInterface|UpdateHandlerInterface
      */
     public function getClientApplication()
     {
