@@ -56,8 +56,10 @@ class ClientSocket extends UriSocket
     }
 
     /**
-     * @see Wrench\Socket.Socket::configure()
-     *   Options include:
+     * Configure the client socket
+     *
+     * Options include:
+     *
      *     - ssl_verify_peer       => boolean, whether to perform peer verification
      *                                 of SSL certificate used
      *     - ssl_allow_self_signed => boolean, whether ssl_verify_peer allows
@@ -75,18 +77,12 @@ class ClientSocket extends UriSocket
         parent::configure($options);
     }
 
-    /**
-     * @see Wrench\Socket.UriSocket::getSocketStreamContextOptions()
-     */
     protected function getSocketStreamContextOptions()
     {
         $options = [];
         return $options;
     }
 
-    /**
-     * @see Wrench\Socket.UriSocket::getSslStreamContextOptions()
-     */
     protected function getSslStreamContextOptions()
     {
         $options = [];

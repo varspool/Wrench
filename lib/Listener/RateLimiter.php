@@ -47,9 +47,6 @@ class RateLimiter extends Configurable implements Listener, LoggerAwareInterface
         $this->logger = new NullLogger();
     }
 
-    /**
-     * @see Wrench\Listener.Listener::listen()
-     */
     public function listen(Server $server)
     {
         $this->server = $server;

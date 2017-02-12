@@ -10,7 +10,7 @@ use Wrench\Payload\Payload;
  */
 class EchoApplication implements DataHandlerInterface
 {
-    public function onData(string $data, Connection $client)
+    public function onData(string $data, Connection $client): void
     {
         $client->send($data);
     }

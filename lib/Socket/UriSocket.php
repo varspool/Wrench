@@ -42,9 +42,6 @@ abstract class UriSocket extends Socket
         return $this->host;
     }
 
-    /**
-     * @see Wrench\Socket.Socket::getPort()
-     */
     public function getPort()
     {
         return $this->port;
@@ -52,7 +49,6 @@ abstract class UriSocket extends Socket
 
     /**
      * @todo DNS lookup? Override getIp()?
-     * @see  Wrench\Socket.Socket::getName()
      */
     protected function getName()
     {

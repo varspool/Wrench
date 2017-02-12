@@ -6,6 +6,7 @@ use Wrench\Exception\ConnectionException;
 
 /**
  * Server socket
+ *
  * Used for a server's "master" socket that binds to the configured
  * interface and listens
  */
@@ -67,7 +68,8 @@ class ServerSocket extends UriSocket
     }
 
     /**
-     * @see Wrench\Socket.Socket::configure()
+     * Configure the server socket
+     *
      *   Options include:
      *     - backlog               => int, used to limit the number of outstanding
      *                                 connections in the socket's listen queue
@@ -90,9 +92,6 @@ class ServerSocket extends UriSocket
         parent::configure($options);
     }
 
-    /**
-     * @see Wrench\Socket.UriSocket::getSocketStreamContextOptions()
-     */
     protected function getSocketStreamContextOptions()
     {
         $options = [];
@@ -104,9 +103,6 @@ class ServerSocket extends UriSocket
         return $options;
     }
 
-    /**
-     * @see Wrench\Socket.UriSocket::getSslStreamContextOptions()
-     */
     protected function getSslStreamContextOptions()
     {
         $options = [];

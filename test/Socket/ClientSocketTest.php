@@ -2,17 +2,13 @@
 
 namespace Wrench\Socket;
 
+use InvalidArgumentException;
+use stdClass;
 use Wrench\Protocol\Rfc6455Protocol;
-use Wrench\Socket\ClientSocket;
 use Wrench\Test\ServerTestHelper;
-use \Exception;
-use \stdClass;
 
 class ClientSocketTest extends UriSocketTest
 {
-    /**
-     * @see Wrench\Test.Test::getClass()
-     */
     public function getClass()
     {
         return 'Wrench\Socket\ClientSocket';
@@ -20,8 +16,6 @@ class ClientSocketTest extends UriSocketTest
 
     /**
      * Overriden to use with the depends annotation
-     *
-     * @see Wrench\Test\Socket.UriSocketTest::testConstructor()
      */
     public function testConstructor()
     {
@@ -40,7 +34,7 @@ class ClientSocketTest extends UriSocketTest
         );
 
         $this->assertInstanceOfClass(
-            new ClientSocket('wss://localhost/test', array()),
+            new ClientSocket('wss://localhost/test', []),
             'empty options'
         );
 
@@ -59,9 +53,9 @@ class ClientSocketTest extends UriSocketTest
         $this->assertInstanceOfClass(
             $socket = new ClientSocket(
                 'ws://localhost:8000/foo',
-                array(
-                    'timeout_connect' => 10
-                )
+                [
+                    'timeout_connect' => 10,
+                ]
             ),
             'connect timeout'
         );
@@ -69,9 +63,9 @@ class ClientSocketTest extends UriSocketTest
         $this->assertInstanceOfClass(
             $socket = new ClientSocket(
                 'ws://localhost:8000/foo',
-                array(
-                    'timeout_socket' => 10
-                )
+                [
+                    'timeout_socket' => 10,
+                ]
             ),
             'socket timeout'
         );
@@ -79,24 +73,24 @@ class ClientSocketTest extends UriSocketTest
         $this->assertInstanceOfClass(
             $socket = new ClientSocket(
                 'ws://localhost:8000/foo',
-                array(
-                    'protocol' => new Rfc6455Protocol()
-                )
+                [
+                    'protocol' => new Rfc6455Protocol(),
+                ]
             ),
             'protocol'
         );
     }
 
-      /**
+    /**
      * @expectedException InvalidArgumentException
      */
     public function testProtocolTypeError()
     {
         $socket = new ClientSocket(
             'ws://localhost:8000/foo',
-            array(
-                'protocol' => new stdClass()
-            )
+            [
+                'protocol' => new stdClass(),
+            ]
         );
     }
 
@@ -120,7 +114,7 @@ class ClientSocketTest extends UriSocketTest
 
     /**
      * @depends testConstructor
-     * @expectedException Wrench\Exception\SocketException
+     * @expectedException \Wrench\Exception\SocketException
      */
     public function testSendTooEarly($instance)
     {

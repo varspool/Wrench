@@ -47,7 +47,8 @@ class HybiFrame extends Frame
     protected $offset_mask = null;
 
     /**
-     * @see Wrench\Frame.Frame::encode()
+     * Encode a frame
+     *
      *     ws-frame         = frame-fin           ; 1 bit in length
      *                        frame-rsv1          ; 1 bit in length
      *                        frame-rsv2          ; 1 bit in length
@@ -278,9 +279,6 @@ class HybiFrame extends Frame
         parent::receiveData($data);
     }
 
-    /**
-     * @see Wrench\Frame.Frame::isFinal()
-     */
     public function isFinal()
     {
         if (!isset($this->buffer[self::BYTE_HEADER])) {
@@ -291,7 +289,6 @@ class HybiFrame extends Frame
 
     /**
      * @throws FrameException
-     * @see Wrench\Frame.Frame::getType()
      */
     public function getType()
     {
@@ -308,17 +305,11 @@ class HybiFrame extends Frame
         return $type;
     }
 
-    /**
-     * @see Wrench\Frame.Frame::getExpectedDataLength()
-     */
     protected function getExpectedBufferLength()
     {
         return $this->getLength() + $this->getPayloadOffset();
     }
 
-    /**
-     * @see Wrench\Frame.Frame::getLength()
-     */
     public function getLength()
     {
         if (!$this->length) {
@@ -347,9 +338,6 @@ class HybiFrame extends Frame
         return $this->length;
     }
 
-    /**
-     * @see Wrench\Frame.Frame::decodeFramePayloadFromBuffer()
-     */
     protected function decodeFramePayloadFromBuffer()
     {
         $payload = substr($this->buffer, $this->getPayloadOffset());

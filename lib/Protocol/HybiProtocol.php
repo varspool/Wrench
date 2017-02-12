@@ -9,9 +9,6 @@ use Wrench\Payload\HybiPayload;
  */
 abstract class HybiProtocol extends Protocol
 {
-    /**
-     * @see Wrench\Protocol.Protocol::getPayload()
-     */
     public function getPayload()
     {
         return new HybiPayload();
