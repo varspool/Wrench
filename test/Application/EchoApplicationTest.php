@@ -7,11 +7,6 @@ use Wrench\Test\BaseTest as WrenchTest;
 
 class EchoApplicationTest extends WrenchTest
 {
-    protected function getClass()
-    {
-        return EchoApplication::class;
-    }
-
     /**
      * Tests the constructor
      */

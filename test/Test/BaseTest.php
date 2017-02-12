@@ -46,14 +46,14 @@ abstract class BaseTest extends TestCase
     /**
      * Gets an instance of the class under test
      *
-     * @param mixed Normal constructor arguments
      * @magic This method accepts a variable number of arguments
-     * @return object Of type given by getClass()
+     * @param array $args
+     * @return static|object of type $this->getClass()
      */
-    public function getInstance()
+    public function getInstance(...$args)
     {
         $reflection = new ReflectionClass($this->getClass());
-        return $reflection->newInstanceArgs(func_get_args());
+        return $reflection->newInstanceArgs($args);
     }
 
     /**

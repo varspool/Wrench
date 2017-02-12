@@ -8,7 +8,7 @@ use Wrench\Server;
 
 class OriginPolicy implements Listener, HandshakeRequestListener
 {
-    protected $allowed = array();
+    protected $allowed = [];
 
     public function __construct(array $allowed)
     {
@@ -70,7 +70,7 @@ class OriginPolicy implements Listener, HandshakeRequestListener
     {
         $server->addListener(
             Server::EVENT_HANDSHAKE_REQUEST,
-            array($this, 'onHandshakeRequest')
+            [$this, 'onHandshakeRequest']
         );
     }
 }

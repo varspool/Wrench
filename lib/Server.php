@@ -252,11 +252,11 @@ class Server extends Configurable
      * connection the caused the event.
      *
      * @param string $event
-     * @param Closure $callback
+     * @param callable $callback
      * @return void
      * @throws InvalidArgumentException
      */
-    public function addListener($event, $callback)
+    public function addListener($event, callable $callback)
     {
         if (!isset($this->listeners[$event])) {
             $this->listeners[$event] = array();

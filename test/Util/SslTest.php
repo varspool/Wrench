@@ -67,14 +67,4 @@ class SslBaseTest extends BaseTest
         $this->assertRegExp('/BEGIN CERTIFICATE/', $contents, 'PEM file contains certificate');
         $this->assertRegExp('/BEGIN PRIVATE KEY/', $contents, 'PEM file contains encrypted private key');
     }
-
-    /**
-     * Gets the class under test
-     *
-     * @return string
-     */
-    protected function getClass()
-    {
-        return 'Wrench\\Util\\Ssl';
-    }
 }

@@ -14,9 +14,4 @@ class BadSubclassFrameTest extends BaseTest
         $frame = new BadSubclassFrame();
         $frame->getFrameBuffer();
     }
-
-    protected function getClass()
-    {
-        return 'Wrench\Test\Frame\BadSubclassFrame';
-    }
 }

@@ -9,10 +9,8 @@ use Wrench\Test\BaseTest;
 
 /**
  * Tests the Connection class
- *
- * @method Connection getInstance
  */
-class ConnectionBaseTest extends BaseTest
+class ConnectionTest extends BaseTest
 {
     /**
      * Tests the constructor
@@ -386,10 +384,5 @@ Origin: http://example.com\r
 Sec-WebSocket-Version: 13\r\n\r\n",
             ],
         ];
-    }
-
-    protected function getClass()
-    {
-        return 'Wrench\Connection';
     }
 }

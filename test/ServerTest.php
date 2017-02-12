@@ -61,9 +61,4 @@ class ServerTest extends BaseTest
             ],
         ];
     }
-
-    protected function getClass()
-    {
-        return 'Wrench\Server';
-    }
 }

@@ -19,7 +19,7 @@ class BasicServerTest extends ServerTest
             'logger' => [$this, 'log'],
         ]);
 
-        $connection = $this->getMockBuilder('Wrench\Connection')
+        $connection = $this->getMockBuilder(Connection::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -51,7 +51,7 @@ class BasicServerTest extends ServerTest
             ->getMock();
 
         $connection
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('close')
             ->will($this->returnValue(true));
 
