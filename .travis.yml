@@ -11,8 +11,6 @@ before_script:
 
 script: |
          ./bin/phpunit \
-           --enforce-time-limit \
-           --report-useless-tests \
            --coverage-clover=coverage.clover
 
 after_script:
