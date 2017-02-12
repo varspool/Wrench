@@ -33,6 +33,20 @@ abstract class Test extends TestCase
     }
 
     /**
+     * Forward compatibility with PHPUnit 5
+     *
+     * @param string $class
+     * @return \PHPUnit_Framework_MockObject_MockObject|mixed
+     */
+    public function createMock($class)
+    {
+        return $this->getMockBuilder($class)
+            ->setMethods(array())
+            ->disableOriginalConstructor()
+            ->getMock();
+    }
+
+    /**
      * Gets an instance of the class under test
      *
      * @param mixed Normal constructor arguments
