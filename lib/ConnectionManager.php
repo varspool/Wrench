@@ -219,17 +219,17 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
             $this->logger->notice('Client connection closed: {exception}', [
                 'exception' => $e,
             ]);
-            $connection->close($e);
+            $connection->close(Protocol::CLOSE_UNEXPECTED, $e->getMessage());
         } catch (WrenchException $e) {
             $this->logger->warning('Error on client socket: {exception}', [
                 'exception' => $e,
             ]);
-            $connection->close($e);
+            $connection->close(Protocol::CLOSE_UNEXPECTED);
         } catch (InvalidArgumentException $e) {
             $this->logger->warning('Wrong input arguments: {exception}', [
                 'exception' => $e,
             ]);
-            $connection->close($e);
+            $connection->close(Protocol::CLOSE_UNEXPECTED);
         }
     }
 
