@@ -63,6 +63,8 @@ class ServerSocket extends UriSocket
         if (!$new) {
             throw new ConnectionException(socket_strerror(socket_last_error($new)));
         }
+        
+        socket_set_option(socket_import_stream($new), SOL_TCP, TCP_NODELAY, 1);
 
         return $new;
     }
