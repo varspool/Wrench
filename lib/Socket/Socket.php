@@ -229,69 +229,82 @@ abstract class Socket extends Configurable implements Resource
     {
         $buffer = '';
         $metadata['unread_bytes'] = 0;
+        $makeBlockingAfterRead = false;
 
-        do {
-            // feof means socket has been closed
-            // also, sometimes in long running processes the system seems to kill the underlying socket
-            if (!$this->socket || feof($this->socket)) {
-                $this->disconnect();
+        try {
+            do {
+                // feof means socket has been closed
+                // also, sometimes in long running processes the system seems to kill the underlying socket
+                if (!$this->socket || feof($this->socket)) {
+                    $this->disconnect();
 
-                return $buffer;
-            }
+                    return $buffer;
+                }
 
-            $result = fread($this->socket, $length);
+                $result = fread($this->socket, $length);
 
-            // fread FALSE means socket has been closed
-            if ($result === false) {
-                $this->disconnect();
+                if ($makeBlockingAfterRead) {
+                    stream_set_blocking($this->socket, true);
+                    $makeBlockingAfterRead = false;
+                }
 
-                return $buffer;
-            }
+                // fread FALSE means socket has been closed
+                if ($result === false) {
+                    $this->disconnect();
 
-            $buffer .= $result;
+                    return $buffer;
+                }
 
-            // feof means socket has been closed
-            if (feof($this->socket)) {
-                $this->disconnect();
+                $buffer .= $result;
 
-                return $buffer;
-            }
+                // feof means socket has been closed
+                if (feof($this->socket)) {
+                    $this->disconnect();
 
-            $continue = false;
+                    return $buffer;
+                }
 
-            if (strlen($result) == 1) {
-                // Workaround Chrome behavior (still needed?)
-                $continue = true;
-            }
+                $continue = false;
 
-            if (strlen($result) == $length) {
-                $continue = true;
-            }
-
-            // Continue if more data to be read
-            $metadata = stream_get_meta_data($this->socket);
-
-            if ($metadata && isset($metadata['unread_bytes'])) {
-                if (!$metadata['unread_bytes']) {
-                    // stop it, if we read a full message in previous time
-                    $continue = false;
-                } else {
+                if (strlen($result) == 1) {
+                    // Workaround Chrome behavior (still needed?)
                     $continue = true;
-                    // it makes sense only if unread_bytes less than DEFAULT_RECEIVE_LENGTH
-                    if ($length > $metadata['unread_bytes']) {
-                        // http://php.net/manual/en/function.stream-get-meta-data.php
-                        // 'unread_bytes' don't describes real length correctly.
-                        //$length = $metadata['unread_bytes'];
+                }
 
-                        // Socket is a blocking by default. When we do a blocking read from an empty
-                        // queue it will block and the server will hang. https://bugs.php.net/bug.php?id=1739
-                        stream_set_blocking($this->socket, false);
+                if (strlen($result) == $length) {
+                    $continue = true;
+                }
+
+                // Continue if more data to be read
+                $metadata = stream_get_meta_data($this->socket);
+
+                if ($metadata && isset($metadata['unread_bytes'])) {
+                    if (!$metadata['unread_bytes']) {
+                        // stop it, if we read a full message in previous time
+                        $continue = false;
+                    } else {
+                        $continue = true;
+                        // it makes sense only if unread_bytes less than DEFAULT_RECEIVE_LENGTH
+                        if ($length > $metadata['unread_bytes']) {
+                            // http://php.net/manual/en/function.stream-get-meta-data.php
+                            // 'unread_bytes' don't describes real length correctly.
+                            //$length = $metadata['unread_bytes'];
+
+                            // Socket is a blocking by default. When we do a blocking read from an empty
+                            // queue it will block and the server will hang. https://bugs.php.net/bug.php?id=1739
+                            stream_set_blocking($this->socket, false);
+                            $makeBlockingAfterRead = true;
+                        }
                     }
                 }
-            }
-        } while ($continue);
+            } while ($continue);
 
-        return $buffer;
+            return $buffer;
+        } finally {
+            if ($this->socket && !feof($this->socket) && $makeBlockingAfterRead) {
+                stream_set_blocking($this->socket, true);
+            }
+        }
     }
 
     /**
