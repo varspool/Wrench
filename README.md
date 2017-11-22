@@ -23,6 +23,7 @@ composer require wrench/wrench ~3.0
 This creates a server on 127.0.0.1:8000 with one Application that listens for
 WebSocket requests to `ws://localhost:8000/echo` and `ws://localhost:8000/chat`:
 
+### Server
 ```php
 /**
  * An example application, that just echoes the received data back to the connection that sent it
@@ -48,6 +49,18 @@ $server->registerApplication('chat', new \My\ChatApplication());
 $server->setLogger($monolog); // PSR3
 $server->run();
 ```
+### Client
+```php
+/**
+ * A client side example, that sends a string and will receive the data back to the connection that sent it
+ */
+$client = new Client('ws://localhost:8000, http://localhost:8000);
+$client->connect();
+$client->sendData('hello');
+$response = $client->receive()[0]->getPayload();
+$client->disconnect();
+```
+
 ## Releases and Changelog
 
 See the [CHANGELOG](CHANGELOG.md) for detailed information about changes between releases.
