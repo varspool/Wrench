@@ -79,7 +79,7 @@ class ConnectionManagerTest extends BaseTest
      */
     public function testCount($instance)
     {
-        $this->assertTrue(is_numeric($instance->count()));
+        $this->assertInternalType('numeric', $instance->count());
     }
 
     /**

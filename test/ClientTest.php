@@ -111,24 +111,24 @@ class ClientTest extends BaseTest
             $this->assertFalse((boolean)$instance->receive(), 'No data');
 
             $bytes = $instance->sendData('foobar', Protocol::TYPE_TEXT);
-            $this->assertTrue($bytes >= 6, 'sent text frame');
+            $this->assertGreaterThanOrEqual(6, $bytes, 'sent text frame');
 
             $bytes = $instance->sendData('baz', Protocol::TYPE_TEXT);
-            $this->assertTrue($bytes >= 3, 'sent text frame');
+            $this->assertGreaterThanOrEqual(3, $bytes, 'sent text frame');
 
             usleep(500000);
             $responses = $instance->receive();
-            $this->assertTrue(is_array($responses));
+            $this->assertInternalType('array', $responses);
             $this->assertCount(2, $responses);
             $this->assertInstanceOf(Payload::class, $responses[0]);
             $this->assertInstanceOf(Payload::class, $responses[1]);
 
             $bytes = $instance->sendData('baz', Protocol::TYPE_TEXT);
-            $this->assertTrue($bytes >= 3, 'sent text frame');
+            $this->assertGreaterThanOrEqual(3, $bytes, 'sent text frame');
 
             # test fix for issue #43
             $responses = $instance->receive();
-            $this->assertTrue(is_array($responses));
+            $this->assertInternalType('array', $responses);
             $this->assertCount(1, $responses);
             $this->assertInstanceOf(Payload::class, $responses[2]);
 

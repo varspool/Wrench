@@ -17,7 +17,7 @@ abstract class SocketBaseTest extends BaseTest
     public function testIsConnected($instance)
     {
         $connected = $instance->isConnected();
-        $this->assertTrue(is_bool($connected), 'isConnected returns boolean');
+        $this->assertInternalType('bool', $connected, 'isConnected returns boolean');
         $this->assertFalse($connected);
     }
 

@@ -139,7 +139,7 @@ Connection: Upgrade\r
 Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r
 Origin: http://localhost\r
 Sec-WebSocket-Version: 13\r\n\r\n");
-            $this->assertNotEquals(false, $sent, 'Client socket can send to test server');
+            $this->assertNotFalse($sent, 'Client socket can send to test server');
 
             $response = $instance->receive();
             $this->assertStringStartsWith('HTTP', $response, 'Response looks like HTTP handshake response');

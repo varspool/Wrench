@@ -26,7 +26,7 @@ abstract class ProtocolBaseTest extends BaseTest
             $this->assertEquals('/chat', $path);
             $this->assertEquals('http://example.com', $origin);
             $this->assertEquals('dGhlIHNhbXBsZSBub25jZQ==', $key);
-            $this->assertTrue(is_array($extensions), 'Extensions returned as array');
+            $this->assertInternalType('array', $extensions, 'Extensions returned as array');
             $this->assertEquals(['x-test', 'x-test2'], $extensions, 'Extensions match');
             $this->assertEquals('chat, superchat', $protocol);
         } catch (Exception $e) {
@@ -41,7 +41,7 @@ abstract class ProtocolBaseTest extends BaseTest
     {
         try {
             $valid = $this->getInstance()->validateResponseHandshake($response, $key);
-            $this->assertTrue(is_bool($valid), 'Validation return value is boolean');
+            $this->assertInternalType('bool', $valid, 'Validation return value is boolean');
             $this->assertTrue($valid, 'Handshake response validates');
         } catch (Exception $e) {
             $this->fail('Validated valid response handshake as invalid');
@@ -75,7 +75,7 @@ abstract class ProtocolBaseTest extends BaseTest
     public function testGetVersion()
     {
         $version = $this->getInstance()->getVersion();
-        $this->assertTrue(is_int($version));
+        $this->assertInternalType('int', $version);
     }
 
     public function testGetResponseError()
