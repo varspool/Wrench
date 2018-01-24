@@ -21,9 +21,6 @@ class Rfc6455Protocol extends HybiProtocol
      */
     public function acceptsVersion($version)
     {
-        if ((int)$version <= 13) {
-            return true;
-        }
-        return false;
+        return (int)$version <= 13;
     }
 }
