@@ -14,6 +14,7 @@ use Wrench\Application\UpdateHandlerInterface;
 use Wrench\Exception\CloseException;
 use Wrench\Exception\ConnectionException;
 use Wrench\Exception\Exception as WrenchException;
+use Wrench\Protocol\Protocol;
 use Wrench\Socket\ServerClientSocket;
 use Wrench\Socket\ServerSocket;
 use Wrench\Util\Configurable;
@@ -281,7 +282,7 @@ class ConnectionManager extends Configurable implements Countable, LoggerAwareIn
         }
 
         if (!$index) {
-            $this->logger->warning('Could not remove connection: not found', 'warning');
+            $this->logger->warning('Could not remove connection: not found');
         }
 
         unset($this->connections[$index]);
