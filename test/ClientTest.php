@@ -130,7 +130,7 @@ class ClientTest extends BaseTest
             $responses = $instance->receive();
             $this->assertTrue(is_array($responses));
             $this->assertCount(1, $responses);
-            $this->assertInstanceOf(Payload::class, $responses[2]);
+            $this->assertInstanceOf(Payload::class, $responses[0]);
 
             $instance->disconnect();
 
