@@ -5,6 +5,7 @@ namespace Wrench;
 use InvalidArgumentException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Wrench\Application\ConnectionHandlerInterface;
 use Wrench\Application\DataHandlerInterface;
@@ -24,7 +25,10 @@ use Wrench\Util\NullLoop;
  */
 class Server extends Configurable implements LoggerAwareInterface
 {
-    use LoggerAwareTrait;
+
+    use LoggerAwareTrait {
+        setLogger as private traitSetLogger;
+    }
 
     /**#@+
      * Events
@@ -244,6 +248,23 @@ class Server extends Configurable implements LoggerAwareInterface
         parent::configure($options);
 
         $this->configureConnectionManager();
+
+        if (isset($options['logger'])) {
+            $this->setLogger($options['logger']);
+        }
+    }
+
+    /**
+     * Sets a logger.
+     *
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        // calling "parent" setLogger
+        $this->traitSetLogger($logger);
+
+        $this->connectionManager->setLogger($logger);
     }
 
     /**

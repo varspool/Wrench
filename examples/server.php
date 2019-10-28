@@ -26,7 +26,7 @@ $logger = new class extends \Psr\Log\AbstractLogger implements Psr\Log\LoggerInt
 {
     public function log($level, $message, array $context = [])
     {
-        echo sprintf('[%s] %s - %s', $level, $message, json_encode($context));
+        echo sprintf('[%s] %s - %s', $level, $message, json_encode($context)) . PHP_EOL;
     }
 };
 
@@ -34,6 +34,7 @@ $logger = new class extends \Psr\Log\AbstractLogger implements Psr\Log\LoggerInt
  * Our websocket server
  */
 $server = new \Wrench\Server('ws://localhost:8000/', [
+    //'logger' => $logger,
     'allowed_origins' => [
         'mysite.localhost',
     ],
