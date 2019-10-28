@@ -18,6 +18,16 @@ class StatusApplication implements ConnectionHandlerInterface
     private $_serverClientCount = 0;
 
     /**
+     * @param string $action
+     * @param array $data
+     * @return string
+     */
+    private function _encodeData($action, $data)
+    {
+        return json_encode(['action' => $action, 'data' => $data]);
+    }
+
+    /**
      * @param Connection $client
      * @throws \Wrench\Exception\ConnectionException
      * @throws \Wrench\Exception\HandshakeException
@@ -27,6 +37,7 @@ class StatusApplication implements ConnectionHandlerInterface
         $id = $client->getId();
         $this->_clients[$id] = $client;
         $this->_sendServerinfo($client);
+        $this->clientConnected($client->getIp(), $client->getPort());
     }
 
     /**
@@ -56,6 +67,7 @@ class StatusApplication implements ConnectionHandlerInterface
     {
         $id = $client->getId();
         unset($this->_clients[$id]);
+        $this->clientDisconnected($client->getIp(), $client->getPort());
     }
 
     public function setServerInfo($serverInfo)
