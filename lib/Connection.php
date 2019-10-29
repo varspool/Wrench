@@ -113,8 +113,8 @@ class Connection extends Configurable implements LoggerAwareInterface
         ConnectionManager $manager,
         ServerClientSocket $socket,
         array $options = []
-    ) {
-
+    )
+    {
         $this->manager = $manager;
         $this->socket = $socket;
         $this->logger = new NullLogger();
@@ -196,9 +196,9 @@ class Connection extends Configurable implements LoggerAwareInterface
                 break;
 
             case Protocol::TYPE_PING:
-                $this->logger->info('Ping received', 'notice');
+                $this->logger->notice('Ping received');
                 $this->send($payload->getPayload(), Protocol::TYPE_PONG);
-                $this->logger->info('Pong!', 'debug');
+                $this->logger->debug('Pong!');
                 break;
 
             /**
@@ -213,7 +213,7 @@ class Connection extends Configurable implements LoggerAwareInterface
             case Protocol::TYPE_CLOSE:
                 $this->logger->notice('Close frame received');
                 $this->close();
-                $this->logger->info('Disconnected');
+                $this->logger->debug('Disconnected');
                 break;
 
             default:
