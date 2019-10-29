@@ -113,8 +113,7 @@ class Connection extends Configurable implements LoggerAwareInterface
         ConnectionManager $manager,
         ServerClientSocket $socket,
         array $options = []
-    )
-    {
+    ) {
         $this->manager = $manager;
         $this->socket = $socket;
         $this->logger = new NullLogger();
