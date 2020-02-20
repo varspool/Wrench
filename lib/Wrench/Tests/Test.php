@@ -2,13 +2,13 @@
 
 namespace Wrench\Tests;
 
-use \PHPUnit_Framework_TestCase;
-use \ReflectionClass;
+use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 /**
  * Test base class
  */
-abstract class Test extends PHPUnit_Framework_TestCase
+abstract class Test extends TestCase
 {
     /**
      * Gets the class under test
@@ -23,7 +23,7 @@ abstract class Test extends PHPUnit_Framework_TestCase
      * @param object $instance
      * @param string $message Optional
      */
-    public function assertInstanceOfClass($instance, $message = null)
+    public function assertInstanceOfClass($instance, $message = '')
     {
         $this->assertInstanceOf(
             $this->getClass(),

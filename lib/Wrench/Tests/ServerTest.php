@@ -5,8 +5,7 @@ namespace Wrench\Tests;
 use Wrench\Server;
 use Wrench\Tests\Test;
 
-use \InvalidArgumentException;
-use \PHPUnit_Framework_Error;
+use InvalidArgumentException;
 
 /**
  * Tests the Server class

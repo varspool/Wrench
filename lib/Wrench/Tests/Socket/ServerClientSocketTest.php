@@ -2,8 +2,6 @@
 
 namespace Wrench\Tests\Socket;
 
-use \Exception;
-
 class ServerClientSocketTest extends SocketTest
 {
     public function getClass()
@@ -23,20 +21,22 @@ class ServerClientSocketTest extends SocketTest
     }
 
     /**
-     * @expectedException Wrench\Exception\SocketException
      * @depends testConstructor
      */
     public function testGetIpTooSoon($instance)
     {
+        $this->expectException(\Wrench\Exception\SocketException::class);
+
         $instance->getIp();
     }
 
     /**
-     * @expectedException Wrench\Exception\SocketException
      * @depends testConstructor
      */
     public function testGetPortTooSoon($instance)
     {
+        $this->expectException(\Wrench\Exception\SocketException::class);
+
         $instance->getPort();
     }
 }

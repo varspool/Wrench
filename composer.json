@@ -27,16 +27,13 @@
         "ext-sockets": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "~4.5",
+        "phpunit/phpunit": "^8.0",
         "squizlabs/php_codesniffer": "*"
     },
     "autoload": {
         "psr-0": {
             "Wrench": "lib/"
         }
-    },
-    "config": {
-        "bin-dir": "bin"
     },
     "extra": {
         "branch-alias": {

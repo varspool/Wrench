@@ -5,7 +5,6 @@ namespace Wrench\Tests\Frame;
 use Wrench\Protocol\Protocol;
 use Wrench\Frame\Frame;
 use Wrench\Tests\Test;
-use \Exception;
 
 /**
  * Frame test
@@ -20,9 +19,9 @@ abstract class FrameTest extends Test
     protected $frame;
 
     /**
-     * @see PHPUnit_Framework_TestCase::setUp()
+     * @see PHPUnit\Framework\TestCase::setUp()
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->frame = $this->getNewFrame();
@@ -35,9 +34,9 @@ abstract class FrameTest extends Test
     }
 
     /**
-     * @see PHPUnit_Framework_TestCase::tearDown()
+     * @see PHPUnit\Framework\TestCase::tearDown()
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         parent::tearDown();
         unset($this->frame);

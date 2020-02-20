@@ -7,8 +7,7 @@ use Wrench\Tests\Test;
 
 use Wrench\Application\EchoApplication;
 
-use \InvalidArgumentException;
-use \PHPUnit_Framework_Error;
+use InvalidArgumentException;
 
 /**
  * Tests the ConnectionManager class
@@ -78,7 +77,7 @@ class ConnectionManagerTest extends Test
      */
     protected function getMockServer()
     {
-        $server = $this->getMock('Wrench\Server', array(), array(), '', false);
+        $server = $this->createMock('Wrench\Server');
 
         $server->registerApplication('/echo', $this->getMockApplication());
 

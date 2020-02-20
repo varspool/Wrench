@@ -2,7 +2,7 @@
 
 namespace Wrench\Tests\Socket;
 
-use \Exception;
+use InvalidArgumentException;
 
 abstract class UriSocketTest extends SocketTest
 {
@@ -18,10 +18,10 @@ abstract class UriSocketTest extends SocketTest
 
     /**
      * @dataProvider getInvalidConstructorArguments
-     * @expectedException InvalidArgumentException
      */
     public function testInvalidConstructor($uri)
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->getInstance($uri);
     }
 

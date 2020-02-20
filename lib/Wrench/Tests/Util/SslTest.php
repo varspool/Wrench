@@ -13,17 +13,17 @@ class SslTest extends Test
      */
     protected function getClass()
     {
-        return 'Wrench\\Util\\Ssl';
+        return 'Wrench\Util\Ssl';
     }
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
         $this->tmp = tempnam('/tmp', 'wrench');
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         parent::tearDown();
 
