@@ -2,6 +2,8 @@
 
 namespace Wrench;
 
+use Psr\Log\NullLogger;
+
 /**
  * Tests the BasicServer class
  */
@@ -16,7 +18,7 @@ class BasicServerTest extends ServerTest
     {
         $server = $this->getInstance('ws://localhost:8000', [
             'allowed_origins' => $allowed,
-            'logger' => [$this, 'log'],
+            'logger' => new NullLogger(),
         ]);
 
         $connection = $this->getMockBuilder(Connection::class)
@@ -43,7 +45,7 @@ class BasicServerTest extends ServerTest
     {
         $server = $this->getInstance('ws://localhost:8000', [
             'allowed_origins' => $allowed,
-            'logger' => [$this, 'log'],
+            'logger' => new NullLogger(),
         ]);
 
         $connection = $this->getMockBuilder(Connection::class)
@@ -69,8 +71,7 @@ class BasicServerTest extends ServerTest
         return array_merge(parent::getValidConstructorArguments(), [
             [
                 'ws://localhost:8000',
-                ['logger' => function () {
-                }],
+                ['logger' => new NullLogger()],
             ],
         ]);
     }
