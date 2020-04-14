@@ -327,7 +327,7 @@ abstract class Protocol
         foreach ($headers as $name => $value) {
             $handshake[] = sprintf(self::HEADER_LINE_FORMAT, $name, $value);
         }
-        return implode($handshake, "\r\n") . "\r\n\r\n";
+        return implode("\r\n", $handshake) . "\r\n\r\n";
     }
 
     /**
