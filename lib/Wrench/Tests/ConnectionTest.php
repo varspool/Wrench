@@ -8,8 +8,7 @@ use Wrench\Connection;
 use Wrench\Tests\Test;
 use Wrench\Socket;
 
-use \InvalidArgumentException;
-use \PHPUnit_Framework_Error;
+use InvalidArgumentException;
 
 /**
  * Tests the Connection class
@@ -45,6 +44,7 @@ class ConnectionTest extends Test
 
     /**
      * @dataProvider getValidCloseCodes
+     * @doesNotPerformAssertions
      */
     public function testClose($code)
     {
@@ -91,10 +91,11 @@ class ConnectionTest extends Test
 
     /**
      * @dataProvider getValidHandshakeData
-     * @expectedException Wrench\Exception\HandshakeException
      */
     public function testHandshakeBadSocket($path, $request)
     {
+        $this->expectException(\Wrench\Exception\HandshakeException::class);
+
         $connection = $this->getConnectionForHandshake(
             $this->getNotConnectedSocket(),
             $path,
@@ -107,10 +108,11 @@ class ConnectionTest extends Test
      * Because expectation is that only $path application is available
      *
      * @dataProvider getWrongPathHandshakeData
-     * @expectedException PHPUnit_Framework_ExpectationFailedException
      */
     public function testWrongPathHandshake($path, $request)
     {
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+
         $connection = $this->getConnectionForHandshake(
             $this->getConnectedSocket(),
             $path,
@@ -174,7 +176,7 @@ class ConnectionTest extends Test
 
         $application = $this->getMockApplication();
 
-        $server = $this->getMock('Wrench\Server', array(), array(), '', false);
+        $server = $this->createMock('Wrench\Server');
         $server->registerApplication($path, $application);
 
         $manager->expects($this->any())
@@ -203,7 +205,7 @@ class ConnectionTest extends Test
                     ->method('onData')
                     ->will($this->returnValue(true));
 
-        $server = $this->getMock('Wrench\Server', array(), array(), '', false);
+        $server = $this->createMock('Wrench\Server');
         $server->registerApplication($path, $application);
 
         $manager->expects($this->any())
@@ -228,7 +230,7 @@ class ConnectionTest extends Test
      */
     protected function getMockConnectionManager()
     {
-        return $this->getMock('Wrench\ConnectionManager', array(), array(), '', false);
+        return $this->createMock('Wrench\ConnectionManager');
     }
 
     /**
@@ -238,7 +240,7 @@ class ConnectionTest extends Test
      */
     protected function getMockSocket()
     {
-        return $this->getMock('Wrench\Socket\ServerClientSocket', array(), array(), '', false);
+        return $this->createMock('Wrench\Socket\ServerClientSocket');
     }
 
     /**
@@ -248,7 +250,7 @@ class ConnectionTest extends Test
      */
     protected function getMockApplication()
     {
-        return $this->getMock('Wrench\Application\EchoApplication');
+        return $this->createMock('Wrench\Application\EchoApplication');
     }
 
     /**

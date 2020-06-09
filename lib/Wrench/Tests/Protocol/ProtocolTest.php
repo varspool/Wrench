@@ -3,14 +3,15 @@
 namespace Wrench\Tests\Protocol;
 
 use Wrench\Tests\Test;
-use \Exception;
+use Exception;
+use InvalidArgumentException;
 
 abstract class ProtocolTest extends Test
 {
     /**
-     * @see PHPUnit_Framework_TestCase::setUp()
+     * @see PHPUnit\Framework\TestCase::setUp()
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
     }
@@ -92,6 +93,7 @@ abstract class ProtocolTest extends Test
 
     /**
      * @dataProvider getValidOriginUris
+     * @doesNotPerformAssertions
      */
     public function testValidateOriginUriValid($uri)
     {
@@ -104,10 +106,11 @@ abstract class ProtocolTest extends Test
 
     /**
      * @dataProvider getInvalidOriginUris
-     * @expectedException InvalidArgumentException
      */
     public function testValidateOriginUriInvalid($uri)
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $this->getInstance()->validateOriginUri($uri);
     }
 

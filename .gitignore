@@ -7,3 +7,4 @@ bin
 composer.phar
 examples/generated.pem
 nbproject/*
+.phpunit.result.cache

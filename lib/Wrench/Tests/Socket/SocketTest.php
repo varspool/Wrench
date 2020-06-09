@@ -3,7 +3,6 @@
 namespace Wrench\Tests\Socket;
 
 use Wrench\Tests\Test;
-use \Exception;
 use Wrench\Socket\Socket;
 
 abstract class SocketTest extends Test

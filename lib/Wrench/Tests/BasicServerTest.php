@@ -6,8 +6,7 @@ use Wrench\Server;
 use Wrench\BasicServer;
 use Wrench\Tests\ServerTest;
 
-use \InvalidArgumentException;
-use \PHPUnit_Framework_Error;
+use InvalidArgumentException;
 
 /**
  * Tests the BasicServer class

@@ -5,7 +5,7 @@ namespace Wrench\Tests\Payload;
 use Wrench\Protocol\Protocol;
 use Wrench\Payload\Payload;
 use Wrench\Tests\Test;
-use \Exception;
+use Exception;
 
 /**
  * Payload test
@@ -20,9 +20,9 @@ abstract class PayloadTest extends Test
     protected $payload;
 
     /**
-     * @see PHPUnit_Payloadwork_TestCase::setUp()
+     * @see PHPUnit\Payloadwork\TestCase::setUp()
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -90,7 +90,9 @@ abstract class PayloadTest extends Test
      */
     public function testSendToSocket($type, $payload)
     {
-        $successfulSocket = $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
+        $successfulSocket = $this->getMockBuilder('Wrench\Socket\ClientSocket')
+            ->setConstructorArgs(['wss://localhost:8000'])
+            ->getMock();
         $failedSocket = clone $successfulSocket;
 
         $successfulSocket->expects($this->any())
@@ -110,6 +112,7 @@ abstract class PayloadTest extends Test
     /**
      * Tests receiving data
      * @dataProvider getValidEncodePayloads
+     * @doesNotPerformAssertions
      */
     public function testReceieveData($type, $payload)
     {

@@ -6,11 +6,10 @@ use Wrench\Tests\Test;
 
 class BadSubclassFrameTest extends Test
 {
-    /**
-     * @expectedException Wrench\Exception\FrameException
-     */
     public function testInvalidFrameBuffer()
     {
+        $this->expectException(\Wrench\Exception\FrameException::class);
+
         $frame = new BadSubclassFrame();
         $frame->getFrameBuffer();
     }

@@ -56,7 +56,7 @@ class ServerTestHelper
      * Sets up the server process and sleeps for a few seconds while
      * it wakes up
      */
-    public function setUp()
+    public function setUp(): void
     {
         $this->port = self::getNextPort();
 
@@ -79,7 +79,7 @@ class ServerTestHelper
      *
      * This method *must* be called
      */
-    public function tearDown()
+    public function tearDown(): void
     {
         if ($this->process) {
             foreach ($this->pipes as &$pipe) {

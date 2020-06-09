@@ -5,8 +5,9 @@ namespace Wrench\Tests\Socket;
 use Wrench\Protocol\Rfc6455Protocol;
 use Wrench\Socket\ClientSocket;
 use Wrench\Tests\ServerTestHelper;
-use \Exception;
-use \stdClass;
+use InvalidArgumentException;
+use Exception;
+use stdClass;
 
 class ClientSocketTest extends UriSocketTest
 {
@@ -87,11 +88,10 @@ class ClientSocketTest extends UriSocketTest
         );
     }
 
-      /**
-     * @expectedException InvalidArgumentException
-     */
     public function testProtocolTypeError()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $socket = new ClientSocket(
             'ws://localhost:8000/foo',
             array(
@@ -100,30 +100,28 @@ class ClientSocketTest extends UriSocketTest
         );
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructorUriEmpty()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $w = new ClientSocket(null);
     }
 
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructorUriInvalid()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $w = new ClientSocket('Bad argument');
     }
 
 
     /**
      * @depends testConstructor
-     * @expectedException Wrench\Exception\SocketException
      */
     public function testSendTooEarly($instance)
     {
+        $this->expectException(\Wrench\Exception\SocketException::class);
+
         $instance->send('foo');
     }
 
@@ -152,7 +150,7 @@ Sec-WebSocket-Version: 13\r\n\r\n");
 
             $response = $instance->receive();
             $this->assertStringStartsWith('HTTP', $response, 'Response looks like HTTP handshake response');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $helper->tearDown();
             throw $e;
         }

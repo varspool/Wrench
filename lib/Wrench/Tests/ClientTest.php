@@ -6,9 +6,7 @@ use Wrench\Protocol\Protocol;
 use Wrench\Client;
 use Wrench\Tests\Test;
 use Wrench\Socket;
-
-use \InvalidArgumentException;
-use \PHPUnit_Framework_Error;
+use InvalidArgumentException;
 
 /**
  * Tests the client class
@@ -50,46 +48,43 @@ class ClientTest extends Test
      */
     protected function getMockSocket()
     {
-        return $this->getMock('Wrench\Socket\ClientSocket', array(), array('wss://localhost:8000'));
+        return $this->getMockBuilder('Wrench\Socket\ClientSocket')
+            ->setConstructorArgs(['wss://localhost:8000'])
+            ->getMock();
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructorUriInvalid()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $w = new Client('invalid uri', 'http://www.example.com/');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructorUriEmpty()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $w = new Client(null, 'http://www.example.com/');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructorUriPathUnspecified()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $w = new Client('ws://localhost', 'http://www.example.com/');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructorOriginEmpty()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $w = new Client('wss://localhost', null);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testConstructorOriginInvalid()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $w = new Client('ws://localhost:8000', 'NOTAVALIDURI');
     }
 
